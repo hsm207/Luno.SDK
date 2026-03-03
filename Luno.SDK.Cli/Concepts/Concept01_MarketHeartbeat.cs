@@ -1,30 +1,30 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using Luno.SDK;
 
 namespace Luno.SDK.Cli.Concepts;
 
 /// <summary>
-/// CONCEPT 01: The Market Heartbeat 💓✨
-/// Learn how to fetch real-time market data with just one line of code! 🤌
+/// Provides a demonstration of fetching real-time market tickers using the Luno SDK.
 /// </summary>
 public static class Concept01_MarketHeartbeat
 {
+    /// <summary>
+    /// Runs the Market Heartbeat demonstration.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task RunAsync()
     {
-        Console.WriteLine("--- Concept 01: Market Heartbeat ---");
+        Console.WriteLine("--- Demonstration: Market Heartbeat ---");
         
-        // 1. Initialize the client (Standalone mode! 💅)
+        // 1. Initialize the client in standalone mode
         using var luno = new LunoClient();
 
-        // 2. Use the fluent extension to stream heartbeats! 🌊📈
+        // 2. Use the fluent extension to stream market tickers
         await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())
         {
-            var statusEmoji = heartbeat.IsActive ? "✅" : "🛑";
-            Console.WriteLine($"[{heartbeat.Timestamp:HH:mm:ss.fff}] [{statusEmoji}] {heartbeat.Pair,-10} | Price: {heartbeat.Price,12:N2}");
+            var statusStr = heartbeat.IsActive ? "ACTIVE" : "DISABLED";
+            Console.WriteLine($"[{heartbeat.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {heartbeat.Pair,-10} | Price: {heartbeat.Price,12:N2}");
         }
         
-        Console.WriteLine("--- Concept 01 Complete! 🥂 ---");
+        Console.WriteLine("--- Demonstration Complete ---");
     }
 }

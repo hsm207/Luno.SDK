@@ -15,12 +15,12 @@ public static class Concept02_DependencyInjection
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task RunAsync()
     {
-        Console.WriteLine("--- Concept 02: Dependency Injection ---");
+        Console.WriteLine("--- Demonstration: Dependency Injection ---");
 
-        // 1. Setup the Service Collection (The Composition Root vibe 💅)
+        // 1. Setup the Service Collection (Composition Root)
         var services = new ServiceCollection();
 
-        // 2. Add the Luno Client with custom options! 🏛️💎
+        // 2. Add the Luno Client with custom options
         services.AddLunoClient(options =>
         {
             options.ApiVersion = "1";
@@ -29,21 +29,21 @@ public static class Concept02_DependencyInjection
         // 3. Build the provider
         var serviceProvider = services.BuildServiceProvider();
 
-        // 4. Resolve the ILunoClient - it's a "Typed Client" under the hood! 🚀
+        // 4. Resolve the ILunoClient instance
         var luno = serviceProvider.GetRequiredService<ILunoClient>();
 
-        Console.WriteLine("📡 Fetching heartbeats via DI-resolved Client... 💉✨");
+        Console.WriteLine("📡 Fetching heartbeats via DI-resolved client...");
 
-        // 5. Use the same fluent extension as Concept 01! 🤌✨
+        // 5. Use the fluent extension to stream tickers
         int count = 0;
         await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())
         {
-            var statusEmoji = heartbeat.IsActive ? "✅" : "🛑";
-            Console.WriteLine($"[{heartbeat.Timestamp:HH:mm:ss.fff}] [{statusEmoji}] {heartbeat.Pair,-10} | Price: {heartbeat.Price,12:N2}");
+            var statusStr = heartbeat.IsActive ? "ACTIVE" : "DISABLED";
+            Console.WriteLine($"[{heartbeat.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {heartbeat.Pair,-10} | Price: {heartbeat.Price,12:N2}");
             
             if (++count >= 5) break;
         }
 
-        Console.WriteLine("--- Concept 02 Complete! 🥂 ---");
+        Console.WriteLine("--- Demonstration Complete ---");
     }
 }
