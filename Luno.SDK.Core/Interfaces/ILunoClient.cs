@@ -1,15 +1,19 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 namespace Luno.SDK;
 
 /// <summary>
-/// The authoritative entry point for the Luno Universe. 🌍✨
-/// Use this to create specialized clients that share implementation details. 🏛️💎
+/// Defines the main interface for interacting with the Luno API.
+/// Provides access to specialized sub-clients for market data and account management.
 /// </summary>
 public interface ILunoClient
 {
+    /// <summary>
+    /// Gets the specialized client for market data operations.
+    /// </summary>
     ILunoMarketClient Market { get; }
 
+    /// <summary>
+    /// Factory method to retrieve a specialized market client instance.
+    /// </summary>
+    /// <returns>An instance of <see cref="ILunoMarketClient"/>.</returns>
     ILunoMarketClient GetMarketClient();
 }
