@@ -1,16 +1,15 @@
 #!/bin/bash
-# 🏛️💎 Luno.SDK - High-Energy Generation Runner 💎🏛️
-# This follows the official Kiota recommendation for fixing specs via a script! 🤌✨
+# Luno.SDK - Automated Client Generation Script
 
 set -e
 
-# 1. Patch the Bible into a Machine Engine Spec 🤖🚀
+# 1. Patch the source specification with required type corrections
 node patch-spec.js
 
-# 2. Generate the Mud 🛡️
+# 2. Generate the Kiota client code
 ~/.dotnet/tools/kiota generate -l CSharp -d docs/luno_api_spec_engine.json -c LunoApiClient -n Luno.SDK.Infrastructure.Generated -o Luno.SDK.Infrastructure.Generated/Generated --clean-output --ad true
 
-# 3. Clean up the Machine Mud 🧼
+# 3. Cleanup intermediate files
 rm docs/luno_api_spec_engine.json
 
-echo "💅✨ Generation Slayed! The Bible is pristine and the Machine is happy! ✨💅"
+echo "Client generation complete."

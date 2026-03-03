@@ -1,16 +1,13 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 const fs = require('fs');
 const path = require('path');
 
 const specPath = path.join(__dirname, 'docs', 'luno_api_spec.json');
 const outputPath = path.join(__dirname, 'docs', 'luno_api_spec_engine.json');
 
-console.log(`📖 Reading Bible: ${specPath}`);
+console.log(`Reading source specification: ${specPath}`);
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 
-// 1. Fix Ticker types! 🤌✨
+// 1. Correct Ticker property types
 const ticker = spec.components.schemas.Ticker;
 if (ticker) {
     ticker.properties.timestamp.format = 'int64';
@@ -20,10 +17,10 @@ if (ticker) {
     ticker.properties.rolling_24_hour_volume.format = 'decimal';
 }
 
-// 2. Fix other quirky types! 🕵️‍♀️
-// (We can add more fixes here as we discover them!)
+// 2. Additional type corrections
+// (Reserved for future type patches)
 
-console.log(`🚀 Writing Machine Engine Spec: ${outputPath}`);
+console.log(`Writing intermediate patched specification: ${outputPath}`);
 fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 
-console.log("💅✨ Spec Patched! Slay! ✨💅");
+console.log("Specification successfully patched.");
