@@ -1,18 +1,18 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using Microsoft.Extensions.DependencyInjection;
 using Luno.SDK;
-using Luno.SDK.Infrastructure.Extensions; // THE MISSING SLAY! 💅✨
+using Luno.SDK.Infrastructure.Market;
 
 namespace Luno.SDK.Cli.Concepts;
 
 /// <summary>
-/// CONCEPT 02: Dependency Injection Slay 🏛️💎
-/// Learn how to integrate the Luno SDK into an enterprise-grade DI container! 🤌✨
+/// Provides a demonstration of integrating the Luno SDK into a Dependency Injection container.
 /// </summary>
 public static class Concept02_DependencyInjection
 {
+    /// <summary>
+    /// Runs the Dependency Injection demonstration.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task RunAsync()
     {
         Console.WriteLine("--- Concept 02: Dependency Injection ---");

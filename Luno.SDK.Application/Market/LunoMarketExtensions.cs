@@ -1,19 +1,18 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using Luno.SDK.Application.Market;
 
 namespace Luno.SDK;
 
 /// <summary>
-/// High-energy fluent extensions to unlock the Luno Universe! 🌍✨
-/// This is the "One Line to Slay" 💅 experience! 🏛️💎
+/// Provides fluent extension methods for Luno Market operations.
 /// </summary>
 public static class LunoMarketExtensions
 {
     /// <summary>
-    /// Fetches the high-fidelity market heartbeats directly from the client! 💓✨
+    /// Asynchronously fetches a stream of market heartbeats (tickers) for all available pairs.
     /// </summary>
+    /// <param name="client">The <see cref="ILunoClient"/> instance to use for the request.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="MarketHeartbeatResponse"/> representing the market state.</returns>
     public static IAsyncEnumerable<MarketHeartbeatResponse> GetMarketHeartbeatAsync(
         this ILunoClient client, 
         CancellationToken ct = default)
