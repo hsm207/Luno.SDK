@@ -1,16 +1,19 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using Microsoft.Extensions.DependencyInjection;
-using Luno.SDK; // THE MISSING SLAY! 💅✨
+using Luno.SDK;
 
 namespace Luno.SDK.Infrastructure.Market;
 
+/// <summary>
+/// Provides extension methods for registering Luno SDK services in a Dependency Injection container.
+/// </summary>
 public static class LunoMarketServiceExtensions
 {
     /// <summary>
-    /// Adds the Luno SDK to the service collection with high-energy modern defaults! 💅✨
+    /// Adds the Luno SDK client and related services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="configureOptions">An optional delegate to configure the <see cref="LunoClientOptions"/>.</param>
+    /// <returns>An <see cref="IHttpClientBuilder"/> that can be used to further configure the HTTP client.</returns>
     public static IHttpClientBuilder AddLunoClient(this IServiceCollection services, Action<LunoClientOptions>? configureOptions = null)
     {
         var options = new LunoClientOptions();

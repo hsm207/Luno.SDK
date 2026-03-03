@@ -1,18 +1,18 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Abstractions.Authentication;
-using Luno.SDK.Core.Market; // Updated! 🤌
+using Luno.SDK.Core.Market;
 using Luno.SDK.Infrastructure.Telemetry;
 using Luno.SDK.Infrastructure.Generated;
 
 namespace Luno.SDK;
 
+/// <summary>
+/// Provides a concrete implementation of the <see cref="ILunoMarketClient"/> interface using the Kiota-generated API client.
+/// </summary>
 public class LunoMarketClient : ILunoMarketClient, IDisposable
 {
     private readonly HttpClient _httpClient;
@@ -36,6 +36,11 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
         [property: JsonPropertyName("timestamp")] long? Timestamp
     );
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LunoMarketClient"/> class.
+    /// </summary>
+    /// <param name="options">Optional client configuration options.</param>
+    /// <param name="httpClient">Optional existing HTTP client to use for requests.</param>
     public LunoMarketClient(LunoClientOptions? options = null, HttpClient? httpClient = null)
     {
         options ??= new LunoClientOptions();
@@ -74,6 +79,7 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
         _apiClient = new LunoApiClient(adapter);
     }
 
+    /// <inheritdoc />
     public async IAsyncEnumerable<Ticker> GetTickersAsync(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {
@@ -81,11 +87,11 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
         using var activity = _telemetry.ActivitySource.StartActivity(operation);
         
         var stopwatch = Stopwatch.StartNew();
-        _logger.LogDebug("Fetching tickers via FULL KIOTA 🤖✨...");
+        _logger.LogDebug("Fetching market tickers via Kiota client.");
 
         var requestBuilder = _apiVersion switch {
             "1" => _apiClient.Api.One.Tickers,
-            _ => throw new NotSupportedException($"API Version {_apiVersion} is not yet supported. 😴")
+            _ => throw new NotSupportedException($"API version {_apiVersion} is not supported by this client version.")
         };
 
         Luno.SDK.Infrastructure.Generated.Models.ListTickersResponse? response = null;
@@ -97,7 +103,7 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
         catch (Exception ex)
         {
             _telemetry.RecordRequest(operation, "Error");
-            _logger.LogError(ex, "Major Yikes! 💀 Failed to fetch tickers via Kiota.");
+            _logger.LogError(ex, "Failed to fetch market tickers from the API.");
             throw;
         }
         finally
@@ -109,11 +115,13 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
 
         foreach (var dto in response.Tickers)
         {
-            // Fully qualify the mapper call! 🤌✨
             yield return Luno.SDK.Infrastructure.Market.LunoMapper.MapToEntity(dto);
         }
     }
 
+    /// <summary>
+    /// Disposes the underlying HTTP client and telemetry resources if they were owned by this instance.
+    /// </summary>
     public void Dispose()
     {
         if (_disposeClient)

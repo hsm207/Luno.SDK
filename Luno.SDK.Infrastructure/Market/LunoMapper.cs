@@ -1,16 +1,19 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using System.Globalization;
 using System.Text.Json;
-using Luno.SDK.Core.Market; // Updated namespace! 🤌✨
+using Luno.SDK.Core.Market;
 using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;
 
 namespace Luno.SDK.Infrastructure.Market;
 
+/// <summary>
+/// Provides mapping functionality to convert between generated DTOs and domain entities.
+/// </summary>
 internal static class LunoMapper
 {
+    /// <summary>
+    /// Maps a generated ticker DTO to a domain entity.
+    /// </summary>
     public static Ticker MapToEntity(GeneratedTicker dto) => new(
         dto.Pair ?? string.Empty,
         ParseDecimal(dto.Ask),
@@ -21,6 +24,9 @@ internal static class LunoMapper
         DateTimeOffset.FromUnixTimeMilliseconds(GetTimestamp(dto))
     );
 
+    /// <summary>
+    /// Maps raw string values to a domain entity.
+    /// </summary>
     public static Ticker MapFromRaw(string pair, string? ask, string? bid, string? last, string? vol, string? status, long timestamp) => new(
         pair,
         ParseDecimal(ask),
@@ -44,6 +50,9 @@ internal static class LunoMapper
     private static decimal ParseDecimal(string? value) => 
         decimal.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0m;
 
+    /// <summary>
+    /// Maps the generated ticker status to the domain status enum.
+    /// </summary>
     public static MarketStatus MapStatus(GeneratedStatus? status) => status switch
     {
         GeneratedStatus.ACTIVE => MarketStatus.Active,
@@ -52,6 +61,9 @@ internal static class LunoMapper
         _ => MarketStatus.Unknown
     };
 
+    /// <summary>
+    /// Maps a string status value to the domain status enum.
+    /// </summary>
     public static MarketStatus MapStatus(string? status) => status switch
     {
         "ACTIVE" => MarketStatus.Active,
