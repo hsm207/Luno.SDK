@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "microsoft-learn": {
+      "httpUrl": "https://learn.microsoft.com/api/mcp"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium",
+        "--isolated"
+      ]
+    }
+  }
+}

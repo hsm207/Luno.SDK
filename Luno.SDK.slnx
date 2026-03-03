@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Luno.SDK.Application/Luno.SDK.Application.csproj" />
+  <Project Path="Luno.SDK.Cli/Luno.SDK.Cli.csproj" />
+  <Project Path="Luno.SDK.Core/Luno.SDK.Core.csproj" />
+  <Project Path="Luno.SDK.Infrastructure.Generated/Luno.SDK.Infrastructure.Generated.csproj" />
+  <Project Path="Luno.SDK.Infrastructure/Luno.SDK.Infrastructure.csproj" />
+  <Project Path="Luno.SDK.Tests.Unit/Luno.SDK.Tests.Unit.csproj" />
+  <Project Path="Luno.SDK.Tests.Integration/Luno.SDK.Tests.Integration.csproj" />
+</Solution>

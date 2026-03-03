@@ -1,0 +1,11 @@
+[Bb]in/
+[Oo]bj/
+TestResults/
+.tools/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+docs/luno_api_spec_engine.json
