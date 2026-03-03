@@ -1,6 +1,3 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using System.Net;
 using Luno.SDK;
 using Luno.SDK.Application.Market;
@@ -12,7 +9,7 @@ namespace Luno.SDK.Tests.Unit;
 
 public class GetMarketHeartbeatTests
 {
-    [Fact(DisplayName = "GetMarketHeartbeatHandler should orchestrate the REAL stack perfectly! 🧠⚡")]
+    [Fact(DisplayName = "GetMarketHeartbeatHandler should correctly orchestrate the client and map entities to responses")]
     public async Task HandleAsync_ShouldMapRealEntitiesToResponses()
     {
         // Arrange
@@ -29,7 +26,7 @@ public class GetMarketHeartbeatTests
 
         using var httpClient = new HttpClient(handlerMock.Object) { BaseAddress = new Uri("https://api.luno.com") };
         
-        // Use the REAL implementation! 🤌✨
+        // Use the real implementation for verification
         using var luno = new LunoClient(httpClient: httpClient);
         var handler = new GetMarketHeartbeatHandler(luno);
 
@@ -44,6 +41,6 @@ public class GetMarketHeartbeatTests
         var result = Assert.Single(responses);
         Assert.Equal("ETHXBT", result.Pair);
         Assert.Equal(0.035m, result.Price);
-        Assert.Equal(0.01m, result.Spread); // Verifies C# 14 property logic! 🤌✨
+        Assert.Equal(0.01m, result.Spread);
     }
 }
