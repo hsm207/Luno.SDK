@@ -1,8 +1,5 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
-using Luno.SDK.Core.Market; // Updated! 🤌
-using Luno.SDK.Infrastructure.Market; // Updated! 🤌
+using Luno.SDK.Core.Market;
+using Luno.SDK.Infrastructure.Market;
 using CoreTicker = Luno.SDK.Core.Market.Ticker;
 using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;
@@ -12,7 +9,7 @@ namespace Luno.SDK.Tests.Integration;
 
 public class LunoMapperTests
 {
-    [Fact(DisplayName = "LunoMapper should handle valid generated tickers perfectly! 🤖🤌")]
+    [Fact(DisplayName = "LunoMapper should correctly map a valid generated ticker to the domain entity")]
     public void MapToEntity_WithValidGeneratedTicker_ShouldReturnMappedEntity()
     {
         // Arrange
@@ -37,7 +34,7 @@ public class LunoMapperTests
         Assert.Equal(MarketStatus.Active, result.Status);
     }
 
-    [Theory(DisplayName = "LunoMapper should map all generated statuses correctly 🗺️🤌")]
+    [Theory(DisplayName = "LunoMapper should map all generated ticker statuses to domain equivalents")]
     [InlineData(GeneratedStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedStatus.POSTONLY, MarketStatus.PostOnly)]
     [InlineData(GeneratedStatus.DISABLED, MarketStatus.Disabled)]

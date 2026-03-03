@@ -1,16 +1,13 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using Microsoft.Extensions.DependencyInjection;
 using Luno.SDK;
-using Luno.SDK.Infrastructure.Market; // Updated! 🤌
+using Luno.SDK.Infrastructure.Market;
 using Xunit;
 
 namespace Luno.SDK.Tests.Integration;
 
 public class DependencyInjectionTests
 {
-    [Fact(DisplayName = "AddLunoClient should register ILunoClient and resolve high-energy sub-clients! 🏛️💎")]
+    [Fact(DisplayName = "AddLunoClient should register ILunoClient and resolve all required services")]
     public void AddLunoClient_ShouldRegisterServices()
     {
         // Arrange

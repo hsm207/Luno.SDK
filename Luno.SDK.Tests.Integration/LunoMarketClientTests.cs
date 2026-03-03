@@ -1,6 +1,3 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using System.Net;
 using Luno.SDK;
 using Luno.SDK.Core.Market;
@@ -12,7 +9,7 @@ namespace Luno.SDK.Tests.Integration;
 
 public class LunoMarketClientTests
 {
-    [Fact(DisplayName = "GetTickersAsync should parse raw Luno JSON into human-soul entities 🏛️💎")]
+    [Fact(DisplayName = "GetTickersAsync should correctly parse and map raw JSON response to domain entities")]
     public async Task GetTickersAsync_WithValidJson_ShouldReturnMappedEntities()
     {
         // Arrange
