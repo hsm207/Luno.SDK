@@ -83,7 +83,10 @@ public class LunoMarketClient : ILunoMarketClient
             _telemetry.RecordDuration(stopwatch.Elapsed.TotalMilliseconds, operation);
         }
 
-        if (response?.Tickers is null) yield break;
+        if (response?.Tickers is null)
+        {
+            throw new InvalidOperationException("API returned a successful response but the ticker list was missing or null.");
+        }
 
         foreach (var dto in response.Tickers)
         {
