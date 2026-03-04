@@ -42,5 +42,7 @@ public class GetMarketHeartbeatTests
         Assert.Equal("ETHXBT", result.Pair);
         Assert.Equal(0.035m, result.Price);
         Assert.Equal(0.01m, result.Spread);
+        Assert.True(result.IsActive);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1772555388322L), result.Timestamp);
     }
 }
