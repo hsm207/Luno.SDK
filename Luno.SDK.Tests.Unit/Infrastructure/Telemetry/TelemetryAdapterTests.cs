@@ -6,7 +6,7 @@ using Moq;
 using Luno.SDK.Infrastructure.Telemetry;
 using Xunit;
 
-namespace Luno.SDK.Tests.Unit;
+namespace Luno.SDK.Tests.Unit.Infrastructure.Telemetry;
 
 public class TelemetryAdapterTests
 {

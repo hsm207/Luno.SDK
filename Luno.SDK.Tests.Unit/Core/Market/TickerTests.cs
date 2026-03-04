@@ -1,7 +1,7 @@
 using Luno.SDK.Core.Market;
 using Xunit;
 
-namespace Luno.SDK.Tests.Unit;
+namespace Luno.SDK.Tests.Unit.Core.Market;
 
 public class TickerTests
 {
