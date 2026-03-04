@@ -1,37 +1,39 @@
-# Luno.SDK 🏛️💎
+# Luno.SDK
 
-A high-performance .NET 10 SDK for Luno, built with Clean Architecture and Kiota.
+A modern .NET 10 SDK for the Luno API, built with Clean Architecture principles and the Microsoft Kiota toolchain.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```csharp
 using Luno.SDK;
 
-using var luno = new LunoClient();
+// Initialize the standalone client
+var luno = new LunoClient();
 
-await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())
+// Stream market tickers asynchronously
+await foreach (var ticker in luno.GetTickersAsync())
 {
-    Console.WriteLine($"{heartbeat.Pair}: {heartbeat.Price}");
+    Console.WriteLine($"{ticker.Pair}: {ticker.Price}");
 }
 ```
 
-## 📖 Executable Documentation
+## Demonstration Gallery
 
-Run the sample gallery to see the SDK in action:
+The project includes a CLI application demonstrating various integration patterns:
 
 ```bash
 cd Luno.SDK.Cli
 dotnet run
 ```
 
-## 🤖 Maintenance & Generation
+## Maintenance and Generation
 
-This SDK uses an automated pipeline to keep the infrastructure spec-compliant without manual maintenance. If the Luno API changes or a new version is released:
+This SDK utilizes an automated generation pipeline to ensure compliance with the Luno OpenAPI specification. If the specification is updated:
 
-1.  **Update the Bible**: Replace `docs/luno_api_spec.json` with the latest version.
-2.  **Run the Engine**: Execute `./generate-sdk.sh`. This script uses `patch-spec.js` to automatically fix Luno's quirky types (`int64`, `decimal`) before generating the Kiota client.
-3.  **No Manual Mud**: Never edit files in the `Infrastructure.Generated` project directly!
+1.  **Update Specification**: Download the latest `openapi.json` from the [Luno API Portal](https://www.luno.com/en/developers/api) and replace `docs/luno_api_spec.json`.
+2.  **Generate Client**: Execute `./scripts/generate-sdk.sh`. This script automatically applies necessary type corrections before generating the Kiota client.
+3.  **Code Preservation**: Do not manually modify files in the `Luno.SDK.Infrastructure.Generated` project.
 
-## 📜 License
+## License
 
-Apache-2.0
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.

@@ -1,25 +1,25 @@
-// Copyright 2026 Google LLC
-// Licensed under the Apache License, Version 2.0
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Luno.SDK;
 
 /// <summary>
-/// Configuration options for the Luno SDK. 🏛️💎
+/// Provides configuration options for the Luno SDK client.
 /// </summary>
 public class LunoClientOptions
 {
+    /// <summary>
+    /// Gets or sets the base URL for the Luno API. Defaults to "https://api.luno.com".
+    /// </summary>
     public string BaseUrl { get; set; } = "https://api.luno.com";
     
-    public string UserAgent { get; set; } = "Luno.SDK/1.0.0 (.NET 10; Pristine)";
+    /// <summary>
+    /// Gets or sets the User-Agent string sent with each request.
+    /// </summary>
+    public string UserAgent { get; set; } = "Luno.SDK/1.0.0 (.NET 10)";
 
     /// <summary>
-    /// The API version to target. Default is "1". 💅✨
-    /// Change this to "2" next year without breaking your code! 🚀
+    /// Gets or sets the logger factory used to create loggers for the SDK.
     /// </summary>
-    public string ApiVersion { get; set; } = "1";
-    
     public ILoggerFactory LoggerFactory { get; set; } = NullLoggerFactory.Instance;
 }

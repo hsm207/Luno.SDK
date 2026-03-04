@@ -9,3 +9,6 @@ TestResults/
 *.userosscache
 *.sln.docstates
 docs/luno_api_spec_engine.json
+session.md
+.gemini/GEMINI.md
+*.log
