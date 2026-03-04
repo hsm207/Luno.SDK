@@ -15,8 +15,9 @@ public static class Concept01_MarketHeartbeat
     {
         Console.WriteLine("--- Demonstration: Market Heartbeat ---");
         
-        // 1. Initialize the client in standalone mode
-        using var luno = new LunoClient();
+        // 1. Initialize the client with an HttpClient
+        using var httpClient = new HttpClient { BaseAddress = new Uri("https://api.luno.com") };
+        var luno = new LunoClient(httpClient);
 
         // 2. Use the fluent extension to stream market tickers
         await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())

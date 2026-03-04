@@ -37,7 +37,7 @@ public class LunoMarketClientTests
             BaseAddress = new Uri("https://api.luno.com")
         };
 
-        using var client = new LunoMarketClient(new LunoClientOptions { BaseUrl = "https://api.luno.com" }, httpClient);
+        var client = new LunoMarketClient(new LunoClientOptions { BaseUrl = "https://api.luno.com" }, httpClient);
 
         // Act
         var tickers = new List<Ticker>();

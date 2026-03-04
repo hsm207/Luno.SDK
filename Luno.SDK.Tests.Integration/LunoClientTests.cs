@@ -5,25 +5,18 @@ namespace Luno.SDK.Tests.Integration;
 
 public class LunoClientTests
 {
-    [Fact(DisplayName = "LunoClient should initialize with correct default configuration")]
-    public void Constructor_ShouldInitializeWithDefaults()
+    [Fact(DisplayName = "LunoClient should initialize with correct configuration")]
+    public void Constructor_ShouldInitialize()
     {
-        // Arrange & Act
-        using var client = new LunoClient();
+        // Arrange
+        using var httpClient = new HttpClient();
+
+        // Act
+        var client = new LunoClient(httpClient);
 
         // Assert
         Assert.NotNull(client.Market);
         var marketClient = client.GetMarketClient();
         Assert.NotNull(marketClient);
-    }
-
-    [Fact(DisplayName = "LunoClient should dispose internal resources without throwing exceptions")]
-    public void Dispose_ShouldNotThrow()
-    {
-        // Arrange
-        var client = new LunoClient();
-
-        // Act & Assert
-        client.Dispose(); // Should not throw
     }
 }

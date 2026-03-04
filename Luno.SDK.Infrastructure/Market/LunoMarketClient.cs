@@ -13,53 +13,26 @@ namespace Luno.SDK;
 /// <summary>
 /// Provides a concrete implementation of the <see cref="ILunoMarketClient"/> interface using the Kiota-generated API client.
 /// </summary>
-public class LunoMarketClient : ILunoMarketClient, IDisposable
+public class LunoMarketClient : ILunoMarketClient
 {
     private readonly HttpClient _httpClient;
     private readonly LunoTelemetry _telemetry;
     private readonly ILogger _logger;
-    private readonly bool _disposeClient;
     private readonly LunoApiClient _apiClient;
     private readonly string _apiVersion;
-
-    private record RawTickersResponse(
-        [property: JsonPropertyName("tickers")] IEnumerable<RawTickerDto> Tickers
-    );
-
-    private record RawTickerDto(
-        [property: JsonPropertyName("pair")] string? Pair,
-        [property: JsonPropertyName("ask")] string? Ask,
-        [property: JsonPropertyName("bid")] string? Bid,
-        [property: JsonPropertyName("last_trade")] string? LastTrade,
-        [property: JsonPropertyName("rolling_24_hour_volume")] string? Rolling24HourVolume,
-        [property: JsonPropertyName("status")] string? Status,
-        [property: JsonPropertyName("timestamp")] long? Timestamp
-    );
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoMarketClient"/> class.
     /// </summary>
     /// <param name="options">Optional client configuration options.</param>
-    /// <param name="httpClient">Optional existing HTTP client to use for requests.</param>
-    public LunoMarketClient(LunoClientOptions? options = null, HttpClient? httpClient = null)
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    public LunoMarketClient(LunoClientOptions? options, HttpClient httpClient)
     {
         options ??= new LunoClientOptions();
         _apiVersion = options.ApiVersion;
         _logger = options.LoggerFactory.CreateLogger<LunoMarketClient>();
         _telemetry = new LunoTelemetry();
-        
-        if (httpClient != null)
-        {
-            _httpClient = httpClient;
-            _disposeClient = false;
-        }
-        else
-        {
-            var handler = new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) };
-            _httpClient = new HttpClient(handler) { BaseAddress = new Uri(options.BaseUrl) };
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
-            _disposeClient = true;
-        }
+        _httpClient = httpClient;
 
         var auth = new AnonymousAuthenticationProvider();
         var adapter = new HttpClientRequestAdapter(auth, httpClient: _httpClient);
@@ -72,7 +45,6 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
         _telemetry = telemetry;
         _logger = logger;
         _apiVersion = apiVersion;
-        _disposeClient = false;
 
         var auth = new AnonymousAuthenticationProvider();
         var adapter = new HttpClientRequestAdapter(auth, httpClient: _httpClient);
@@ -117,18 +89,5 @@ public class LunoMarketClient : ILunoMarketClient, IDisposable
         {
             yield return Luno.SDK.Infrastructure.Market.LunoMapper.MapToEntity(dto);
         }
-    }
-
-    /// <summary>
-    /// Disposes the underlying HTTP client and telemetry resources if they were owned by this instance.
-    /// </summary>
-    public void Dispose()
-    {
-        if (_disposeClient)
-        {
-            _httpClient.Dispose();
-            _telemetry.Dispose();
-        }
-        GC.SuppressFinalize(this);
     }
 }

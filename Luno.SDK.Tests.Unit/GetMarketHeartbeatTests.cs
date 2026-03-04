@@ -27,7 +27,7 @@ public class GetMarketHeartbeatTests
         using var httpClient = new HttpClient(handlerMock.Object) { BaseAddress = new Uri("https://api.luno.com") };
         
         // Use the real implementation for verification
-        using var luno = new LunoClient(httpClient: httpClient);
+        var luno = new LunoClient(httpClient: httpClient);
         var handler = new GetMarketHeartbeatHandler(luno);
 
         // Act
