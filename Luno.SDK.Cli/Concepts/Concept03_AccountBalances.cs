@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Luno.SDK;
 
 namespace Luno.SDK.Cli.Concepts;
@@ -10,17 +11,29 @@ public static class Concept03_AccountBalances
     {
         Console.WriteLine("\n=== Concept 03: Account Balances (Private API) ===");
 
-        // Note: For this demonstration to actually hit Luno's private API, you would need
-        // valid API keys. We simulate what happens if you provide keys (or leave them blank).
+        // Try to load credentials from User Secrets first
+        var config = new ConfigurationBuilder()
+            .AddUserSecrets<Program>()
+            .Build();
 
-        Console.WriteLine("Enter your API Key ID (or press enter to skip and see the fail-fast behavior): ");
-        var keyId = Console.ReadLine();
+        string? keyId = config["Luno:ApiKeyId"];
+        string? keySecret = config["Luno:ApiKeySecret"];
 
-        string? keySecret = null;
-        if (!string.IsNullOrWhiteSpace(keyId))
+        if (string.IsNullOrWhiteSpace(keyId))
         {
-            Console.WriteLine("Enter your API Key Secret: ");
-            keySecret = Console.ReadLine();
+            Console.WriteLine("No credentials found in User Secrets.");
+            Console.WriteLine("Enter your API Key ID (or press enter to skip and see the fail-fast behavior): ");
+            keyId = Console.ReadLine();
+
+            if (!string.IsNullOrWhiteSpace(keyId))
+            {
+                Console.WriteLine("Enter your API Key Secret: ");
+                keySecret = Console.ReadLine();
+            }
+        }
+        else
+        {
+            Console.WriteLine("Loaded API credentials from User Secrets! 💅");
         }
 
         var options = new LunoClientOptions
@@ -34,7 +47,8 @@ public static class Concept03_AccountBalances
         try
         {
             Console.WriteLine("Fetching balances...");
-            var balances = await client.Accounts.GetBalancesAsync();
+            // Use the application-layer extension method directly on the client!
+            var balances = await client.GetBalancesAsync();
 
             Console.WriteLine($"Successfully retrieved {balances.Count} balances:");
             foreach (var balance in balances)
