@@ -1,6 +1,6 @@
 # Luno.SDK
 
-A modern, enterprise-grade .NET 10 SDK for the Luno API, built with Clean Architecture principles and the Microsoft Kiota toolchain.
+A modern .NET 10 SDK for the Luno API, built with Clean Architecture principles and the Microsoft Kiota toolchain.
 
 ## Quick Start
 
