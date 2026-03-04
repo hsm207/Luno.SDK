@@ -41,6 +41,17 @@ public class LunoMapperTests
         Assert.True(result.IsActive);
     }
 
+    [Fact(DisplayName = "MapToEntity should throw InvalidOperationException when Pair is null")]
+    public void MapToEntity_WithNullPair_ShouldThrowException()
+    {
+        // Arrange
+        var dto = new GeneratedTicker { Pair = null };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => LunoMapper.MapToEntity(dto));
+        Assert.Equal("API returned a ticker without a valid market pair identifier.", exception.Message);
+    }
+
     [Theory(DisplayName = "LunoMapper should map all generated ticker statuses to domain equivalents")]
     [InlineData(GeneratedStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedStatus.POSTONLY, MarketStatus.PostOnly)]

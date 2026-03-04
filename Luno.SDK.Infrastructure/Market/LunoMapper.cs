@@ -14,8 +14,9 @@ internal static class LunoMapper
     /// <summary>
     /// Maps a generated ticker DTO to a domain entity.
     /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the ticker DTO is missing required data.</exception>
     public static Ticker MapToEntity(GeneratedTicker dto) => new(
-        dto.Pair ?? string.Empty,
+        dto.Pair ?? throw new InvalidOperationException("API returned a ticker without a valid market pair identifier."),
         ParseDecimal(dto.Ask),
         ParseDecimal(dto.Bid),
         ParseDecimal(dto.LastTrade),
