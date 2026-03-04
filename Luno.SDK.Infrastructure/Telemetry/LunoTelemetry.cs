@@ -6,18 +6,8 @@ namespace Luno.SDK.Infrastructure.Telemetry;
 /// <summary>
 /// Provides unified telemetry for the Luno SDK using OpenTelemetry standards for tracing and metrics.
 /// </summary>
-public sealed class LunoTelemetry : IDisposable
+internal class LunoTelemetry : ILunoTelemetry, IDisposable
 {
-    /// <summary>
-    /// The name of the instrumentation source.
-    /// </summary>
-    public const string Name = "Luno.SDK";
-
-    /// <summary>
-    /// The version of the instrumentation source.
-    /// </summary>
-    public const string Version = "1.0.0";
-
     /// <summary>
     /// Gets the <see cref="ActivitySource"/> for tracing SDK operations.
     /// </summary>
@@ -36,8 +26,8 @@ public sealed class LunoTelemetry : IDisposable
     /// </summary>
     public LunoTelemetry()
     {
-        ActivitySource = new ActivitySource(Name, Version);
-        Meter = new Meter(Name, Version);
+        ActivitySource = new ActivitySource(LunoInstrumentation.Name, LunoInstrumentation.Version);
+        Meter = new Meter(LunoInstrumentation.Name, LunoInstrumentation.Version);
 
         _requestCounter = Meter.CreateCounter<long>(
             "luno.sdk.requests", 
@@ -55,7 +45,7 @@ public sealed class LunoTelemetry : IDisposable
     /// </summary>
     /// <param name="operation">The name of the operation (e.g., GetTickers).</param>
     /// <param name="status">The result status (e.g., Success, Error).</param>
-    public void RecordRequest(string operation, string status)
+    public virtual void RecordRequest(string operation, string status)
     {
         _requestCounter.Add(1, 
             new KeyValuePair<string, object?>("luno.operation", operation),
@@ -67,7 +57,7 @@ public sealed class LunoTelemetry : IDisposable
     /// </summary>
     /// <param name="duration">The duration in milliseconds.</param>
     /// <param name="operation">The name of the operation.</param>
-    public void RecordDuration(double duration, string operation)
+    public virtual void RecordDuration(double duration, string operation)
     {
         _durationHistogram.Record(duration, 
             new KeyValuePair<string, object?>("luno.operation", operation));
