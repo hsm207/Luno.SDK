@@ -1,37 +1,35 @@
-using Luno.SDK.Application.Market;
-using Luno.SDK.Core.Market;
 using Moq;
-using Xunit;
+using Luno.SDK.Core.Market;
+using Luno.SDK.Application.Market;
 
 namespace Luno.SDK.Tests.Unit;
 
 public class TickerExtensionTests
 {
-    [Fact(DisplayName = "ListTickersAsync should delegate call to specialized market client via handler")]
-    public async Task ListTickersAsync_ShouldDelegateToMarketClient()
+    [Fact(DisplayName = "GetTickersAsync should delegate call to specialized market client via handler")]
+    public async Task GetTickersAsync_ShouldDelegateToMarketClient()
     {
         // Arrange
-        var clientMock = new Mock<ILunoClient>();
+        var tickers = new List<Ticker>
+        {
+            new("XBTZAR", 1000000m, 990000m, 995000m, 50.5m, MarketStatus.Active, DateTimeOffset.UtcNow)
+        };
+
         var marketClientMock = new Mock<ILunoMarketClient>();
-        
-        clientMock.Setup(c => c.Market).Returns(marketClientMock.Object);
-        
-        var ticker = new Ticker("XBTZAR", 1000100m, 1000000m, 1000050m, 500m, MarketStatus.Active, DateTimeOffset.UtcNow);
-        
-        marketClientMock
-            .Setup(m => m.GetTickersAsync(It.IsAny<CancellationToken>()))
-            .Returns(new[] { ticker }.ToAsyncEnumerable());
+        marketClientMock.Setup(x => x.GetTickersAsync(It.IsAny<CancellationToken>()))
+            .Returns(tickers.ToAsyncEnumerable());
+
+        var clientMock = new Mock<ILunoClient>();
+        clientMock.Setup(x => x.Market).Returns(marketClientMock.Object);
 
         // Act
-        var results = new List<TickerResponse>();
-        await foreach (var response in clientMock.Object.ListTickersAsync())
+        await foreach (var response in clientMock.Object.GetTickersAsync())
         {
-            results.Add(response);
+            // Assert
+            Assert.Equal("XBTZAR", response.Pair);
+            Assert.Equal(995000m, response.Price);
         }
 
-        // Assert
-        var result = Assert.Single(results);
-        Assert.Equal("XBTZAR", result.Pair);
-        marketClientMock.Verify(m => m.GetTickersAsync(It.IsAny<CancellationToken>()), Times.Once);
+        marketClientMock.Verify(x => x.GetTickersAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

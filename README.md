@@ -11,9 +11,9 @@ using Luno.SDK;
 using var luno = new LunoClient();
 
 // Stream market tickers asynchronously
-await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())
+await foreach (var ticker in luno.GetTickersAsync())
 {
-    Console.WriteLine($"{heartbeat.Pair}: {heartbeat.Price}");
+    Console.WriteLine($"{ticker.Pair}: {ticker.Price}");
 }
 ```
 
