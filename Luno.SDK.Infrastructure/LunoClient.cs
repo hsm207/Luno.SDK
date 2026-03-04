@@ -42,7 +42,7 @@ public class LunoClient : ILunoClient
         _options = options ?? new LunoClientOptions();
         _telemetry = new LunoTelemetry();
         
-        // Setup the high-fidelity request adapter with telemetry decoration
+        // Setup the request adapter with telemetry decoration
         var auth = new AnonymousAuthenticationProvider();
         var baseAdapter = new HttpClientRequestAdapter(auth, httpClient: httpClient);
         var decoratedAdapter = new LunoTelemetryAdapter(baseAdapter, _telemetry, _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
