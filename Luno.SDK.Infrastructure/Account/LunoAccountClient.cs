@@ -9,19 +9,10 @@ namespace Luno.SDK.Infrastructure.Account;
 /// Provides a concrete implementation of the <see cref="ILunoAccountClient"/> interface
 /// using the generated Kiota client.
 /// </summary>
-public class LunoAccountClient : ILunoAccountClient
+/// <param name="requestAdapter">The decorated request adapter pipeline.</param>
+internal class LunoAccountClient(IRequestAdapter requestAdapter) : ILunoAccountClient
 {
-    private readonly Luno.SDK.Infrastructure.Generated.LunoApiClient _apiClient;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LunoAccountClient"/> class.
-    /// </summary>
-    /// <param name="requestAdapter">The decorated request adapter pipeline.</param>
-    public LunoAccountClient(IRequestAdapter requestAdapter)
-    {
-        if (requestAdapter == null) throw new ArgumentNullException(nameof(requestAdapter));
-        _apiClient = new Luno.SDK.Infrastructure.Generated.LunoApiClient(requestAdapter);
-    }
+    private readonly Luno.SDK.Infrastructure.Generated.LunoApiClient _apiClient = new(requestAdapter ?? throw new ArgumentNullException(nameof(requestAdapter)));
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<Balance>> GetBalancesAsync(CancellationToken cancellationToken = default)
