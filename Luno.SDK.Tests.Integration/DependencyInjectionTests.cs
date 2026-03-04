@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Luno.SDK;
-using Luno.SDK.Infrastructure.Market;
 using Xunit;
 
 namespace Luno.SDK.Tests.Integration;

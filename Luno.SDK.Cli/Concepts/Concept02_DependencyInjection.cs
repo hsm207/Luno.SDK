@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Luno.SDK;
-using Luno.SDK.Infrastructure.Market;
 
 namespace Luno.SDK.Cli.Concepts;
 

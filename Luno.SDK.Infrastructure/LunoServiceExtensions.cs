@@ -1,12 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
-using Luno.SDK;
 
-namespace Luno.SDK.Infrastructure.Market;
+namespace Luno.SDK;
 
 /// <summary>
 /// Provides extension methods for registering Luno SDK services in a Dependency Injection container.
 /// </summary>
-public static class LunoMarketServiceExtensions
+public static class LunoServiceExtensions
 {
     /// <summary>
     /// Adds the Luno SDK client and related services to the specified <see cref="IServiceCollection"/>.
