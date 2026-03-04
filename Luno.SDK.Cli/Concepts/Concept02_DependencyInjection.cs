@@ -20,11 +20,8 @@ public static class Concept02_DependencyInjection
         // 1. Setup the Service Collection (Composition Root)
         var services = new ServiceCollection();
 
-        // 2. Add the Luno Client with custom options
-        services.AddLunoClient(options =>
-        {
-            options.ApiVersion = "1";
-        });
+        // 2. Add the Luno Client with default options
+        services.AddLunoClient();
 
         // 3. Build the provider
         var serviceProvider = services.BuildServiceProvider();

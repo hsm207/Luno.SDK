@@ -14,10 +14,7 @@ public class DependencyInjectionTests
         var services = new ServiceCollection();
 
         // Act
-        services.AddLunoClient(options =>
-        {
-            options.ApiVersion = "1";
-        });
+        services.AddLunoClient();
         var provider = services.BuildServiceProvider();
         var client = provider.GetService<ILunoClient>();
 

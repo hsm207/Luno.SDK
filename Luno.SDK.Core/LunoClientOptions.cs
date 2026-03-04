@@ -19,11 +19,6 @@ public class LunoClientOptions
     public string UserAgent { get; set; } = "Luno.SDK/1.0.0 (.NET 10)";
 
     /// <summary>
-    /// Gets or sets the API version to target. Defaults to "1".
-    /// </summary>
-    public string ApiVersion { get; set; } = "1";
-    
-    /// <summary>
     /// Gets or sets the logger factory used to create loggers for the SDK.
     /// </summary>
     public ILoggerFactory LoggerFactory { get; set; } = NullLoggerFactory.Instance;
