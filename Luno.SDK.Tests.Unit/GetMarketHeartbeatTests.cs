@@ -1,5 +1,6 @@
 using System.Net;
 using Luno.SDK;
+using Luno.SDK.Core.Market;
 using Luno.SDK.Application.Market;
 using Moq;
 using Moq.Protected;
@@ -13,22 +14,15 @@ public class GetMarketHeartbeatTests
     public async Task HandleAsync_ShouldMapRealEntitiesToResponses()
     {
         // Arrange
-        var handlerMock = new Mock<HttpMessageHandler>();
-        var json = "{\"tickers\":[{\"pair\":\"ETHXBT\",\"timestamp\":1772555388322,\"bid\":\"0.03\",\"ask\":\"0.04\",\"last_trade\":\"0.035\",\"rolling_24_hour_volume\":\"10\",\"status\":\"ACTIVE\"}]}";
+        var marketClientMock = new Mock<ILunoMarketClient>();
+        var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(1772555388322L);
+        var ticker = new Ticker("ETHXBT", 0.04m, 0.03m, 0.035m, 10m, MarketStatus.Active, timestamp);
         
-        handlerMock.Protected()
-           .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-           .ReturnsAsync(new HttpResponseMessage
-           {
-               StatusCode = HttpStatusCode.OK,
-               Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
-           });
+        marketClientMock
+            .Setup(m => m.GetTickersAsync(It.IsAny<CancellationToken>()))
+            .Returns(ToAsyncEnumerable(ticker));
 
-        using var httpClient = new HttpClient(handlerMock.Object) { BaseAddress = new Uri("https://api.luno.com") };
-        
-        // Use the real implementation for verification
-        var luno = new LunoClient(httpClient: httpClient);
-        var handler = new GetMarketHeartbeatHandler(luno);
+        var handler = new GetMarketHeartbeatHandler(marketClientMock.Object);
 
         // Act
         var responses = new List<MarketHeartbeatResponse>();
@@ -43,6 +37,15 @@ public class GetMarketHeartbeatTests
         Assert.Equal(0.035m, result.Price);
         Assert.Equal(0.01m, result.Spread);
         Assert.True(result.IsActive);
-        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1772555388322L), result.Timestamp);
+        Assert.Equal(timestamp, result.Timestamp);
+    }
+
+    private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(params T[] items)
+    {
+        foreach (var item in items)
+        {
+            yield return item;
+            await Task.Yield();
+        }
     }
 }

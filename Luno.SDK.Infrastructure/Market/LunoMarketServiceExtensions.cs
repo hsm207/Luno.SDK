@@ -27,6 +27,8 @@ public static class LunoMarketServiceExtensions
 
         builder.AddStandardResilienceHandler();
 
+        services.AddTransient(sp => sp.GetRequiredService<ILunoClient>().Market);
+
         return builder;
     }
 }

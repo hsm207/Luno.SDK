@@ -17,7 +17,7 @@ public static class LunoMarketExtensions
         this ILunoClient client, 
         CancellationToken ct = default)
     {
-        var handler = new GetMarketHeartbeatHandler(client);
+        var handler = new GetMarketHeartbeatHandler(client.Market);
         return handler.HandleAsync(new GetMarketHeartbeatQuery(), ct);
     }
 }

@@ -27,8 +27,8 @@ public record MarketHeartbeatResponse(
 /// <summary>
 /// Orchestrates the retrieval of market heartbeats from the Luno API.
 /// </summary>
-/// <param name="lunoClient">The Luno client used to fetch raw market data.</param>
-public class GetMarketHeartbeatHandler(ILunoClient lunoClient)
+/// <param name="marketClient">The specialized market client used to fetch raw market data.</param>
+public class GetMarketHeartbeatHandler(ILunoMarketClient marketClient)
 {
     /// <summary>
     /// Handles the market heartbeat query and streams the results.
@@ -40,8 +40,6 @@ public class GetMarketHeartbeatHandler(ILunoClient lunoClient)
         GetMarketHeartbeatQuery query, 
         [EnumeratorCancellation] CancellationToken ct = default)
     {
-        var marketClient = lunoClient.GetMarketClient();
-        
         await foreach (var ticker in marketClient.GetTickersAsync(ct))
         {
             yield return new MarketHeartbeatResponse(
