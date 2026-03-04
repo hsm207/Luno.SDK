@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
+using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Authentication;
 using Luno.SDK.Core.Market;
 using Luno.SDK.Infrastructure.Telemetry;
@@ -53,7 +54,7 @@ internal class LunoMarketClient : ILunoMarketClient
             response = await requestBuilder.GetAsync(cancellationToken: ct);
             _telemetry.RecordRequest(operation, "Success");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is ApiException or HttpRequestException)
         {
             _telemetry.RecordRequest(operation, "Error");
             _logger.LogError(ex, "Failed to fetch market tickers from the API.");
