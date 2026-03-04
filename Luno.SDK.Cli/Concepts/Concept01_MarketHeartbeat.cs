@@ -8,21 +8,23 @@ namespace Luno.SDK.Cli.Concepts;
 public static class Concept01_MarketHeartbeat
 {
     /// <summary>
-    /// Runs the Market Heartbeat demonstration.
+    /// Runs the Market Data demonstration.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task RunAsync()
     {
-        Console.WriteLine("--- Demonstration: Market Heartbeat ---");
-        
-        // 1. Initialize the client using the standalone defaults
+        Console.WriteLine("--- Demonstration: Market Data ---");
+        Console.WriteLine("📡 Fetching latest tickers from Luno...");
+
+        // 1. Initialize the standalone client
         var luno = new LunoClient();
 
-        // 2. Use the fluent extension to stream market tickers
-        await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())
+        // 2. Use the fluent extension to stream tickers
+        // This method automatically maps the raw domain entities to application-layer DTOs.
+        await foreach (var ticker in luno.ListTickersAsync())
         {
-            var statusStr = heartbeat.IsActive ? "ACTIVE" : "DISABLED";
-            Console.WriteLine($"[{heartbeat.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {heartbeat.Pair,-10} | Price: {heartbeat.Price,12:N2}");
+            var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
+            Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");
         }
         
         Console.WriteLine("--- Demonstration Complete ---");

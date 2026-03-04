@@ -32,10 +32,10 @@ public static class Concept02_DependencyInjection
 
         // 5. Use the fluent extension to stream tickers
         int count = 0;
-        await foreach (var heartbeat in luno.GetMarketHeartbeatAsync())
+        await foreach (var ticker in luno.ListTickersAsync())
         {
-            var statusStr = heartbeat.IsActive ? "ACTIVE" : "DISABLED";
-            Console.WriteLine($"[{heartbeat.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {heartbeat.Pair,-10} | Price: {heartbeat.Price,12:N2}");
+            var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
+            Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");
             
             if (++count >= 5) break;
         }
