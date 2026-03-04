@@ -40,7 +40,7 @@ public class GetTickersHandler(ILunoMarketClient marketClient)
         GetTickersQuery query, 
         [EnumeratorCancellation] CancellationToken ct = default)
     {
-        await foreach (var ticker in marketClient.GetTickersAsync(ct))
+        await foreach (var ticker in marketClient.GetTickersAsync(ct).WithCancellation(ct))
         {
             yield return new TickerResponse(
                 ticker.Pair,
