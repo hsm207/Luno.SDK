@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
+using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Authentication;
 using Luno.SDK.Infrastructure.Telemetry;
 
@@ -14,7 +15,8 @@ public class LunoClient : ILunoClient
     private static readonly HttpClient SharedHttpClient = CreateDefaultHttpClient();
 
     private readonly LunoClientOptions _options;
-    private readonly LunoTelemetry _telemetry;
+    private readonly ILunoTelemetry _telemetry;
+    private readonly IRequestAdapter _requestAdapter;
     private readonly Lazy<ILunoMarketClient> _market;
 
     /// <inheritdoc />
@@ -40,15 +42,21 @@ public class LunoClient : ILunoClient
     public LunoClient(HttpClient httpClient, LunoClientOptions? options = null)
     {
         _options = options ?? new LunoClientOptions();
-        _telemetry = new LunoTelemetry();
         
-        // Setup the request adapter with telemetry decoration
+        var telemetryImpl = new LunoTelemetry();
+        _telemetry = telemetryImpl;
+        
+        // Setup the centralized request adapter with telemetry decoration
+        // This adapter will be shared across all specialized sub-clients.
         var auth = new AnonymousAuthenticationProvider();
         var baseAdapter = new HttpClientRequestAdapter(auth, httpClient: httpClient);
-        var decoratedAdapter = new LunoTelemetryAdapter(baseAdapter, _telemetry, _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
+        
+        _requestAdapter = new LunoTelemetryAdapter(
+            baseAdapter, 
+            telemetryImpl, 
+            _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
 
-        _market = new Lazy<ILunoMarketClient>(() => 
-            new LunoMarketClient(decoratedAdapter));
+        _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_requestAdapter));
     }
 
     private static HttpClient CreateDefaultHttpClient()
