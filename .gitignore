@@ -10,3 +10,4 @@ TestResults/
 *.sln.docstates
 docs/luno_api_spec_engine.json
 session.md
+.gemini/GEMINI.md
