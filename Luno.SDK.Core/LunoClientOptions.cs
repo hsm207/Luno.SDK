@@ -22,4 +22,14 @@ public class LunoClientOptions
     /// Gets or sets the logger factory used to create loggers for the SDK.
     /// </summary>
     public ILoggerFactory LoggerFactory { get; set; } = NullLoggerFactory.Instance;
+
+    /// <summary>
+    /// Gets or sets the API Key ID for authenticated requests.
+    /// </summary>
+    public string? ApiKeyId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the API Key Secret for authenticated requests.
+    /// </summary>
+    public string? ApiKeySecret { get; set; }
 }

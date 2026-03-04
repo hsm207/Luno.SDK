@@ -12,6 +12,11 @@ public interface ILunoClient
     ILunoMarketClient Market { get; }
 
     /// <summary>
+    /// Gets the specialized client for account management and balances.
+    /// </summary>
+    Luno.SDK.Core.Account.ILunoAccountClient Accounts { get; }
+
+    /// <summary>
     /// Gets the observability provider for the SDK, including traces and metrics.
     /// </summary>
     ILunoTelemetry Telemetry { get; }
