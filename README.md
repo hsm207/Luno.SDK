@@ -30,8 +30,8 @@ dotnet run
 
 This SDK utilizes an automated generation pipeline to ensure compliance with the Luno OpenAPI specification. If the specification is updated:
 
-1.  **Update Specification**: Replace `docs/luno_api_spec.json` with the latest version.
-2.  **Generate Client**: Execute `./generate-sdk.sh`. This script uses `patch-spec.js` to automatically apply necessary type corrections before generating the Kiota client.
+1.  **Update Specification**: Download the latest `openapi.json` from the [Luno API Portal](https://www.luno.com/en/developers/api) and replace `docs/luno_api_spec.json`.
+2.  **Generate Client**: Execute `./scripts/generate-sdk.sh`. This script automatically applies necessary type corrections before generating the Kiota client.
 3.  **Code Preservation**: Do not manually modify files in the `Luno.SDK.Infrastructure.Generated` project.
 
 ## License
