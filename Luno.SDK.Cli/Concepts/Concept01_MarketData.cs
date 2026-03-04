@@ -5,7 +5,7 @@ namespace Luno.SDK.Cli.Concepts;
 /// <summary>
 /// Provides a demonstration of fetching real-time market tickers using the Luno SDK.
 /// </summary>
-public static class Concept01_MarketHeartbeat
+public static class Concept01_MarketData
 {
     /// <summary>
     /// Runs the Market Data demonstration.

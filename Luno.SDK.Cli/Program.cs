@@ -19,7 +19,7 @@ Console.WriteLine("-------------------------------------------------");
 switch (choice)
 {
     case "1":
-        await Concept01_MarketHeartbeat.RunAsync();
+        await Concept01_MarketData.RunAsync();
         break;
     case "2":
         await Concept02_DependencyInjection.RunAsync();
