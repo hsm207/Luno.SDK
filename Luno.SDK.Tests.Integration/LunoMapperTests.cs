@@ -52,6 +52,17 @@ public class LunoMapperTests
         Assert.Equal("API returned a ticker without a valid market pair identifier.", exception.Message);
     }
 
+    [Fact(DisplayName = "MapToEntity should throw InvalidOperationException when Timestamp is null")]
+    public void MapToEntity_WithNullTimestamp_ShouldThrowException()
+    {
+        // Arrange
+        var dto = new GeneratedTicker { Pair = "XBTZAR", Timestamp = null };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => LunoMapper.MapToEntity(dto));
+        Assert.Equal("API returned a ticker without a valid timestamp.", exception.Message);
+    }
+
     [Theory(DisplayName = "LunoMapper should map all generated ticker statuses to domain equivalents")]
     [InlineData(GeneratedStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedStatus.POSTONLY, MarketStatus.PostOnly)]
