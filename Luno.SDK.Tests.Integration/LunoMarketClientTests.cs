@@ -182,6 +182,33 @@ public class LunoMarketClientTests : IDisposable
         Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));
     }
 
+    [Fact(DisplayName = "Given the Luno API returns a successful response with null tickers, When fetching tickers, Then throw InvalidOperationException.")]
+    public async Task GetTickersAsync_GivenTheLunoApiReturnsASuccessfulResponseWithNullTickers_WhenFetchingTickers_ThenThrowInvalidOperationException()
+    {
+        // Arrange
+        var telemetry = new LunoTelemetry();
+
+        _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    tickers = (object[]?)null
+                }));
+
+        using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
+        var client = CreateClient(httpClient, telemetry);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var _ in client.GetTickersAsync()) { }
+        });
+
+        Assert.Equal("API returned a successful response but the ticker list was missing or null.", exception.Message);
+    }
+
     [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing optional fields, When fetching tickers, Then ensure the Kiota engine handles it AND records a successful operation trace.")]
     public async Task GetTickersAsync_GivenTheLunoApiReturnsQuirkyJsonWithMissingOptionalFields_WhenFetchingTickers_ThenEnsureTheKiotaEngineHandlesItAndRecordsASuccessfulOperationTrace()
     {
