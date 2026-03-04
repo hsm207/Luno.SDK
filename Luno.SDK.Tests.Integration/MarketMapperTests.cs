@@ -7,9 +7,9 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Integration;
 
-public class LunoMapperTests
+public class MarketMapperTests
 {
-    [Fact(DisplayName = "LunoMapper should correctly map a valid generated ticker to the domain entity")]
+    [Fact(DisplayName = "MarketMapper should correctly map a valid generated ticker to the domain entity")]
     public void MapToEntity_WithValidGeneratedTicker_ShouldReturnMappedEntity()
     {
         // Arrange
@@ -25,7 +25,7 @@ public class LunoMapperTests
         };
 
         // Act
-        var result = LunoMapper.MapToEntity(dto);
+        var result = MarketMapper.MapToEntity(dto);
 
         // Assert
         Assert.Equal("XBTZAR", result.Pair);
@@ -48,7 +48,7 @@ public class LunoMapperTests
         var dto = new GeneratedTicker { Pair = null };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => LunoMapper.MapToEntity(dto));
+        var exception = Assert.Throws<InvalidOperationException>(() => MarketMapper.MapToEntity(dto));
         Assert.Equal("API returned a ticker without a valid market pair identifier.", exception.Message);
     }
 
@@ -59,11 +59,11 @@ public class LunoMapperTests
         var dto = new GeneratedTicker { Pair = "XBTZAR", Timestamp = null };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => LunoMapper.MapToEntity(dto));
+        var exception = Assert.Throws<InvalidOperationException>(() => MarketMapper.MapToEntity(dto));
         Assert.Equal("API returned a ticker without a valid timestamp.", exception.Message);
     }
 
-    [Theory(DisplayName = "LunoMapper should map all generated ticker statuses to domain equivalents")]
+    [Theory(DisplayName = "MarketMapper should map all generated ticker statuses to domain equivalents")]
     [InlineData(GeneratedStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedStatus.POSTONLY, MarketStatus.PostOnly)]
     [InlineData(GeneratedStatus.DISABLED, MarketStatus.Disabled)]
@@ -71,7 +71,7 @@ public class LunoMapperTests
     public void MapStatus_ShouldMapCorrectly(GeneratedStatus? status, MarketStatus expected)
     {
         // Act
-        var result = LunoMapper.MapStatus(status);
+        var result = MarketMapper.MapStatus(status);
 
         // Assert
         Assert.Equal(expected, result);

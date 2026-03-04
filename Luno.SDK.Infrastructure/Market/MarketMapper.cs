@@ -9,7 +9,7 @@ namespace Luno.SDK.Infrastructure.Market;
 /// <summary>
 /// Provides mapping functionality to convert between generated DTOs and domain entities.
 /// </summary>
-internal static class LunoMapper
+internal static class MarketMapper
 {
     /// <summary>
     /// Maps a generated ticker DTO to a domain entity.

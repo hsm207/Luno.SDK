@@ -19,7 +19,6 @@ public class LunoMarketClient : ILunoMarketClient
     private readonly LunoTelemetry _telemetry;
     private readonly ILogger _logger;
     private readonly LunoApiClient _apiClient;
-    private readonly string _apiVersion;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoMarketClient"/> class.
@@ -29,7 +28,6 @@ public class LunoMarketClient : ILunoMarketClient
     public LunoMarketClient(LunoClientOptions? options, HttpClient httpClient)
     {
         options ??= new LunoClientOptions();
-        _apiVersion = options.ApiVersion;
         _logger = options.LoggerFactory.CreateLogger<LunoMarketClient>();
         _telemetry = new LunoTelemetry();
         _httpClient = httpClient;
@@ -39,12 +37,11 @@ public class LunoMarketClient : ILunoMarketClient
         _apiClient = new LunoApiClient(adapter);
     }
 
-    internal LunoMarketClient(HttpClient httpClient, LunoTelemetry telemetry, ILogger logger, string apiVersion = "1")
+    internal LunoMarketClient(HttpClient httpClient, LunoTelemetry telemetry, ILogger logger)
     {
         _httpClient = httpClient;
         _telemetry = telemetry;
         _logger = logger;
-        _apiVersion = apiVersion;
 
         var auth = new AnonymousAuthenticationProvider();
         var adapter = new HttpClientRequestAdapter(auth, httpClient: _httpClient);
@@ -61,10 +58,7 @@ public class LunoMarketClient : ILunoMarketClient
         var stopwatch = Stopwatch.StartNew();
         _logger.LogDebug("Fetching market tickers via Kiota client.");
 
-        var requestBuilder = _apiVersion switch {
-            "1" => _apiClient.Api.One.Tickers,
-            _ => throw new NotSupportedException($"API version {_apiVersion} is not supported by this client version.")
-        };
+        var requestBuilder = _apiClient.Api.One.Tickers;
 
         Luno.SDK.Infrastructure.Generated.Models.ListTickersResponse? response = null;
         try
@@ -90,7 +84,7 @@ public class LunoMarketClient : ILunoMarketClient
 
         foreach (var dto in response.Tickers)
         {
-            yield return Luno.SDK.Infrastructure.Market.LunoMapper.MapToEntity(dto);
+            yield return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(dto);
         }
     }
 }
