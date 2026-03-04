@@ -91,7 +91,7 @@ internal class LunoTelemetryAdapter(IRequestAdapter inner, LunoTelemetry telemet
             telemetry.RecordRequest(operationName, "Success");
             return result;
         }
-        catch (Exception ex) when (ex is ApiException or HttpRequestException)
+        catch (Exception ex)
         {
             activity?.SetTag("luno.status", "Error");
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
