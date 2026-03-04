@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const specPath = path.join(__dirname, 'docs', 'luno_api_spec.json');
-const outputPath = path.join(__dirname, 'docs', 'luno_api_spec_engine.json');
+// Reference paths relative to the script location
+const specPath = path.join(__dirname, '..', 'docs', 'luno_api_spec.json');
+const outputPath = path.join(__dirname, '..', 'docs', 'luno_api_spec_engine.json');
 
 console.log(`Reading source specification: ${specPath}`);
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
