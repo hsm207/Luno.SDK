@@ -11,6 +11,14 @@ namespace Luno.SDK;
 /// </summary>
 public class LunoClient : ILunoClient
 {
+    private static readonly HttpClient SharedHttpClient = new(new SocketsHttpHandler 
+    { 
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2) 
+    }) 
+    { 
+        BaseAddress = new Uri("https://api.luno.com") 
+    };
+
     private readonly HttpClient _httpClient;
     private readonly LunoTelemetry _telemetry;
     private readonly ILogger<LunoClient> _logger;
@@ -18,6 +26,15 @@ public class LunoClient : ILunoClient
 
     /// <inheritdoc />
     public ILunoMarketClient Market => GetMarketClient();
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LunoClient"/> class using standalone defaults.
+    /// </summary>
+    /// <param name="options">Optional configuration options for the client.</param>
+    public LunoClient(LunoClientOptions? options = null)
+        : this(SharedHttpClient, options)
+    {
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoClient"/> class using the specified HTTP client and options.
