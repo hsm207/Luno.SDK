@@ -30,8 +30,15 @@ public class LunoMapperTests
         // Assert
         Assert.Equal("XBTZAR", result.Pair);
         Assert.Equal(1000100m, result.Ask);
+        Assert.Equal(1000000m, result.Bid);
+        Assert.Equal(1000050m, result.LastTrade);
+        Assert.Equal(500m, result.Rolling24HourVolume);
         Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1772555388322L), result.Timestamp);
         Assert.Equal(MarketStatus.Active, result.Status);
+
+        // Derived domain properties
+        Assert.Equal(100m, result.Spread);
+        Assert.True(result.IsActive);
     }
 
     [Theory(DisplayName = "LunoMapper should map all generated ticker statuses to domain equivalents")]
