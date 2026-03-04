@@ -10,4 +10,9 @@ public interface ILunoClient
     /// Gets the specialized client for market data operations.
     /// </summary>
     ILunoMarketClient Market { get; }
+
+    /// <summary>
+    /// Gets the observability provider for the SDK, including traces and metrics.
+    /// </summary>
+    ILunoTelemetry Telemetry { get; }
 }
