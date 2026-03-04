@@ -25,7 +25,7 @@ public class StubRequestAdapter : IRequestAdapter
     public ISerializationWriterFactory SerializationWriterFactory => throw new NotImplementedException();
     public void EnableBackingStore(IBackingStoreFactory backingStoreFactory) { }
 
-    public Task<ModelType?> SendAsync<ModelType>(RequestInformation requestInfo, ParsableFactory<ModelType> factory, Dictionary<string, ParsableFactory<IParsable>>? errorMapping = null, CancellationToken cancellationToken = default) where ModelType : IParsable
+    public virtual Task<ModelType?> SendAsync<ModelType>(RequestInformation requestInfo, ParsableFactory<ModelType> factory, Dictionary<string, ParsableFactory<IParsable>>? errorMapping = null, CancellationToken cancellationToken = default) where ModelType : IParsable
     {
         if (_exceptionToThrow != null) throw _exceptionToThrow;
         return Task.FromResult<ModelType?>(default);
