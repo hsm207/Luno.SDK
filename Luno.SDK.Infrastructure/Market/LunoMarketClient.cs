@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Abstractions.Authentication;
@@ -13,7 +11,7 @@ namespace Luno.SDK;
 /// <summary>
 /// Provides a concrete implementation of the <see cref="ILunoMarketClient"/> interface using the Kiota-generated API client.
 /// </summary>
-public class LunoMarketClient : ILunoMarketClient
+internal class LunoMarketClient : ILunoMarketClient
 {
     private readonly HttpClient _httpClient;
     private readonly LunoTelemetry _telemetry;
@@ -23,21 +21,10 @@ public class LunoMarketClient : ILunoMarketClient
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoMarketClient"/> class.
     /// </summary>
-    /// <param name="options">Optional client configuration options.</param>
     /// <param name="httpClient">The HTTP client to use for requests.</param>
-    public LunoMarketClient(LunoClientOptions? options, HttpClient httpClient)
-    {
-        options ??= new LunoClientOptions();
-        _logger = options.LoggerFactory.CreateLogger<LunoMarketClient>();
-        _telemetry = new LunoTelemetry();
-        _httpClient = httpClient;
-
-        var auth = new AnonymousAuthenticationProvider();
-        var adapter = new HttpClientRequestAdapter(auth, httpClient: _httpClient);
-        _apiClient = new LunoApiClient(adapter);
-    }
-
-    internal LunoMarketClient(HttpClient httpClient, LunoTelemetry telemetry, ILogger logger)
+    /// <param name="telemetry">The telemetry instance used to record activity.</param>
+    /// <param name="logger">The logger for the market client.</param>
+    public LunoMarketClient(HttpClient httpClient, LunoTelemetry telemetry, ILogger logger)
     {
         _httpClient = httpClient;
         _telemetry = telemetry;
@@ -52,7 +39,7 @@ public class LunoMarketClient : ILunoMarketClient
     public async IAsyncEnumerable<Ticker> GetTickersAsync(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {
-        const string operation = "GetTickers";
+        const string operation = "GetMarketTickers";
         using var activity = _telemetry.ActivitySource.StartActivity(operation);
         
         var stopwatch = Stopwatch.StartNew();

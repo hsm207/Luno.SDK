@@ -1,6 +1,8 @@
 using System.Net;
+using Microsoft.Extensions.Logging.Abstractions;
 using Luno.SDK;
 using Luno.SDK.Core.Market;
+using Luno.SDK.Infrastructure.Telemetry;
 using Moq;
 using Moq.Protected;
 using Xunit;
@@ -9,6 +11,14 @@ namespace Luno.SDK.Tests.Integration;
 
 public class LunoMarketClientTests
 {
+    private static LunoMarketClient CreateClient(HttpClient httpClient)
+    {
+        return new LunoMarketClient(
+            httpClient, 
+            new LunoTelemetry(), 
+            NullLogger.Instance);
+    }
+
     [Fact(DisplayName = "GetTickersAsync should correctly parse and map raw JSON response to domain entities")]
     public async Task GetTickersAsync_WithValidJson_ShouldReturnMappedEntities()
     {
@@ -37,7 +47,7 @@ public class LunoMarketClientTests
             BaseAddress = new Uri("https://api.luno.com")
         };
 
-        var client = new LunoMarketClient(new LunoClientOptions { BaseUrl = "https://api.luno.com" }, httpClient);
+        var client = CreateClient(httpClient);
 
         // Act
         var tickers = new List<Ticker>();
@@ -82,7 +92,7 @@ public class LunoMarketClientTests
             BaseAddress = new Uri("https://api.luno.com")
         };
 
-        var client = new LunoMarketClient(new LunoClientOptions { BaseUrl = "https://api.luno.com" }, httpClient);
+        var client = CreateClient(httpClient);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>

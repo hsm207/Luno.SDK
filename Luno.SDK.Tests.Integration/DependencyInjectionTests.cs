@@ -23,6 +23,5 @@ public class DependencyInjectionTests
         Assert.IsType<LunoClient>(client);
         
         Assert.NotNull(client.Market);
-        Assert.NotNull(client.GetMarketClient());
     }
 }

@@ -10,10 +10,4 @@ public interface ILunoClient
     /// Gets the specialized client for market data operations.
     /// </summary>
     ILunoMarketClient Market { get; }
-
-    /// <summary>
-    /// Factory method to retrieve a specialized market client instance.
-    /// </summary>
-    /// <returns>An instance of <see cref="ILunoMarketClient"/>.</returns>
-    ILunoMarketClient GetMarketClient();
 }

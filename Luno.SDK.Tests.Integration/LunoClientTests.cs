@@ -13,8 +13,6 @@ public class LunoClientTests
 
         // Assert
         Assert.NotNull(client.Market);
-        var marketClient = client.GetMarketClient();
-        Assert.NotNull(marketClient);
     }
 
     [Fact(DisplayName = "LunoClient should initialize with correct configuration using an injected HttpClient")]
