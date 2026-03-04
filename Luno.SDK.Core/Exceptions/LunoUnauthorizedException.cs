@@ -1,3 +1,6 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+
 namespace Luno.SDK;
 
 /// <summary>
@@ -5,6 +8,12 @@ namespace Luno.SDK;
 /// </summary>
 public class LunoUnauthorizedException : Exception
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LunoUnauthorizedException"/> class.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public LunoUnauthorizedException() : base() { }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoUnauthorizedException"/> class.
     /// </summary>
@@ -16,5 +25,6 @@ public class LunoUnauthorizedException : Exception
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
+    [ExcludeFromCodeCoverage]
     public LunoUnauthorizedException(string message, Exception innerException) : base(message, innerException) { }
 }
