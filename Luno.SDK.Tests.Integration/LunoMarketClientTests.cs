@@ -159,8 +159,8 @@ public class LunoMarketClientTests : IDisposable
         Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));
     }
 
-    [Fact(DisplayName = "Given the Luno API returns a successful response with null tickers, When fetching tickers, Then throw InvalidOperationException.")]
-    public async Task GetTickersWhenApiReturnsNullTickersShouldThrowInvalidOperationException()
+    [Fact(DisplayName = "Given the Luno API returns a successful response with null tickers, When fetching tickers, Then throw LunoMappingException.")]
+    public async Task GetTickersWhenApiReturnsNullTickersShouldThrowLunoMappingException()
     {
         // Arrange
         var telemetry = new LunoTelemetry();
@@ -174,7 +174,7 @@ public class LunoMarketClientTests : IDisposable
         var client = CreateClient(httpClient, telemetry);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var ex = await Assert.ThrowsAsync<LunoMappingException>(async () =>
         {
             await foreach (var _ in client.GetTickersAsync()) { }
         });

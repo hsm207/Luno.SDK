@@ -46,22 +46,33 @@ public class AccountMapperTests
         }
     }
 
-    [Fact(DisplayName = "Given null fields in AccountBalance, When mapping to domain, Then assign defaults or zero")]
-    public void MapToDomain_GivenNullFields_WhenMapping_ThenAssignDefaults()
+    [Fact(DisplayName = "Given missing AccountId, When mapping to domain, Then throw LunoMappingException")]
+    public void MapToDomain_GivenMissingAccountId_WhenMapping_ThenThrowLunoMappingException()
     {
         // Arrange
-        var dto = new AccountBalance();
+        var dto = new AccountBalance
+        {
+            Asset = "XBT"
+        };
 
-        // Act
-        var domain = dto.ToDomain();
+        // Act & Assert
+        var ex = Assert.Throws<LunoMappingException>(() => dto.ToDomain());
+        Assert.Contains("Missing mandatory field: account_id", ex.Message);
+        Assert.Equal(nameof(AccountBalance), ex.DtoType);
+    }
 
-        // Assert
-        Assert.Equal(string.Empty, domain.AccountId);
-        Assert.Equal(string.Empty, domain.Asset);
-        Assert.Equal(0m, domain.Available);
-        Assert.Equal(0m, domain.Reserved);
-        Assert.Equal(0m, domain.Unconfirmed);
-        Assert.Equal(string.Empty, domain.Name);
-        Assert.Equal(0m, domain.Total);
+    [Fact(DisplayName = "Given missing Asset, When mapping to domain, Then throw LunoMappingException")]
+    public void MapToDomain_GivenMissingAsset_WhenMapping_ThenThrowLunoMappingException()
+    {
+        // Arrange
+        var dto = new AccountBalance
+        {
+            AccountId = "123"
+        };
+
+        // Act & Assert
+        var ex = Assert.Throws<LunoMappingException>(() => dto.ToDomain());
+        Assert.Contains("Missing mandatory field: asset", ex.Message);
+        Assert.Equal(nameof(AccountBalance), ex.DtoType);
     }
 }

@@ -14,9 +14,9 @@ internal static class MarketMapper
     /// <summary>
     /// Maps a generated ticker DTO to a domain entity.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when the ticker DTO is missing required data.</exception>
+    /// <exception cref="LunoMappingException">Thrown when the ticker DTO is missing required data.</exception>
     public static Ticker MapToEntity(GeneratedTicker dto) => new(
-        dto.Pair ?? throw new InvalidOperationException("API returned a ticker without a valid market pair identifier."),
+        dto.Pair ?? throw new LunoMappingException("API returned a ticker without a valid market pair identifier.", nameof(GeneratedTicker)),
         ParseDecimal(dto.Ask),
         ParseDecimal(dto.Bid),
         ParseDecimal(dto.LastTrade),
@@ -26,7 +26,7 @@ internal static class MarketMapper
     );
 
     private static long GetTimestamp(GeneratedTicker dto) => 
-        dto.Timestamp ?? throw new InvalidOperationException("API returned a ticker without a valid timestamp.");
+        dto.Timestamp ?? throw new LunoMappingException("API returned a ticker without a valid timestamp.", nameof(GeneratedTicker));
 
     private static decimal ParseDecimal(string? value) => 
         decimal.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0m;

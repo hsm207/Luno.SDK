@@ -1,17 +1,15 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Luno.SDK;
 
 /// <summary>
 /// Exception thrown when the API returns a 401 Unauthorized status code, indicating invalid credentials.
 /// </summary>
-public class LunoUnauthorizedException : Exception
+public class LunoUnauthorizedException : LunoSecurityException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoUnauthorizedException"/> class.
     /// </summary>
-    [ExcludeFromCodeCoverage]
     public LunoUnauthorizedException() : base() { }
 
     /// <summary>
@@ -25,6 +23,5 @@ public class LunoUnauthorizedException : Exception
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    [ExcludeFromCodeCoverage]
     public LunoUnauthorizedException(string message, Exception innerException) : base(message, innerException) { }
 }

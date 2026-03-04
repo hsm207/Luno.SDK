@@ -22,7 +22,7 @@ internal class LunoMarketClient(IRequestAdapter requestAdapter) : ILunoMarketCli
 
         if (response?.Tickers is null)
         {
-            throw new InvalidOperationException("API returned a successful response but the ticker list was missing or null.");
+            throw new LunoMappingException("The API response was successful but the tickers array was missing or null.", "GetTickersResponse");
         }
 
         foreach (var dto in response.Tickers)
