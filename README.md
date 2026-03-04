@@ -1,6 +1,6 @@
 # Luno.SDK
 
-A high-performance .NET 10 SDK for the Luno API, built with Clean Architecture principles and the Microsoft Kiota toolchain.
+A modern, enterprise-grade .NET 10 SDK for the Luno API, built with Clean Architecture principles and the Microsoft Kiota toolchain.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ A high-performance .NET 10 SDK for the Luno API, built with Clean Architecture p
 using Luno.SDK;
 
 // Initialize the standalone client
-using var luno = new LunoClient();
+var luno = new LunoClient();
 
 // Stream market tickers asynchronously
 await foreach (var ticker in luno.GetTickersAsync())
