@@ -5,16 +5,16 @@ namespace Luno.SDK.Tests.Unit;
 
 public class LunoTelemetryTests
 {
-    [Fact(DisplayName = "Given telemetry instance, When disposing, Then release all resources faithfully")]
-    public void Dispose_GivenTelemetryInstance_WhenDisposing_ThenReleaseAllResourcesFaithfully()
+    [Fact(DisplayName = "Given telemetry instance, When disposing, Then release all resources faithfully.")]
+    public void DisposeWhenCalledShouldReleaseResources()
     {
         // Arrange
         var telemetry = new LunoTelemetry();
 
         // Act
-        var ex = Record.Exception(() => telemetry.Dispose());
+        telemetry.Dispose();
 
-        // Assert
-        Assert.Null(ex); // If it threw an exception, it wouldn't be faithfully releasing.
+        // Assert - Safe disposal
+        telemetry.Dispose();
     }
 }
