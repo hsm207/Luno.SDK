@@ -85,11 +85,16 @@ public class LunoMarketClientTests : IDisposable
         var client = CreateClient(httpClient, telemetry);
 
         Activity? capturedActivity = null;
+        using var activityStoppedEvent = new ManualResetEventSlim();
         using var listener = new ActivityListener
         {
             ShouldListenTo = (source) => source.Name == LunoInstrumentation.Name,
             Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData,
-            ActivityStopped = (activity) => capturedActivity = activity
+            ActivityStopped = (activity) =>
+            {
+                capturedActivity = activity;
+                activityStoppedEvent.Set();
+            }
         };
         ActivitySource.AddActivityListener(listener);
 
@@ -121,6 +126,9 @@ public class LunoMarketClientTests : IDisposable
             results.Add(ticker);
         }
 
+        // Wait for the telemetry activity to physically stop
+        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
+
         // Assert
         Assert.Single(results);
         Assert.NotNull(capturedActivity);
@@ -141,11 +149,16 @@ public class LunoMarketClientTests : IDisposable
         var client = CreateClient(httpClient, telemetry);
 
         Activity? capturedActivity = null;
+        using var activityStoppedEvent = new ManualResetEventSlim();
         using var activityListener = new ActivityListener
         {
             ShouldListenTo = (source) => source.Name == LunoInstrumentation.Name,
             Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData,
-            ActivityStopped = (activity) => capturedActivity = activity
+            ActivityStopped = (activity) =>
+            {
+                capturedActivity = activity;
+                activityStoppedEvent.Set();
+            }
         };
         ActivitySource.AddActivityListener(activityListener);
 
@@ -154,6 +167,9 @@ public class LunoMarketClientTests : IDisposable
         {
             await foreach (var _ in client.GetTickersAsync()) { }
         });
+
+        // Wait for the telemetry activity to physically stop
+        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
 
         Assert.NotNull(capturedActivity);
         Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));

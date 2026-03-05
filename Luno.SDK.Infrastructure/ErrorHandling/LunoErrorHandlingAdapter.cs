@@ -18,7 +18,7 @@ public class LunoErrorHandlingAdapter : IRequestAdapter
     /// <param name="innerAdapter">The inner request adapter to delegate calls to.</param>
     public LunoErrorHandlingAdapter(IRequestAdapter innerAdapter)
     {
-        _innerAdapter = innerAdapter ?? throw new ArgumentNullException(nameof(innerAdapter));
+        _innerAdapter = innerAdapter;
     }
 
     /// <inheritdoc />

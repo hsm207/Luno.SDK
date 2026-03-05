@@ -12,7 +12,7 @@ namespace Luno.SDK.Infrastructure.Account;
 /// <param name="requestAdapter">The decorated request adapter pipeline.</param>
 internal class LunoAccountClient(IRequestAdapter requestAdapter) : ILunoAccountClient
 {
-    private readonly Luno.SDK.Infrastructure.Generated.LunoApiClient _apiClient = new(requestAdapter ?? throw new ArgumentNullException(nameof(requestAdapter)));
+    private readonly Luno.SDK.Infrastructure.Generated.LunoApiClient _apiClient = new(requestAdapter);
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<Balance>> GetBalancesAsync(CancellationToken cancellationToken = default)
