@@ -74,4 +74,41 @@ public class LunoExceptionComplianceTests
         Assert.Equal(_testMessage, ex.Message);
         Assert.Equal("TestDto", ex.DtoType);
     }
+
+    [Fact(DisplayName = "Explicit Direct Constructor Tests to guarantee 100% FATALITY in all coverage runners")]
+    public void ExplicitConstructorTests()
+    {
+        // Parameterless
+        var ex1 = new LunoAuthenticationException();
+        var ex2 = new LunoForbiddenException();
+        var ex3 = new LunoUnauthorizedException();
+        var ex4 = new LunoMappingException();
+
+        Assert.NotNull(ex1);
+        Assert.NotNull(ex2);
+        Assert.NotNull(ex3);
+        Assert.NotNull(ex4);
+
+        // Message
+        var ex5 = new LunoAuthenticationException(_testMessage);
+        var ex6 = new LunoForbiddenException(_testMessage);
+        var ex7 = new LunoUnauthorizedException(_testMessage);
+        var ex8 = new LunoMappingException(_testMessage);
+
+        Assert.Equal(_testMessage, ex5.Message);
+        Assert.Equal(_testMessage, ex6.Message);
+        Assert.Equal(_testMessage, ex7.Message);
+        Assert.Equal(_testMessage, ex8.Message);
+
+        // Inner Exception
+        var ex9 = new LunoAuthenticationException(_testMessage, _testInnerException);
+        var ex10 = new LunoForbiddenException(_testMessage, _testInnerException);
+        var ex11 = new LunoUnauthorizedException(_testMessage, _testInnerException);
+        var ex12 = new LunoMappingException(_testMessage, _testInnerException);
+
+        Assert.Equal(_testInnerException, ex9.InnerException);
+        Assert.Equal(_testInnerException, ex10.InnerException);
+        Assert.Equal(_testInnerException, ex11.InnerException);
+        Assert.Equal(_testInnerException, ex12.InnerException);
+    }
 }
