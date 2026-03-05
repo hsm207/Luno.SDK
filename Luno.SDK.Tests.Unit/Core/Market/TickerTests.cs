@@ -1,4 +1,4 @@
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Core.Market;

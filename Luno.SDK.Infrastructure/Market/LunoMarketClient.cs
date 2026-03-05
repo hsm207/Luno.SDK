@@ -1,5 +1,5 @@
 using Microsoft.Kiota.Abstractions;
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Telemetry;
 using Luno.SDK.Infrastructure.Generated;
 

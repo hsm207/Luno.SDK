@@ -9,7 +9,7 @@ using Microsoft.Kiota.Http.HttpClientLibrary;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Telemetry;
 using Xunit;
 

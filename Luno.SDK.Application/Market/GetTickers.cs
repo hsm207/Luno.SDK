@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 
 namespace Luno.SDK.Application.Market;
 

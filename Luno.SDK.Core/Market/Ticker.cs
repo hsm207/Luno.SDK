@@ -1,4 +1,4 @@
-namespace Luno.SDK.Core.Market;
+namespace Luno.SDK.Market;
 
 /// <summary>
 /// Represents a market ticker containing the latest trading information for a specific pair.

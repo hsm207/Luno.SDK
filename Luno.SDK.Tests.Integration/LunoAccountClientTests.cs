@@ -2,7 +2,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Luno.SDK;
-using Luno.SDK.Core.Account;
+using Luno.SDK.Account;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;

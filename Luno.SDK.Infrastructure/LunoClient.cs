@@ -2,11 +2,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Authentication;
-using Luno.SDK.Core.Account;
+using Luno.SDK.Account;
 using Luno.SDK.Infrastructure.Account;
 using Luno.SDK.Infrastructure.Authentication;
 using Luno.SDK.Infrastructure.ErrorHandling;
 using Luno.SDK.Infrastructure.Telemetry;
+using Luno.SDK.Market;
+using Luno.SDK.Infrastructure.Market;
 
 namespace Luno.SDK;
 

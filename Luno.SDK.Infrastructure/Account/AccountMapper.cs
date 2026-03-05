@@ -1,5 +1,5 @@
 using System.Globalization;
-using Luno.SDK.Core.Account;
+using Luno.SDK.Account;
 using Luno.SDK.Infrastructure.Generated.Models;
 
 namespace Luno.SDK.Infrastructure.Account;

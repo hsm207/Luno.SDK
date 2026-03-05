@@ -1,4 +1,4 @@
-namespace Luno.SDK.Core.Account;
+namespace Luno.SDK.Account;
 
 /// <summary>
 /// Represents a high-fidelity snapshot of an account balance.

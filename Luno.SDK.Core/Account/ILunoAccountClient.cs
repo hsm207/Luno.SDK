@@ -1,4 +1,4 @@
-namespace Luno.SDK.Core.Account;
+namespace Luno.SDK.Account;
 
 /// <summary>
 /// Defines operations for interacting with Luno accounts and balances.

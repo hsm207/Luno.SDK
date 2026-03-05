@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Luno.SDK.Core.Account;
+using Luno.SDK.Account;
 
 namespace Luno.SDK.Application.Account;
 

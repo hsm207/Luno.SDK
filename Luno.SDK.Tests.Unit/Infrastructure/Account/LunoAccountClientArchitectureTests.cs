@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Kiota.Abstractions;
-using Luno.SDK.Core.Account;
+using Luno.SDK.Account;
 using Luno.SDK.Infrastructure.Account;
 using Luno.SDK.Infrastructure.Authentication;
 using Luno.SDK.Tests.Unit.Infrastructure.ErrorHandling; // Assuming StubRequestAdapter is public and reusable

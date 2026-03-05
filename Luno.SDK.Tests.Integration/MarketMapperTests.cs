@@ -1,4 +1,4 @@
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
 using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;

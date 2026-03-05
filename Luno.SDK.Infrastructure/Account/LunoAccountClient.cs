@@ -1,5 +1,5 @@
 using Microsoft.Kiota.Abstractions;
-using Luno.SDK.Core.Account;
+using Luno.SDK.Account;
 using Luno.SDK.Infrastructure.Authentication;
 using Luno.SDK.Infrastructure.Generated.Api;
 
