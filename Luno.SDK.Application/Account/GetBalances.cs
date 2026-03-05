@@ -7,20 +7,21 @@ using Luno.SDK.Core.Account;
 namespace Luno.SDK.Application.Account;
 
 /// <summary>
-/// Represents a query to get all current account balances.
+/// The list of all Accounts and their respective balances for the requesting user.
 /// </summary>
+/// <remarks>Permissions required: Perm_R_Balance</remarks>
 public record GetBalancesQuery;
 
 /// <summary>
 /// Represents the application-layer response containing balance data for a specific account.
 /// </summary>
-/// <param name="AccountId">The unique identifier for the account.</param>
-/// <param name="Asset">The currency code (e.g., XBT).</param>
+/// <param name="AccountId">ID of the account.</param>
+/// <param name="Asset">Currency code for the asset held in this account.</param>
 /// <param name="Available">The amount available to send or trade.</param>
-/// <param name="Reserved">The amount locked by Luno.</param>
-/// <param name="Unconfirmed">The amount awaiting verification.</param>
+/// <param name="Reserved">Amount locked by Luno and cannot be sent or traded. This could be due to open orders.</param>
+/// <param name="Unconfirmed">Amount that is awaiting some sort of verification to be credited to this account. This could be an on-chain transaction that Luno is waiting for further block verifications to happen.</param>
 /// <param name="Total">The calculated total amount (Available + Reserved).</param>
-/// <param name="Name">The user-defined name for the account.</param>
+/// <param name="Name">The name set by the user upon creating the account.</param>
 public record AccountBalanceResponse(
     string AccountId,
     string Asset,
@@ -38,8 +39,9 @@ public record AccountBalanceResponse(
 public class GetBalancesHandler(ILunoAccountClient accountClient)
 {
     /// <summary>
-    /// Handles the request to get balances and returns them as application-layer DTOs.
+    /// The list of all Accounts and their respective balances for the requesting user.
     /// </summary>
+    /// <remarks>Permissions required: Perm_R_Balance</remarks>
     /// <param name="query">The query parameters.</param>
     /// <param name="ct">A cancellation token.</param>
     /// <returns>A list of <see cref="AccountBalanceResponse"/> objects.</returns>
