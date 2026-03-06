@@ -32,13 +32,20 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         Dictionary<string, object>? additionalAuthenticationContext = null,
         CancellationToken cancellationToken = default)
     {
-        if (request == null) throw new ArgumentNullException(nameof(request));
-
-        // Check if the request explicitly requires authentication
+        // We trust the compiler for null checks.
         var authOption = request.RequestOptions.OfType<LunoAuthenticationOption>().FirstOrDefault();
-        bool requiresAuth = authOption?.RequiresAuthentication ?? false;
 
-        if (requiresAuth)
+        // 1. Explicit Control (The Edge Case)
+        if (authOption != null && !authOption.RequiresAuthentication)
+        {
+            // Explicitly opted out. Do NOT authenticate.
+            return Task.CompletedTask;
+        }
+
+        bool isMandatoryPrivate = IsMandatoryPrivateEndpoint(request.URI.AbsolutePath);
+
+        // If explicitly requested OR naturally a mandatory private endpoint
+        if ((authOption != null && authOption.RequiresAuthentication) || isMandatoryPrivate)
         {
             if (_preComputedAuthHeader == null)
             {
@@ -52,9 +59,8 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         }
         else
         {
-            // If the request doesn't explicitly require authentication, but we have credentials, we can still attach them
-            // The RFC states: "Additionally, by authenticating 'public' requests, developers can leverage their per-account rate limit buckets."
-            // So we add them if they are present and no auth header is already set.
+            // 2. Auto-Optimized Public (or Anonymous)
+            // If we have credentials, we attach them to get the rate limit optimization
             if (_preComputedAuthHeader != null && !request.Headers.ContainsKey("Authorization"))
             {
                 request.Headers.Add("Authorization", _preComputedAuthHeader);
@@ -62,5 +68,17 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         }
 
         return Task.CompletedTask;
+    }
+
+    private static bool IsMandatoryPrivateEndpoint(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+
+        return path.StartsWith("/api/1/accounts", StringComparison.OrdinalIgnoreCase) ||
+               path.StartsWith("/api/1/balance", StringComparison.OrdinalIgnoreCase) ||
+               path.StartsWith("/api/1/beneficiaries", StringComparison.OrdinalIgnoreCase) ||
+               path.StartsWith("/api/1/withdrawals", StringComparison.OrdinalIgnoreCase) ||
+               path.StartsWith("/api/exchange/", StringComparison.OrdinalIgnoreCase) ||
+               path.Equals("/api/1/candles", StringComparison.OrdinalIgnoreCase);
     }
 }

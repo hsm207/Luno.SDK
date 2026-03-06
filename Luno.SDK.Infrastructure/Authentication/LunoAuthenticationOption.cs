@@ -9,6 +9,7 @@ public class LunoAuthenticationOption : IRequestOption
 {
     /// <summary>
     /// Gets or sets a value indicating whether the request requires authentication.
+    /// Default is true.
     /// </summary>
-    public bool RequiresAuthentication { get; set; }
+    public bool RequiresAuthentication { get; set; } = true;
 }

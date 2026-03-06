@@ -19,7 +19,6 @@ internal class LunoAccountClient(IRequestAdapter requestAdapter) : ILunoAccountC
     {
         var response = await _apiClient.Api.One.Balance.GetAsync(requestConfiguration =>
         {
-            requestConfiguration.Options.Add(new LunoAuthenticationOption { RequiresAuthentication = true });
             requestConfiguration.Options.Add(new Luno.SDK.Infrastructure.Telemetry.LunoTelemetryOptions("GetBalances"));
         }, cancellationToken).ConfigureAwait(false);
 
