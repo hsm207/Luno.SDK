@@ -110,4 +110,153 @@ public class LunoErrorHandlingAdapterTests
         var ex = await Assert.ThrowsAsync<ApiException>(() => errorAdapter.SendAsync<DummyParsable>(requestInfo, Factory));
         Assert.Equal(500, ex.ResponseStatusCode);
     }
+
+    [Theory(DisplayName = "Given 401 ApiException, When calling any Send method, Then throw LunoUnauthorizedException")]
+    [InlineData("SendCollectionAsync")]
+    [InlineData("SendPrimitiveAsync")]
+    [InlineData("SendPrimitiveCollectionAsync")]
+    [InlineData("SendNoContentAsync")]
+    public async Task AllSendMethods_Given401_WhenCalled_ThenThrowUnauthorized(string methodName)
+    {
+        // Arrange
+        var apiEx = new ApiException { ResponseStatusCode = 401 };
+        var innerAdapter = new StubRequestAdapter(apiEx);
+        var errorAdapter = new LunoErrorHandlingAdapter(innerAdapter);
+        var requestInfo = new RequestInformation();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<LunoUnauthorizedException>(async () =>
+        {
+            switch (methodName)
+            {
+                case "SendCollectionAsync":
+                    await errorAdapter.SendCollectionAsync<DummyParsable>(requestInfo, Factory);
+                    break;
+                case "SendPrimitiveAsync":
+                    await errorAdapter.SendPrimitiveAsync<string>(requestInfo);
+                    break;
+                case "SendPrimitiveCollectionAsync":
+                    await errorAdapter.SendPrimitiveCollectionAsync<string>(requestInfo);
+                    break;
+                case "SendNoContentAsync":
+                    await errorAdapter.SendNoContentAsync(requestInfo);
+                    break;
+            }
+        });
+    }
+
+    [Theory(DisplayName = "Given 403 ApiException, When calling any Send method, Then throw LunoForbiddenException")]
+    [InlineData("SendCollectionAsync")]
+    [InlineData("SendPrimitiveAsync")]
+    [InlineData("SendPrimitiveCollectionAsync")]
+    [InlineData("SendNoContentAsync")]
+    public async Task AllSendMethods_Given403_WhenCalled_ThenThrowForbidden(string methodName)
+    {
+        // Arrange
+        var apiEx = new ApiException { ResponseStatusCode = 403 };
+        var innerAdapter = new StubRequestAdapter(apiEx);
+        var errorAdapter = new LunoErrorHandlingAdapter(innerAdapter);
+        var requestInfo = new RequestInformation();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<LunoForbiddenException>(async () =>
+        {
+            switch (methodName)
+            {
+                case "SendCollectionAsync":
+                    await errorAdapter.SendCollectionAsync<DummyParsable>(requestInfo, Factory);
+                    break;
+                case "SendPrimitiveAsync":
+                    await errorAdapter.SendPrimitiveAsync<string>(requestInfo);
+                    break;
+                case "SendPrimitiveCollectionAsync":
+                    await errorAdapter.SendPrimitiveCollectionAsync<string>(requestInfo);
+                    break;
+                case "SendNoContentAsync":
+                    await errorAdapter.SendNoContentAsync(requestInfo);
+                    break;
+            }
+        });
+    }
+
+    [Theory(DisplayName = "Given 500 ApiException, When calling any Send method, Then re-throw ApiException")]
+    [InlineData("SendCollectionAsync")]
+    [InlineData("SendPrimitiveAsync")]
+    [InlineData("SendPrimitiveCollectionAsync")]
+    [InlineData("SendNoContentAsync")]
+    public async Task AllSendMethods_Given500_WhenCalled_ThenRethrowApiEx(string methodName)
+    {
+        // Arrange
+        var apiEx = new ApiException { ResponseStatusCode = 500 };
+        var innerAdapter = new StubRequestAdapter(apiEx);
+        var errorAdapter = new LunoErrorHandlingAdapter(innerAdapter);
+        var requestInfo = new RequestInformation();
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ApiException>(async () =>
+        {
+            switch (methodName)
+            {
+                case "SendCollectionAsync":
+                    await errorAdapter.SendCollectionAsync<DummyParsable>(requestInfo, Factory);
+                    break;
+                case "SendPrimitiveAsync":
+                    await errorAdapter.SendPrimitiveAsync<string>(requestInfo);
+                    break;
+                case "SendPrimitiveCollectionAsync":
+                    await errorAdapter.SendPrimitiveCollectionAsync<string>(requestInfo);
+                    break;
+                case "SendNoContentAsync":
+                    await errorAdapter.SendNoContentAsync(requestInfo);
+                    break;
+            }
+        });
+
+        Assert.Equal(500, ex.ResponseStatusCode);
+    }
+
+    [Fact(DisplayName = "Given ConvertToNativeRequestAsync, When called, Then delegate faithfully")]
+    public async Task ConvertToNativeRequestAsync_WhenCalled_ThenDelegateFaithfully()
+    {
+        // Arrange
+        var innerAdapter = new StubRequestAdapter();
+        var errorAdapter = new LunoErrorHandlingAdapter(innerAdapter);
+        var requestInfo = new RequestInformation();
+
+        // Act
+        var result = await errorAdapter.ConvertToNativeRequestAsync<string>(requestInfo);
+
+        // Assert (Stub returns default, which is null for class strings)
+        Assert.Null(result);
+    }
+
+    [Fact(DisplayName = "Given properties, When getting and setting, Then delegate to inner adapter")]
+    public void Properties_WhenAccessed_ThenDelegateToInnerAdapter()
+    {
+        // Arrange
+        var innerAdapter = new StubRequestAdapter { BaseUrl = "https://test.com" };
+        var errorAdapter = new LunoErrorHandlingAdapter(innerAdapter);
+
+        // Act & Assert
+        Assert.Equal("https://test.com", errorAdapter.BaseUrl);
+
+        errorAdapter.BaseUrl = "https://new.com";
+        Assert.Equal("https://new.com", innerAdapter.BaseUrl);
+
+        Assert.Throws<NotImplementedException>(() => errorAdapter.SerializationWriterFactory);
+    }
+
+    [Fact(DisplayName = "Given EnableBackingStore, When called, Then delegate to inner adapter")]
+    public void EnableBackingStore_WhenCalled_ThenDelegateToInnerAdapter()
+    {
+        // Arrange
+        var innerAdapter = new StubRequestAdapter();
+        var errorAdapter = new LunoErrorHandlingAdapter(innerAdapter);
+
+        // Act
+        var ex = Record.Exception(() => errorAdapter.EnableBackingStore(null!));
+
+        // Assert
+        Assert.Null(ex); // Stub simply does nothing, so no exception means it successfully delegated
+    }
 }
