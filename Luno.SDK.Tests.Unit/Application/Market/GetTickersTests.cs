@@ -104,4 +104,16 @@ public class GetTickersTests
             await foreach (var _ in handler.HandleAsync(new GetTickersQuery(), cts.Token)) { }
         });
     }
+
+    [Fact(DisplayName = "Given identical TickerResponses, When compared, Then return true")]
+    public void Equality_GivenIdenticalTickerResponses_WhenCompared_ThenReturnTrue()
+    {
+        var timestamp = DateTimeOffset.UtcNow;
+        var r1 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);
+        var r2 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);
+
+        Assert.Equal(r1, r2);
+        Assert.Equal(r1.GetHashCode(), r2.GetHashCode());
+        Assert.NotNull(r1.ToString());
+    }
 }

@@ -30,11 +30,10 @@ public class LunoMarketClientTests : IDisposable
         _server.Dispose();
     }
 
-    private static LunoMarketClient CreateClient(HttpClient httpClient, LunoTelemetry telemetry)
+    private static ILunoClient CreateClient(HttpClient httpClient)
     {
-        var baseAdapter = new HttpClientRequestAdapter(new AnonymousAuthenticationProvider(), httpClient: httpClient);
-        var decoratedAdapter = new LunoTelemetryAdapter(baseAdapter, telemetry, NullLogger.Instance);
-        return new LunoMarketClient(decoratedAdapter);
+        var options = new LunoClientOptions();
+        return new LunoClient(httpClient, options);
     }
 
     [Fact(DisplayName = "Given standard DI container, When resolving ILunoClient, Then return a valid instance with all sub-clients configured.")]
@@ -57,7 +56,6 @@ public class LunoMarketClientTests : IDisposable
     public async Task GetTickersWhenApiSucceedsShouldEmitTelemetry()
     {
         // Arrange
-        var telemetry = new LunoTelemetry();
         var operationName = "GetMarketTickers";
 
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
@@ -82,7 +80,7 @@ public class LunoMarketClientTests : IDisposable
                 }));
 
         using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient, telemetry);
+        var client = CreateClient(httpClient);
 
         Activity? capturedActivity = null;
         using var activityStoppedEvent = new ManualResetEventSlim();
@@ -120,7 +118,7 @@ public class LunoMarketClientTests : IDisposable
         meterListener.Start();
 
         // Act
-        var results = new List<Ticker>();
+        var results = new List<Luno.SDK.Application.Market.TickerResponse>();
         await foreach (var ticker in client.GetTickersAsync())
         {
             results.Add(ticker);
@@ -141,12 +139,11 @@ public class LunoMarketClientTests : IDisposable
     public async Task GetTickersWhenApiFailsShouldBubbleExceptionAndEmitErrorTrace()
     {
         // Arrange
-        var telemetry = new LunoTelemetry();
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(500).WithBody("Internal Server Error"));
 
         using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient, telemetry);
+        var client = CreateClient(httpClient);
 
         Activity? capturedActivity = null;
         using var activityStoppedEvent = new ManualResetEventSlim();
@@ -179,7 +176,6 @@ public class LunoMarketClientTests : IDisposable
     public async Task GetTickersWhenApiReturnsNullTickersShouldThrowLunoMappingException()
     {
         // Arrange
-        var telemetry = new LunoTelemetry();
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -187,7 +183,7 @@ public class LunoMarketClientTests : IDisposable
                 .WithBodyAsJson(new { tickers = (object[]?)null }));
 
         using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient, telemetry);
+        var client = CreateClient(httpClient);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoMappingException>(async () =>
@@ -202,7 +198,6 @@ public class LunoMarketClientTests : IDisposable
     public async Task GetTickersWhenApiReturnsQuirkyJsonShouldHandleGracefully()
     {
         // Arrange
-        var telemetry = new LunoTelemetry();
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -213,10 +208,10 @@ public class LunoMarketClientTests : IDisposable
                 }));
 
         using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient, telemetry);
+        var client = CreateClient(httpClient);
 
         // Act
-        var results = new List<Ticker>();
+        var results = new List<Luno.SDK.Application.Market.TickerResponse>();
         await foreach (var ticker in client.GetTickersAsync())
         {
             results.Add(ticker);
@@ -225,6 +220,6 @@ public class LunoMarketClientTests : IDisposable
         // Assert
         Assert.Single(results);
         Assert.Equal("XBTZAR", results[0].Pair);
-        Assert.Equal(MarketStatus.Unknown, results[0].Status);
+        Assert.False(results[0].IsActive);
     }
 }
