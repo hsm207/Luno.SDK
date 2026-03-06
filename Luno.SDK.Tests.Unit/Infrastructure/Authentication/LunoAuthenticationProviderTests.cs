@@ -12,20 +12,25 @@ public class LunoAuthenticationProviderTests
         // Arrange
         var options = new LunoClientOptions();
         var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/public") };
+        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/ticker") };
         request.AddRequestOptions(new[] { new LunoAuthenticationOption { RequiresAuthentication = true } });
 
         // Act & Assert
         await Assert.ThrowsAsync<LunoAuthenticationException>(() => provider.AuthenticateRequestAsync(request));
     }
 
-    [Fact(DisplayName = "Given no credentials and mandatory private endpoint, When authenticating, Then throw LunoAuthenticationException")]
-    public async Task AuthenticateRequestAsync_GivenNoCredentialsAndMandatoryPrivate_ThenThrow()
+    [Theory(DisplayName = "Given no credentials and mandatory private endpoint, When authenticating, Then throw LunoAuthenticationException")]
+    [InlineData("/api/1/balance")]
+    [InlineData("/api/1/orders")]
+    [InlineData("/api/1/postorder")]
+    [InlineData("/api/1/funding_address")]
+    [InlineData("/api/exchange/1/candles")] // Candles require auth in Luno
+    public async Task AuthenticateRequestAsync_GivenNoCredentialsAndMandatoryPrivate_ThenThrow(string path)
     {
         // Arrange
         var options = new LunoClientOptions();
         var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/balance") };
+        var request = new RequestInformation { URI = new Uri($"https://api.luno.com{path}") };
 
         // Act & Assert
         await Assert.ThrowsAsync<LunoAuthenticationException>(() => provider.AuthenticateRequestAsync(request));
@@ -37,7 +42,7 @@ public class LunoAuthenticationProviderTests
         // Arrange
         var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };
         var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/public") };
+        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/ticker") };
         request.AddRequestOptions(new[] { new LunoAuthenticationOption { RequiresAuthentication = true } });
 
         // Act

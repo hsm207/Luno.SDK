@@ -72,13 +72,16 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
 
     private static bool IsMandatoryPrivateEndpoint(string path)
     {
-        if (string.IsNullOrEmpty(path)) return false;
+        if (string.IsNullOrEmpty(path)) return true; // Fail-secure
 
-        return path.StartsWith("/api/1/accounts", StringComparison.OrdinalIgnoreCase) ||
-               path.StartsWith("/api/1/balance", StringComparison.OrdinalIgnoreCase) ||
-               path.StartsWith("/api/1/beneficiaries", StringComparison.OrdinalIgnoreCase) ||
-               path.StartsWith("/api/1/withdrawals", StringComparison.OrdinalIgnoreCase) ||
-               path.StartsWith("/api/exchange/", StringComparison.OrdinalIgnoreCase) ||
-               path.Equals("/api/1/candles", StringComparison.OrdinalIgnoreCase);
+        // Public Allowlist Strategy (Secure-by-Design)
+        // Only explicitly known market data endpoints are considered public.
+        // Everything else requires authentication.
+        bool isPublic = path.StartsWith("/api/1/ticker", StringComparison.OrdinalIgnoreCase) || // covers /ticker and /tickers
+                        path.StartsWith("/api/1/orderbook", StringComparison.OrdinalIgnoreCase) || // covers /orderbook and /orderbook_top
+                        path.Equals("/api/1/trades", StringComparison.OrdinalIgnoreCase) ||
+                        path.Equals("/api/exchange/1/markets", StringComparison.OrdinalIgnoreCase);
+
+        return !isPublic;
     }
 }
