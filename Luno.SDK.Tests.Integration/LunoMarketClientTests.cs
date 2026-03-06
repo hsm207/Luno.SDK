@@ -30,10 +30,10 @@ public class LunoMarketClientTests : IDisposable
         _server.Dispose();
     }
 
-    private static ILunoClient CreateClient(HttpClient httpClient)
+    private ILunoClient CreateClient()
     {
-        var options = new LunoClientOptions();
-        return new LunoClient(httpClient, options);
+        var options = new LunoClientOptions { BaseUrl = _server.Url! };
+        return new LunoClient(options);
     }
 
     [Fact(DisplayName = "Given standard DI container, When resolving ILunoClient, Then return a valid instance with all sub-clients configured.")]
@@ -79,8 +79,7 @@ public class LunoMarketClientTests : IDisposable
                     }
                 }));
 
-        using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient);
+        var client = CreateClient();
 
         Activity? capturedActivity = null;
         using var activityStoppedEvent = new ManualResetEventSlim();
@@ -142,8 +141,7 @@ public class LunoMarketClientTests : IDisposable
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(500).WithBody("Internal Server Error"));
 
-        using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient);
+        var client = CreateClient();
 
         Activity? capturedActivity = null;
         using var activityStoppedEvent = new ManualResetEventSlim();
@@ -182,8 +180,7 @@ public class LunoMarketClientTests : IDisposable
                 .WithHeader("Content-Type", "application/json")
                 .WithBodyAsJson(new { tickers = (object[]?)null }));
 
-        using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient);
+        var client = CreateClient();
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoMappingException>(async () =>
@@ -207,8 +204,7 @@ public class LunoMarketClientTests : IDisposable
                     tickers = new[] { new { pair = "XBTZAR", timestamp = 1772555388322 } }
                 }));
 
-        using var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
-        var client = CreateClient(httpClient);
+        var client = CreateClient();
 
         // Act
         var results = new List<Luno.SDK.Application.Market.TickerResponse>();

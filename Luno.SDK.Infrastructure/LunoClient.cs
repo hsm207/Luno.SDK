@@ -18,7 +18,11 @@ namespace Luno.SDK;
 /// </summary>
 public class LunoClient : ILunoClient
 {
-    private static readonly HttpClient SharedHttpClient = CreateDefaultHttpClient();
+    // High-performance process-wide connection pool
+    private static readonly SocketsHttpHandler SharedHandler = new()
+    {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+    };
 
     private readonly LunoClientOptions _options;
     private readonly ILunoTelemetry _telemetry;
@@ -40,7 +44,7 @@ public class LunoClient : ILunoClient
     /// </summary>
     /// <param name="options">Optional configuration options for the client.</param>
     public LunoClient(LunoClientOptions? options = null)
-        : this(SharedHttpClient, options)
+        : this(CreatePooledClient(options ?? new LunoClientOptions()), options)
     {
     }
 
@@ -71,16 +75,11 @@ public class LunoClient : ILunoClient
         _accounts = new Lazy<ILunoAccountClient>(() => new LunoAccountClient(_requestAdapter));
     }
 
-    private static HttpClient CreateDefaultHttpClient()
+    private static HttpClient CreatePooledClient(LunoClientOptions options)
     {
-        var handler = new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2) 
-        };
-
-        return new HttpClient(handler, disposeHandler: true) 
-        { 
-            BaseAddress = new Uri("https://api.luno.com") 
+        return new HttpClient(SharedHandler, disposeHandler: false)
+        {
+            BaseAddress = new Uri(options.BaseUrl)
         };
     }
 }

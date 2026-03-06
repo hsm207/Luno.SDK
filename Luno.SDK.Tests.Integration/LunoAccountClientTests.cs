@@ -27,13 +27,13 @@ public class LunoAccountClientTests : IDisposable
 
     private LunoClient CreateClient(string? apiKeyId = null, string? apiKeySecret = null)
     {
-        var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
         var options = new LunoClientOptions
         {
+            BaseUrl = _server.Url!,
             ApiKeyId = apiKeyId,
             ApiKeySecret = apiKeySecret
         };
-        return new LunoClient(httpClient, options);
+        return new LunoClient(options);
     }
 
     [Fact(DisplayName = "Given successful response, When getting balances, Then deserialize with exact decimal precision")]
