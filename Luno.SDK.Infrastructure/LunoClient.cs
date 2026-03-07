@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Abstractions;
-using Microsoft.Kiota.Abstractions.Authentication;
 using Luno.SDK.Account;
 using Luno.SDK.Infrastructure.Account;
 using Luno.SDK.Infrastructure.Authentication;
@@ -56,19 +55,19 @@ public class LunoClient : ILunoClient
     public LunoClient(HttpClient httpClient, LunoClientOptions? options = null)
     {
         _options = options ?? new LunoClientOptions();
-        
+
         var telemetryImpl = new LunoTelemetry();
         _telemetry = telemetryImpl;
-        
+
         // Setup the centralized request adapter pipeline
         var authProvider = new LunoAuthenticationProvider(_options);
         var baseAdapter = new HttpClientRequestAdapter(authProvider, httpClient: httpClient);
 
         var errorHandlingAdapter = new LunoErrorHandlingAdapter(baseAdapter);
-        
+
         _requestAdapter = new LunoTelemetryAdapter(
             errorHandlingAdapter,
-            telemetryImpl, 
+            telemetryImpl,
             _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
 
         _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_requestAdapter));

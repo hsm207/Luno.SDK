@@ -4,7 +4,6 @@ using Microsoft.Kiota.Http.HttpClientLibrary;
 using Moq;
 using Moq.Protected;
 using Luno.SDK.Application.Market;
-using Luno.SDK.Infrastructure.Market;
 using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Application.Market;
@@ -24,7 +23,7 @@ public class GetTickersTests
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
         var json = "{\"tickers\":[{\"pair\":\"XBTZAR\",\"timestamp\":1772555388322,\"bid\":\"1000000\",\"ask\":\"1000100\",\"last_trade\":\"1000050\",\"rolling_24_hour_volume\":\"500\",\"status\":\"ACTIVE\"}]}";
-        
+
         handlerMock
            .Protected()
            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
@@ -58,7 +57,7 @@ public class GetTickersTests
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
         var json = "{\"tickers\":[]}";
-        
+
         handlerMock
            .Protected()
            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())

@@ -36,7 +36,7 @@ public static class Concept02_DependencyInjection
         {
             var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
             Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");
-            
+
             if (++count >= 5) break;
         }
 

@@ -24,7 +24,7 @@ public record Ticker(
     /// Gets the difference between the Ask and Bid prices.
     /// </summary>
     public decimal Spread => Ask - Bid;
-    
+
     /// <summary>
     /// Gets a value indicating whether the market is currently active.
     /// </summary>

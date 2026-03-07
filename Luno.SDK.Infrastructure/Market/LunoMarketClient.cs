@@ -17,7 +17,7 @@ internal class LunoMarketClient(IRequestAdapter requestAdapter) : ILunoMarketCli
     public async IAsyncEnumerable<Ticker> GetTickersAsync(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {
-        var response = await _apiClient.Api.One.Tickers.GetAsync(req => 
+        var response = await _apiClient.Api.One.Tickers.GetAsync(req =>
             req.Options.Add(new LunoTelemetryOptions("GetMarketTickers")), ct);
 
         if (response?.Tickers is null)

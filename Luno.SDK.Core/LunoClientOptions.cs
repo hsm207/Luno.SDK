@@ -12,7 +12,7 @@ public class LunoClientOptions
     /// Gets or sets the base URL for the Luno API. Defaults to "https://api.luno.com".
     /// </summary>
     public string BaseUrl { get; set; } = "https://api.luno.com";
-    
+
     /// <summary>
     /// Gets or sets the User-Agent string sent with each request.
     /// </summary>

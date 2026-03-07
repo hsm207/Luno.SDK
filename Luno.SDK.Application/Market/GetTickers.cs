@@ -37,7 +37,7 @@ public class GetTickersHandler(ILunoMarketClient marketClient)
     /// <param name="ct">A cancellation token.</param>
     /// <returns>A stream of <see cref="TickerResponse"/> objects.</returns>
     public async IAsyncEnumerable<TickerResponse> HandleAsync(
-        GetTickersQuery query, 
+        GetTickersQuery query,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
         await foreach (var ticker in marketClient.GetTickersAsync(ct).WithCancellation(ct))

@@ -1,15 +1,10 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Net;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Kiota.Abstractions;
-using Microsoft.Kiota.Abstractions.Authentication;
-using Microsoft.Kiota.Http.HttpClientLibrary;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
-using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Telemetry;
 using Xunit;
 

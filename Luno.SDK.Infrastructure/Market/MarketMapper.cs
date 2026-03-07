@@ -25,10 +25,10 @@ internal static class MarketMapper
         DateTimeOffset.FromUnixTimeMilliseconds(GetTimestamp(dto))
     );
 
-    private static long GetTimestamp(GeneratedTicker dto) => 
+    private static long GetTimestamp(GeneratedTicker dto) =>
         dto.Timestamp ?? throw new LunoMappingException("API returned a ticker without a valid timestamp.", nameof(GeneratedTicker));
 
-    private static decimal ParseDecimal(string? value) => 
+    private static decimal ParseDecimal(string? value) =>
         decimal.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0m;
 
     /// <summary>

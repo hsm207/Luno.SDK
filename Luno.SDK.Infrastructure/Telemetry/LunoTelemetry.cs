@@ -30,13 +30,13 @@ internal class LunoTelemetry : ILunoTelemetry, IDisposable
         Meter = new Meter(LunoInstrumentation.Name, LunoInstrumentation.Version);
 
         _requestCounter = Meter.CreateCounter<long>(
-            "luno.sdk.requests", 
-            unit: "{requests}", 
+            "luno.sdk.requests",
+            unit: "{requests}",
             description: "Total number of API requests made to Luno.");
 
         _durationHistogram = Meter.CreateHistogram<double>(
-            "luno.sdk.request.duration", 
-            unit: "ms", 
+            "luno.sdk.request.duration",
+            unit: "ms",
             description: "Latency of API requests made to Luno.");
     }
 
@@ -47,7 +47,7 @@ internal class LunoTelemetry : ILunoTelemetry, IDisposable
     /// <param name="status">The result status (e.g., Success, Error).</param>
     public virtual void RecordRequest(string operation, string status)
     {
-        _requestCounter.Add(1, 
+        _requestCounter.Add(1,
             new KeyValuePair<string, object?>("luno.operation", operation),
             new KeyValuePair<string, object?>("luno.status", status));
     }
@@ -59,7 +59,7 @@ internal class LunoTelemetry : ILunoTelemetry, IDisposable
     /// <param name="operation">The name of the operation.</param>
     public virtual void RecordDuration(double duration, string operation)
     {
-        _durationHistogram.Record(duration, 
+        _durationHistogram.Record(duration,
             new KeyValuePair<string, object?>("luno.operation", operation));
     }
 
