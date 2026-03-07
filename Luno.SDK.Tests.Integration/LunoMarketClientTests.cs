@@ -1,5 +1,9 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Kiota.Abstractions;
 using WireMock.RequestBuilders;
@@ -84,8 +88,11 @@ public class LunoMarketClientTests : IDisposable
             Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData,
             ActivityStopped = (activity) =>
             {
-                capturedActivity = activity;
-                activityStoppedEvent.Set();
+                if (activity.OperationName == operationName)
+                {
+                    capturedActivity = activity;
+                    activityStoppedEvent.Set();
+                }
             }
         };
         ActivitySource.AddActivityListener(listener);
@@ -133,6 +140,7 @@ public class LunoMarketClientTests : IDisposable
     public async Task GetTickersWhenApiFailsShouldBubbleExceptionAndEmitErrorTrace()
     {
         // Arrange
+        var operationName = "GetMarketTickers";
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(500).WithBody("Internal Server Error"));
 
@@ -146,8 +154,11 @@ public class LunoMarketClientTests : IDisposable
             Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData,
             ActivityStopped = (activity) =>
             {
-                capturedActivity = activity;
-                activityStoppedEvent.Set();
+                if (activity.OperationName == operationName)
+                {
+                    capturedActivity = activity;
+                    activityStoppedEvent.Set();
+                }
             }
         };
         ActivitySource.AddActivityListener(activityListener);

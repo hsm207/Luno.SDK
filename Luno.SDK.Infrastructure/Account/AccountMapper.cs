@@ -17,8 +17,6 @@ public static class AccountMapper
     /// <returns>A domain <see cref="Balance"/>.</returns>
     public static Balance ToDomain(this AccountBalance dto)
     {
-        if (dto == null) throw new ArgumentNullException(nameof(dto));
-
         if (string.IsNullOrWhiteSpace(dto.AccountId))
             throw new LunoMappingException("Missing mandatory field: account_id", nameof(AccountBalance));
 
