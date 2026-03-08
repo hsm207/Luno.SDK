@@ -31,15 +31,6 @@ public static class LunoServiceExtensions
             PooledConnectionLifetime = TimeSpan.FromMinutes(2)
         });
 
-        // Register LunoClient with the DI container using the factory approach
-        services.AddTransient<ILunoClient>(sp =>
-        {
-            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-            var httpClient = httpClientFactory.CreateClient(nameof(ILunoClient));
-            var spOptions = sp.GetRequiredService<LunoClientOptions>();
-            return new LunoClient(httpClient, spOptions);
-        });
-
         builder.AddStandardResilienceHandler();
 
         services.AddTransient(sp => sp.GetRequiredService<ILunoClient>().Market);
