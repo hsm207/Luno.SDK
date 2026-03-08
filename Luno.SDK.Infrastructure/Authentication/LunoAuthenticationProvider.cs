@@ -18,9 +18,11 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
     /// <param name="options">The client options containing the API Key ID and Secret.</param>
     public LunoAuthenticationProvider(LunoClientOptions options)
     {
-        if (!string.IsNullOrWhiteSpace(options.ApiKeyId) && !string.IsNullOrWhiteSpace(options.ApiKeySecret))
+        if (options is { ApiKeyId: var id, ApiKeySecret: var secret }
+            && !string.IsNullOrWhiteSpace(id)
+            && !string.IsNullOrWhiteSpace(secret))
         {
-            var bytes = Encoding.UTF8.GetBytes($"{options.ApiKeyId}:{options.ApiKeySecret}");
+            var bytes = Encoding.UTF8.GetBytes($"{id}:{secret}");
             var base64 = Convert.ToBase64String(bytes);
             _preComputedAuthHeader = $"Basic {base64}";
         }
@@ -32,39 +34,33 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         Dictionary<string, object>? additionalAuthenticationContext = null,
         CancellationToken cancellationToken = default)
     {
-        // We trust the compiler for null checks.
         var authOption = request.RequestOptions.OfType<LunoAuthenticationOption>().FirstOrDefault();
 
-        // 1. Explicit Control (The Edge Case)
-        if (authOption != null && !authOption.RequiresAuthentication)
+        // 1. Explicit Control (The Edge Case) - Opt-Out
+        if (authOption is { RequiresAuthentication: false })
         {
-            // Explicitly opted out. Do NOT authenticate.
+            return Task.CompletedTask;
+        }
+
+        // 2. Early return if the header is already present
+        if (request.Headers.ContainsKey("Authorization"))
+        {
             return Task.CompletedTask;
         }
 
         bool isMandatoryPrivate = IsMandatoryPrivateEndpoint(request.URI.AbsolutePath);
+        bool requiresAuth = (authOption is { RequiresAuthentication: true }) || isMandatoryPrivate;
 
-        // If explicitly requested OR naturally a mandatory private endpoint
-        if ((authOption != null && authOption.RequiresAuthentication) || isMandatoryPrivate)
+        // 3. Guard Clause: Mandatory Private / Explicit Opt-In missing keys
+        if (requiresAuth && _preComputedAuthHeader == null)
         {
-            if (_preComputedAuthHeader == null)
-            {
-                throw new LunoAuthenticationException("This request requires authentication, but API keys were not provided in LunoClientOptions.");
-            }
-
-            if (!request.Headers.ContainsKey("Authorization"))
-            {
-                request.Headers.Add("Authorization", _preComputedAuthHeader);
-            }
+            throw new LunoAuthenticationException("This request requires authentication, but API keys were not provided in LunoClientOptions.");
         }
-        else
+
+        // 4. Attach Header (if we have it, covering both Required and Auto-Optimized Public)
+        if (_preComputedAuthHeader != null)
         {
-            // 2. Auto-Optimized Public (or Anonymous)
-            // If we have credentials, we attach them to get the rate limit optimization
-            if (_preComputedAuthHeader != null && !request.Headers.ContainsKey("Authorization"))
-            {
-                request.Headers.Add("Authorization", _preComputedAuthHeader);
-            }
+            request.Headers.Add("Authorization", _preComputedAuthHeader);
         }
 
         return Task.CompletedTask;
