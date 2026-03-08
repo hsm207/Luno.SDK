@@ -1,4 +1,4 @@
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
 using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;
@@ -36,26 +36,28 @@ public class MarketMapperTests
         Assert.Equal(MarketStatus.Active, result.Status);
     }
 
-    [Fact(DisplayName = "Given ticker DTO with null pair, When mapping, Then throw InvalidOperationException.")]
-    public void MapToEntityWhenPairIsNullShouldThrowInvalidOperationException()
+    [Fact(DisplayName = "Given ticker DTO with null pair, When mapping, Then throw LunoMappingException.")]
+    public void MapToEntityWhenPairIsNullShouldThrowLunoMappingException()
     {
         // Arrange
         var dto = new GeneratedTicker { Pair = null };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => MarketMapper.MapToEntity(dto));
+        var ex = Assert.Throws<LunoMappingException>(() => MarketMapper.MapToEntity(dto));
         Assert.Contains("market pair", ex.Message);
+        Assert.Equal(nameof(GeneratedTicker), ex.DtoType);
     }
 
-    [Fact(DisplayName = "Given ticker DTO with null timestamp, When mapping, Then throw InvalidOperationException.")]
-    public void MapToEntityWhenTimestampIsNullShouldThrowInvalidOperationException()
+    [Fact(DisplayName = "Given ticker DTO with null timestamp, When mapping, Then throw LunoMappingException.")]
+    public void MapToEntityWhenTimestampIsNullShouldThrowLunoMappingException()
     {
         // Arrange
         var dto = new GeneratedTicker { Pair = "XBTZAR", Timestamp = null };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => MarketMapper.MapToEntity(dto));
+        var ex = Assert.Throws<LunoMappingException>(() => MarketMapper.MapToEntity(dto));
         Assert.Contains("timestamp", ex.Message);
+        Assert.Equal(nameof(GeneratedTicker), ex.DtoType);
     }
 
     [Theory(DisplayName = "Given each TickerStatus enum value, When mapping status, Then return equivalent domain MarketStatus.")]

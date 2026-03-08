@@ -1,4 +1,4 @@
-namespace Luno.SDK.Core.Market;
+namespace Luno.SDK.Market;
 
 /// <summary>
 /// Represents the operational status of a Luno market pair.

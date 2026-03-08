@@ -1,6 +1,4 @@
-using Luno.SDK.Core.Market;
-
-namespace Luno.SDK;
+namespace Luno.SDK.Market;
 
 /// <summary>
 /// Defines the interface for a client specialized in Luno Market data operations.

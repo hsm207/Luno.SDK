@@ -1,4 +1,4 @@
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Core.Market;
@@ -27,5 +27,17 @@ public class TickerTests
 
         // Act & Assert
         Assert.Equal(expected, ticker.IsActive);
+    }
+
+    [Fact(DisplayName = "Given identical tickers, When compared, Then return true")]
+    public void Equality_GivenIdenticalTickers_WhenCompared_ThenReturnTrue()
+    {
+        var timestamp = DateTimeOffset.UtcNow;
+        var ticker1 = new Ticker("XBTZAR", 100m, 90m, 95m, 1m, MarketStatus.Active, timestamp);
+        var ticker2 = new Ticker("XBTZAR", 100m, 90m, 95m, 1m, MarketStatus.Active, timestamp);
+
+        Assert.Equal(ticker1, ticker2);
+        Assert.Equal(ticker1.GetHashCode(), ticker2.GetHashCode());
+        Assert.NotNull(ticker1.ToString());
     }
 }

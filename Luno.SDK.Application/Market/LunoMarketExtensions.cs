@@ -14,7 +14,7 @@ public static class LunoMarketExtensions
     /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="TickerResponse"/> representing the market state.</returns>
     public static IAsyncEnumerable<TickerResponse> GetTickersAsync(
-        this ILunoClient client, 
+        this ILunoClient client,
         CancellationToken ct = default)
     {
         var handler = new GetTickersHandler(client.Market);

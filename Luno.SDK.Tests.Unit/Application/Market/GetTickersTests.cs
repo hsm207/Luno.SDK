@@ -4,7 +4,6 @@ using Microsoft.Kiota.Http.HttpClientLibrary;
 using Moq;
 using Moq.Protected;
 using Luno.SDK.Application.Market;
-using Luno.SDK.Infrastructure.Market;
 using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Application.Market;
@@ -24,7 +23,7 @@ public class GetTickersTests
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
         var json = "{\"tickers\":[{\"pair\":\"XBTZAR\",\"timestamp\":1772555388322,\"bid\":\"1000000\",\"ask\":\"1000100\",\"last_trade\":\"1000050\",\"rolling_24_hour_volume\":\"500\",\"status\":\"ACTIVE\"}]}";
-        
+
         handlerMock
            .Protected()
            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
@@ -58,7 +57,7 @@ public class GetTickersTests
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
         var json = "{\"tickers\":[]}";
-        
+
         handlerMock
            .Protected()
            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
@@ -103,5 +102,17 @@ public class GetTickersTests
         {
             await foreach (var _ in handler.HandleAsync(new GetTickersQuery(), cts.Token)) { }
         });
+    }
+
+    [Fact(DisplayName = "Given identical TickerResponses, When compared, Then return true")]
+    public void Equality_GivenIdenticalTickerResponses_WhenCompared_ThenReturnTrue()
+    {
+        var timestamp = DateTimeOffset.UtcNow;
+        var r1 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);
+        var r2 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);
+
+        Assert.Equal(r1, r2);
+        Assert.Equal(r1.GetHashCode(), r2.GetHashCode());
+        Assert.NotNull(r1.ToString());
     }
 }

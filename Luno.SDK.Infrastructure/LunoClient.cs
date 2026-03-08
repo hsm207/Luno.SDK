@@ -1,8 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Abstractions;
-using Microsoft.Kiota.Abstractions.Authentication;
+using Luno.SDK.Account;
+using Luno.SDK.Infrastructure.Account;
+using Luno.SDK.Infrastructure.Authentication;
+using Luno.SDK.Infrastructure.ErrorHandling;
 using Luno.SDK.Infrastructure.Telemetry;
+using Luno.SDK.Market;
+using Luno.SDK.Infrastructure.Market;
 
 namespace Luno.SDK;
 
@@ -12,15 +17,23 @@ namespace Luno.SDK;
 /// </summary>
 public class LunoClient : ILunoClient
 {
-    private static readonly HttpClient SharedHttpClient = CreateDefaultHttpClient();
+    // High-performance process-wide connection pool
+    private static readonly SocketsHttpHandler SharedHandler = new()
+    {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+    };
 
     private readonly LunoClientOptions _options;
     private readonly ILunoTelemetry _telemetry;
     private readonly IRequestAdapter _requestAdapter;
     private readonly Lazy<ILunoMarketClient> _market;
+    private readonly Lazy<ILunoAccountClient> _accounts;
 
     /// <inheritdoc />
     public ILunoMarketClient Market => _market.Value;
+
+    /// <inheritdoc />
+    public ILunoAccountClient Accounts => _accounts.Value;
 
     /// <inheritdoc />
     public ILunoTelemetry Telemetry => _telemetry;
@@ -30,7 +43,7 @@ public class LunoClient : ILunoClient
     /// </summary>
     /// <param name="options">Optional configuration options for the client.</param>
     public LunoClient(LunoClientOptions? options = null)
-        : this(SharedHttpClient, options)
+        : this(CreatePooledClient(options ?? new LunoClientOptions()), options)
     {
     }
 
@@ -42,33 +55,30 @@ public class LunoClient : ILunoClient
     public LunoClient(HttpClient httpClient, LunoClientOptions? options = null)
     {
         _options = options ?? new LunoClientOptions();
-        
+
         var telemetryImpl = new LunoTelemetry();
         _telemetry = telemetryImpl;
-        
-        // Setup the centralized request adapter with telemetry decoration
-        // This adapter will be shared across all specialized sub-clients.
-        var auth = new AnonymousAuthenticationProvider();
-        var baseAdapter = new HttpClientRequestAdapter(auth, httpClient: httpClient);
-        
+
+        // Setup the centralized request adapter pipeline
+        var authProvider = new LunoAuthenticationProvider(_options);
+        var baseAdapter = new HttpClientRequestAdapter(authProvider, httpClient: httpClient);
+
+        var errorHandlingAdapter = new LunoErrorHandlingAdapter(baseAdapter);
+
         _requestAdapter = new LunoTelemetryAdapter(
-            baseAdapter, 
-            telemetryImpl, 
+            errorHandlingAdapter,
+            telemetryImpl,
             _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
 
         _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_requestAdapter));
+        _accounts = new Lazy<ILunoAccountClient>(() => new LunoAccountClient(_requestAdapter));
     }
 
-    private static HttpClient CreateDefaultHttpClient()
+    private static HttpClient CreatePooledClient(LunoClientOptions options)
     {
-        var handler = new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2) 
-        };
-
-        return new HttpClient(handler, disposeHandler: true) 
-        { 
-            BaseAddress = new Uri("https://api.luno.com") 
+        return new HttpClient(SharedHandler, disposeHandler: false)
+        {
+            BaseAddress = new Uri(options.BaseUrl)
         };
     }
 }
