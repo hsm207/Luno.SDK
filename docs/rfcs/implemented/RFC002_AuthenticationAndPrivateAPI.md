@@ -1,6 +1,6 @@
 # RFC 002: Authentication and Private API Access
 
-**Status:** Draft  
+**Status:** Implemented (March 11, 2026)  
 **Date:** 2026-03-04
 
 ## 1. Overview
