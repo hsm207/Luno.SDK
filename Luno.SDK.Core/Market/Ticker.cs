@@ -1,4 +1,4 @@
-namespace Luno.SDK.Core.Market;
+namespace Luno.SDK.Market;
 
 /// <summary>
 /// Represents a market ticker containing the latest trading information for a specific pair.
@@ -24,7 +24,7 @@ public record Ticker(
     /// Gets the difference between the Ask and Bid prices.
     /// </summary>
     public decimal Spread => Ask - Bid;
-    
+
     /// <summary>
     /// Gets a value indicating whether the market is currently active.
     /// </summary>

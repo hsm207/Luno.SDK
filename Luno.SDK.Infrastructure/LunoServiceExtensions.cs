@@ -18,15 +18,23 @@ public static class LunoServiceExtensions
         var options = new LunoClientOptions();
         configureOptions?.Invoke(options);
 
-        var builder = services.AddHttpClient<ILunoClient, LunoClient>(client =>
+        services.AddSingleton(options);
+
+        var builder = services.AddHttpClient<ILunoClient, LunoClient>((sp, client) =>
         {
-            client.BaseAddress = new Uri(options.BaseUrl);
-            client.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
+            var spOptions = sp.GetRequiredService<LunoClientOptions>();
+            client.BaseAddress = new Uri(spOptions.BaseUrl);
+            client.DefaultRequestHeaders.Add("User-Agent", spOptions.UserAgent);
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2)
         });
 
         builder.AddStandardResilienceHandler();
 
         services.AddTransient(sp => sp.GetRequiredService<ILunoClient>().Market);
+        services.AddTransient(sp => sp.GetRequiredService<ILunoClient>().Accounts);
 
         return builder;
     }

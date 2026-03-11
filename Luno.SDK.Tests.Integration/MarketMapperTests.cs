@@ -1,4 +1,4 @@
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
 using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;
@@ -9,7 +9,7 @@ namespace Luno.SDK.Tests.Integration;
 public class MarketMapperTests
 {
     [Fact(DisplayName = "Given valid ticker DTO, When mapping, Then return populated domain entity.")]
-    public void MapToEntityWhenValidTickerDtoShouldReturnPopulatedEntity()
+    public void MapToEntity_ValidTickerDto_ReturnsPopulatedEntity()
     {
         // Arrange
         var dto = new GeneratedTicker
@@ -36,33 +36,35 @@ public class MarketMapperTests
         Assert.Equal(MarketStatus.Active, result.Status);
     }
 
-    [Fact(DisplayName = "Given ticker DTO with null pair, When mapping, Then throw InvalidOperationException.")]
-    public void MapToEntityWhenPairIsNullShouldThrowInvalidOperationException()
+    [Fact(DisplayName = "Given ticker DTO with null pair, When mapping, Then throw LunoMappingException.")]
+    public void MapToEntity_PairIsNull_ThrowsLunoMappingException()
     {
         // Arrange
         var dto = new GeneratedTicker { Pair = null };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => MarketMapper.MapToEntity(dto));
+        var ex = Assert.Throws<LunoMappingException>(() => MarketMapper.MapToEntity(dto));
         Assert.Contains("market pair", ex.Message);
+        Assert.Equal(nameof(GeneratedTicker), ex.DtoType);
     }
 
-    [Fact(DisplayName = "Given ticker DTO with null timestamp, When mapping, Then throw InvalidOperationException.")]
-    public void MapToEntityWhenTimestampIsNullShouldThrowInvalidOperationException()
+    [Fact(DisplayName = "Given ticker DTO with null timestamp, When mapping, Then throw LunoMappingException.")]
+    public void MapToEntity_TimestampIsNull_ThrowsLunoMappingException()
     {
         // Arrange
         var dto = new GeneratedTicker { Pair = "XBTZAR", Timestamp = null };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => MarketMapper.MapToEntity(dto));
+        var ex = Assert.Throws<LunoMappingException>(() => MarketMapper.MapToEntity(dto));
         Assert.Contains("timestamp", ex.Message);
+        Assert.Equal(nameof(GeneratedTicker), ex.DtoType);
     }
 
     [Theory(DisplayName = "Given each TickerStatus enum value, When mapping status, Then return equivalent domain MarketStatus.")]
     [InlineData(GeneratedStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedStatus.POSTONLY, MarketStatus.PostOnly)]
     [InlineData(GeneratedStatus.DISABLED, MarketStatus.Disabled)]
-    public void MapStatusWhenEnumIsProvidedShouldReturnEquivalentStatus(GeneratedStatus status, MarketStatus expected)
+    public void MapStatus_EnumIsProvided_ReturnsEquivalentStatus(GeneratedStatus status, MarketStatus expected)
     {
         // Act
         var result = MarketMapper.MapStatus(status);
@@ -72,7 +74,7 @@ public class MarketMapperTests
     }
 
     [Fact(DisplayName = "Given null ticker status, When mapping status, Then return MarketStatus.Unknown.")]
-    public void MapStatusWhenNullShouldReturnUnknown()
+    public void MapStatus_Null_ReturnsUnknown()
     {
         // Act
         var result = MarketMapper.MapStatus(null);
