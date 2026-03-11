@@ -1,5 +1,5 @@
 using Microsoft.Kiota.Abstractions;
-using Luno.SDK.Core.Market;
+using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Telemetry;
 using Luno.SDK.Infrastructure.Generated;
 
@@ -17,12 +17,12 @@ internal class LunoMarketClient(IRequestAdapter requestAdapter) : ILunoMarketCli
     public async IAsyncEnumerable<Ticker> GetTickersAsync(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {
-        var response = await _apiClient.Api.One.Tickers.GetAsync(req => 
+        var response = await _apiClient.Api.One.Tickers.GetAsync(req =>
             req.Options.Add(new LunoTelemetryOptions("GetMarketTickers")), ct);
 
         if (response?.Tickers is null)
         {
-            throw new InvalidOperationException("API returned a successful response but the ticker list was missing or null.");
+            throw new LunoMappingException("The API response was successful but the tickers array was missing or null.", "GetTickersResponse");
         }
 
         foreach (var dto in response.Tickers)

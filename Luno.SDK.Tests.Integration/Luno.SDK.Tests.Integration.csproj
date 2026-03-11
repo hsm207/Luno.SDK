@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Luno.SDK.Core\Luno.SDK.Core.csproj" />
     <ProjectReference Include="..\Luno.SDK.Infrastructure\Luno.SDK.Infrastructure.csproj" />
+    <ProjectReference Include="..\Luno.SDK.Application\Luno.SDK.Application.csproj" />
   </ItemGroup>
 
 </Project>

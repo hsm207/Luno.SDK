@@ -44,8 +44,8 @@ internal class LunoTelemetryAdapter(IRequestAdapter inner, LunoTelemetry telemet
     }
 
     public Task<IEnumerable<ModelType>?> SendPrimitiveCollectionAsync<ModelType>(
-        RequestInformation requestInfo, 
-        Dictionary<string, ParsableFactory<IParsable>>? errorMapping = default, 
+        RequestInformation requestInfo,
+        Dictionary<string, ParsableFactory<IParsable>>? errorMapping = default,
         CancellationToken cancellationToken = default)
     {
         return WrapAsync(() => inner.SendPrimitiveCollectionAsync<ModelType>(requestInfo, errorMapping, cancellationToken), requestInfo);
@@ -56,7 +56,7 @@ internal class LunoTelemetryAdapter(IRequestAdapter inner, LunoTelemetry telemet
         Dictionary<string, ParsableFactory<IParsable>>? errorMapping = default,
         CancellationToken cancellationToken = default)
     {
-        return WrapAsync(async () => 
+        return WrapAsync(async () =>
         {
             await inner.SendNoContentAsync(requestInfo, errorMapping, cancellationToken);
             return true; // Dummy value for the wrapper
@@ -64,7 +64,7 @@ internal class LunoTelemetryAdapter(IRequestAdapter inner, LunoTelemetry telemet
     }
 
     public Task<T?> ConvertToNativeRequestAsync<T>(
-        RequestInformation requestInfo, 
+        RequestInformation requestInfo,
         CancellationToken cancellationToken = default)
     {
         // Conversion methods typically don't record telemetry as they don't hit the wire,
@@ -79,9 +79,9 @@ internal class LunoTelemetryAdapter(IRequestAdapter inner, LunoTelemetry telemet
 
         using var activity = telemetry.ActivitySource.StartActivity(operationName);
         activity?.SetTag("luno.operation", operationName);
-        
+
         var stopwatch = Stopwatch.StartNew();
-        
+
         logger.LogDebug("Executing decorated operation '{OperationName}'", operationName);
 
         try

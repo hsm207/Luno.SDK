@@ -22,7 +22,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given telemetry adapter, When delegating properties, Then call inner adapter faithfully.")]
-    public void PropertiesWhenDelegatingShouldCallInner()
+    public void Properties_Delegating_CallsInnerFaithfully()
     {
         var factoryMock = new Mock<ISerializationWriterFactory>();
         _innerMock.Setup(x => x.SerializationWriterFactory).Returns(factoryMock.Object);
@@ -35,7 +35,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given telemetry adapter, When calling SendAsync, Then record telemetry and delegate.")]
-    public async Task SendAsyncWhenCalledShouldRecordAndDelegate()
+    public async Task SendAsync_Always_RecordsAndDelegates()
     {
         var requestInfo = new RequestInformation();
         var factoryMock = new Mock<ParsableFactory<IParsable>>();
@@ -48,7 +48,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given telemetry adapter, When calling SendPrimitiveAsync, Then record telemetry and delegate.")]
-    public async Task SendPrimitiveAsyncWhenCalledShouldRecordAndDelegate()
+    public async Task SendPrimitiveAsync_Always_RecordsAndDelegates()
     {
         var requestInfo = new RequestInformation();
         _innerMock.Setup(x => x.SendPrimitiveAsync<string>(It.IsAny<RequestInformation>(), It.IsAny<Dictionary<string, ParsableFactory<IParsable>>>(), It.IsAny<CancellationToken>()))
@@ -61,7 +61,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given telemetry adapter, When calling SendPrimitiveCollectionAsync, Then record telemetry and delegate.")]
-    public async Task SendPrimitiveCollectionAsyncWhenCalledShouldRecordAndDelegate()
+    public async Task SendPrimitiveCollectionAsync_Always_RecordsAndDelegates()
     {
         var requestInfo = new RequestInformation();
         _innerMock.Setup(x => x.SendPrimitiveCollectionAsync<string>(It.IsAny<RequestInformation>(), It.IsAny<Dictionary<string, ParsableFactory<IParsable>>>(), It.IsAny<CancellationToken>()))
@@ -73,7 +73,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given telemetry adapter, When calling SendNoContentAsync, Then record telemetry and delegate.")]
-    public async Task SendNoContentAsyncWhenCalledShouldRecordAndDelegate()
+    public async Task SendNoContentAsync_Always_RecordsAndDelegates()
     {
         var requestInfo = new RequestInformation();
         _innerMock.Setup(x => x.SendNoContentAsync(It.IsAny<RequestInformation>(), It.IsAny<Dictionary<string, ParsableFactory<IParsable>>>(), It.IsAny<CancellationToken>()))
@@ -85,7 +85,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given telemetry adapter, When calling ConvertToNativeRequestAsync, Then delegate faithfully.")]
-    public async Task ConvertToNativeWhenCalledShouldDelegate()
+    public async Task ConvertToNative_Always_DelegatesFaithfully()
     {
         var requestInfo = new RequestInformation();
         _innerMock.Setup(x => x.ConvertToNativeRequestAsync<string>(It.IsAny<RequestInformation>(), It.IsAny<CancellationToken>()))
@@ -97,7 +97,7 @@ public class TelemetryAdapterTests
     }
 
     [Fact(DisplayName = "Given operation fails, When calling SendAsync, Then record error and throw.")]
-    public async Task SendAsyncWhenFailsShouldRecordErrorAndThrow()
+    public async Task SendAsync_Fails_RecordsErrorAndThrows()
     {
         var requestInfo = new RequestInformation();
         _innerMock.Setup(x => x.SendAsync(It.IsAny<RequestInformation>(), It.IsAny<ParsableFactory<IParsable>>(), It.IsAny<Dictionary<string, ParsableFactory<IParsable>>>(), It.IsAny<CancellationToken>()))

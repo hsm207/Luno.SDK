@@ -6,7 +6,7 @@ namespace Luno.SDK.Tests.Unit.Infrastructure.Telemetry;
 public class LunoTelemetryTests
 {
     [Fact(DisplayName = "Given telemetry instance, When disposing, Then release all resources faithfully.")]
-    public void DisposeWhenCalledShouldReleaseResources()
+    public void Dispose_Always_ReleasesResources()
     {
         // Arrange
         var telemetry = new LunoTelemetry();
