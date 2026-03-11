@@ -7,7 +7,7 @@ namespace Luno.SDK.Tests.Unit.Infrastructure.Authentication;
 public class LunoAuthenticationProviderTests
 {
     [Fact(DisplayName = "Given no credentials and explicit required request, When authenticating, Then throw LunoAuthenticationException")]
-    public async Task AuthenticateRequestAsync_GivenNoCredentialsAndExplicitRequired_ThenThrow()
+    public async Task AuthenticateRequestAsync_NoCredentialsAndExplicitRequired_Throws()
     {
         // Arrange
         var options = new LunoClientOptions();
@@ -25,7 +25,7 @@ public class LunoAuthenticationProviderTests
     [InlineData("/api/1/postorder")]
     [InlineData("/api/1/funding_address")]
     [InlineData("/api/exchange/1/candles")] // Candles require auth in Luno
-    public async Task AuthenticateRequestAsync_GivenNoCredentialsAndMandatoryPrivate_ThenThrow(string path)
+    public async Task AuthenticateRequestAsync_NoCredentialsAndMandatoryPrivate_Throws(string path)
     {
         // Arrange
         var options = new LunoClientOptions();
@@ -37,7 +37,7 @@ public class LunoAuthenticationProviderTests
     }
 
     [Fact(DisplayName = "Given credentials and explicit required request, When authenticating, Then attach Authorization header")]
-    public async Task AuthenticateRequestAsync_GivenCredentialsAndExplicitRequired_ThenAttachHeader()
+    public async Task AuthenticateRequestAsync_CredentialsAndExplicitRequired_AttachesHeader()
     {
         // Arrange
         var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };
@@ -55,7 +55,7 @@ public class LunoAuthenticationProviderTests
     }
 
     [Fact(DisplayName = "Given credentials and explicit opt-out, When authenticating, Then do not attach Authorization header")]
-    public async Task AuthenticateRequestAsync_GivenCredentialsAndExplicitOptOut_ThenSkipAuth()
+    public async Task AuthenticateRequestAsync_CredentialsAndExplicitOptOut_SkipsAuth()
     {
         // Arrange
         var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };
@@ -72,7 +72,7 @@ public class LunoAuthenticationProviderTests
     }
 
     [Fact(DisplayName = "Given credentials and public endpoint, When authenticating, Then auto-optimize by attaching Authorization header")]
-    public async Task AuthenticateRequestAsync_GivenCredentialsAndPublicEndpoint_ThenAttachHeader()
+    public async Task AuthenticateRequestAsync_CredentialsAndPublicEndpoint_AttachesHeader()
     {
         // Arrange
         var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };

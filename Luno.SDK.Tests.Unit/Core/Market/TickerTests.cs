@@ -6,7 +6,7 @@ namespace Luno.SDK.Tests.Unit.Core.Market;
 public class TickerTests
 {
     [Fact(DisplayName = "Given ask and bid prices, When accessing spread, Then return the difference.")]
-    public void SpreadWhenCalledShouldReturnDifference()
+    public void Spread_Always_ReturnsDifference()
     {
         // Arrange
         var ticker = new Ticker("XBTZAR", 1000100m, 1000000m, 1000050m, 500m, MarketStatus.Active, DateTimeOffset.UtcNow);
@@ -20,7 +20,7 @@ public class TickerTests
     [InlineData(MarketStatus.PostOnly, false)]
     [InlineData(MarketStatus.Disabled, false)]
     [InlineData(MarketStatus.Unknown, false)]
-    public void IsActiveWhenStatusIsProvidedShouldReturnCorrectValue(MarketStatus status, bool expected)
+    public void IsActive_StatusIsProvided_ReturnsCorrectValue(MarketStatus status, bool expected)
     {
         // Arrange
         var ticker = new Ticker("XBTZAR", 1m, 1m, 1m, 1m, status, DateTimeOffset.UtcNow);
@@ -30,7 +30,7 @@ public class TickerTests
     }
 
     [Fact(DisplayName = "Given identical tickers, When compared, Then return true")]
-    public void Equality_GivenIdenticalTickers_WhenCompared_ThenReturnTrue()
+    public void Equality_IdenticalTickers_ReturnsTrue()
     {
         var timestamp = DateTimeOffset.UtcNow;
         var ticker1 = new Ticker("XBTZAR", 100m, 90m, 95m, 1m, MarketStatus.Active, timestamp);

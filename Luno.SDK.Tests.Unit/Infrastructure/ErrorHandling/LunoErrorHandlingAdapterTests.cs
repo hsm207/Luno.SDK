@@ -72,7 +72,7 @@ public class LunoErrorHandlingAdapterTests
     private static readonly ParsableFactory<DummyParsable> Factory = (node) => new DummyParsable();
 
     [Fact(DisplayName = "Given ApiException with 401, When SendAsync is called, Then throw LunoUnauthorizedException")]
-    public async Task SendAsync_Given401_WhenCalled_ThenThrowUnauthorized()
+    public async Task SendAsync_401_ThrowsUnauthorized()
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 401 };
@@ -85,7 +85,7 @@ public class LunoErrorHandlingAdapterTests
     }
 
     [Fact(DisplayName = "Given ApiException with 403, When SendAsync is called, Then throw LunoForbiddenException")]
-    public async Task SendAsync_Given403_WhenCalled_ThenThrowForbidden()
+    public async Task SendAsync_403_ThrowsForbidden()
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 403 };
@@ -98,7 +98,7 @@ public class LunoErrorHandlingAdapterTests
     }
 
     [Fact(DisplayName = "Given ApiException with 500, When SendAsync is called, Then re-throw ApiException")]
-    public async Task SendAsync_Given500_WhenCalled_ThenRethrowApiEx()
+    public async Task SendAsync_500_RethrowsApiEx()
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 500 };
@@ -116,7 +116,7 @@ public class LunoErrorHandlingAdapterTests
     [InlineData("SendPrimitiveAsync")]
     [InlineData("SendPrimitiveCollectionAsync")]
     [InlineData("SendNoContentAsync")]
-    public async Task AllSendMethods_Given401_WhenCalled_ThenThrowUnauthorized(string methodName)
+    public async Task AllSendMethods_401_ThrowsUnauthorized(string methodName)
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 401 };
@@ -150,7 +150,7 @@ public class LunoErrorHandlingAdapterTests
     [InlineData("SendPrimitiveAsync")]
     [InlineData("SendPrimitiveCollectionAsync")]
     [InlineData("SendNoContentAsync")]
-    public async Task AllSendMethods_Given403_WhenCalled_ThenThrowForbidden(string methodName)
+    public async Task AllSendMethods_403_ThrowsForbidden(string methodName)
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 403 };
@@ -184,7 +184,7 @@ public class LunoErrorHandlingAdapterTests
     [InlineData("SendPrimitiveAsync")]
     [InlineData("SendPrimitiveCollectionAsync")]
     [InlineData("SendNoContentAsync")]
-    public async Task AllSendMethods_Given500_WhenCalled_ThenRethrowApiEx(string methodName)
+    public async Task AllSendMethods_500_RethrowsApiEx(string methodName)
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 500 };
@@ -216,7 +216,7 @@ public class LunoErrorHandlingAdapterTests
     }
 
     [Fact(DisplayName = "Given ConvertToNativeRequestAsync, When called, Then delegate faithfully")]
-    public async Task ConvertToNativeRequestAsync_WhenCalled_ThenDelegateFaithfully()
+    public async Task ConvertToNativeRequestAsync_Always_DelegatesFaithfully()
     {
         // Arrange
         var innerAdapter = new StubRequestAdapter();
@@ -231,7 +231,7 @@ public class LunoErrorHandlingAdapterTests
     }
 
     [Fact(DisplayName = "Given properties, When getting and setting, Then delegate to inner adapter")]
-    public void Properties_WhenAccessed_ThenDelegateToInnerAdapter()
+    public void Properties_Always_DelegatesToInnerAdapter()
     {
         // Arrange
         var innerAdapter = new StubRequestAdapter { BaseUrl = "https://test.com" };
@@ -247,7 +247,7 @@ public class LunoErrorHandlingAdapterTests
     }
 
     [Fact(DisplayName = "Given EnableBackingStore, When called, Then delegate to inner adapter")]
-    public void EnableBackingStore_WhenCalled_ThenDelegateToInnerAdapter()
+    public void EnableBackingStore_Always_DelegatesToInnerAdapter()
     {
         // Arrange
         var innerAdapter = new StubRequestAdapter();

@@ -18,7 +18,7 @@ public class GetTickersTests
     }
 
     [Fact(DisplayName = "Given market client returns tickers, When handling query, Then stream mapped ticker responses.")]
-    public async Task HandleWhenApiSucceedsShouldStreamMappedResponses()
+    public async Task Handle_ApiSucceeds_StreamsMappedResponses()
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
@@ -52,7 +52,7 @@ public class GetTickersTests
     }
 
     [Fact(DisplayName = "Given market client returns empty stream, When handling query, Then stream nothing.")]
-    public async Task HandleWhenApiReturnsEmptyShouldStreamNothing()
+    public async Task Handle_ApiReturnsEmpty_StreamsNothing()
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
@@ -82,7 +82,7 @@ public class GetTickersTests
     }
 
     [Fact(DisplayName = "Given cancellation token is cancelled, When handling query, Then stop streaming results.")]
-    public async Task HandleWhenCancelledShouldStopStreaming()
+    public async Task Handle_Cancelled_StopsStreaming()
     {
         // Arrange
         var handlerMock = new Mock<HttpMessageHandler>();
@@ -105,7 +105,7 @@ public class GetTickersTests
     }
 
     [Fact(DisplayName = "Given identical TickerResponses, When compared, Then return true")]
-    public void Equality_GivenIdenticalTickerResponses_WhenCompared_ThenReturnTrue()
+    public void Equality_IdenticalTickerResponses_ReturnsTrue()
     {
         var timestamp = DateTimeOffset.UtcNow;
         var r1 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);

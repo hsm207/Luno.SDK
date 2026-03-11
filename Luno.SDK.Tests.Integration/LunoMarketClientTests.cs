@@ -35,8 +35,27 @@ public class LunoMarketClientTests : IDisposable
         return new LunoClient(options);
     }
 
+    private static ActivityListener CaptureActivity(string operationName, ManualResetEventSlim signal, Action<Activity> onCapture)
+    {
+        var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == LunoInstrumentation.Name,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStopped = activity =>
+            {
+                if (activity.OperationName == operationName)
+                {
+                    onCapture(activity);
+                    signal.Set();
+                }
+            }
+        };
+        ActivitySource.AddActivityListener(listener);
+        return listener;
+    }
+
     [Fact(DisplayName = "Given standard DI container, When resolving ILunoClient, Then return a valid instance with all sub-clients configured.")]
-    public void ResolveWhenContainerIsConfiguredShouldReturnValidClient()
+    public void Resolve_ContainerIsConfigured_ReturnsValidClient()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -52,7 +71,7 @@ public class LunoMarketClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given a successful API request, When fetching tickers, Then verify that real OpenTelemetry traces and metrics are emitted.")]
-    public async Task GetTickersWhenApiSucceedsShouldEmitTelemetry()
+    public async Task GetTickers_ApiSucceeds_EmitsTelemetry()
     {
         // Arrange
         var operationName = "GetMarketTickers";
@@ -82,20 +101,7 @@ public class LunoMarketClientTests : IDisposable
 
         Activity? capturedActivity = null;
         using var activityStoppedEvent = new ManualResetEventSlim();
-        using var listener = new ActivityListener
-        {
-            ShouldListenTo = (source) => source.Name == LunoInstrumentation.Name,
-            Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData,
-            ActivityStopped = (activity) =>
-            {
-                if (activity.OperationName == operationName)
-                {
-                    capturedActivity = activity;
-                    activityStoppedEvent.Set();
-                }
-            }
-        };
-        ActivitySource.AddActivityListener(listener);
+        using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         using var meterListener = new MeterListener();
         meterListener.InstrumentPublished = (instrument, listener) =>
@@ -137,7 +143,7 @@ public class LunoMarketClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given the Luno API returns a 500 error, When fetching tickers, Then bubble up the correct ApiException AND emit an error trace signal.")]
-    public async Task GetTickersWhenApiFailsShouldBubbleExceptionAndEmitErrorTrace()
+    public async Task GetTickers_ApiFails_BubblesExceptionAndEmitsErrorTrace()
     {
         // Arrange
         var operationName = "GetMarketTickers";
@@ -148,20 +154,7 @@ public class LunoMarketClientTests : IDisposable
 
         Activity? capturedActivity = null;
         using var activityStoppedEvent = new ManualResetEventSlim();
-        using var activityListener = new ActivityListener
-        {
-            ShouldListenTo = (source) => source.Name == LunoInstrumentation.Name,
-            Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData,
-            ActivityStopped = (activity) =>
-            {
-                if (activity.OperationName == operationName)
-                {
-                    capturedActivity = activity;
-                    activityStoppedEvent.Set();
-                }
-            }
-        };
-        ActivitySource.AddActivityListener(activityListener);
+        using var activityListener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         // Act & Assert
         await Assert.ThrowsAsync<ApiException>(async () =>
@@ -177,7 +170,7 @@ public class LunoMarketClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given the Luno API returns a successful response with null tickers, When fetching tickers, Then throw LunoMappingException.")]
-    public async Task GetTickersWhenApiReturnsNullTickersShouldThrowLunoMappingException()
+    public async Task GetTickers_ApiReturnsNullTickers_ThrowsLunoMappingException()
     {
         // Arrange
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
@@ -198,7 +191,7 @@ public class LunoMarketClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing optional fields, When fetching tickers, Then ensure the Kiota engine handles it AND records success.")]
-    public async Task GetTickersWhenApiReturnsQuirkyJsonShouldHandleGracefully()
+    public async Task GetTickers_ApiReturnsQuirkyJson_HandlesGracefully()
     {
         // Arrange
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())

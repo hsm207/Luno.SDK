@@ -8,7 +8,7 @@ namespace Luno.SDK.Tests.Unit.Infrastructure.Account;
 public class AccountMapperTests
 {
     [Fact(DisplayName = "Given valid AccountBalance, When mapping to domain, Then use InvariantCulture to parse safely")]
-    public void MapToDomain_GivenValidAccountBalance_WhenMapping_ThenUseInvariantCulture()
+    public void MapToDomain_ValidAccountBalance_UsesInvariantCulture()
     {
         // Arrange
         var originalCulture = CultureInfo.CurrentCulture;
@@ -47,7 +47,7 @@ public class AccountMapperTests
     }
 
     [Fact(DisplayName = "Given missing AccountId, When mapping to domain, Then throw LunoMappingException")]
-    public void MapToDomain_GivenMissingAccountId_WhenMapping_ThenThrowLunoMappingException()
+    public void MapToDomain_MissingAccountId_ThrowsLunoMappingException()
     {
         // Arrange
         var dto = new AccountBalance
@@ -62,7 +62,7 @@ public class AccountMapperTests
     }
 
     [Fact(DisplayName = "Given missing Asset, When mapping to domain, Then throw LunoMappingException")]
-    public void MapToDomain_GivenMissingAsset_WhenMapping_ThenThrowLunoMappingException()
+    public void MapToDomain_MissingAsset_ThrowsLunoMappingException()
     {
         // Arrange
         var dto = new AccountBalance

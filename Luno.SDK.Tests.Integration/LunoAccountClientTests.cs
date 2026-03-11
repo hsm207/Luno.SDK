@@ -35,7 +35,7 @@ public class LunoAccountClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given successful response, When getting balances, Then deserialize with exact decimal precision")]
-    public async Task GetBalancesAsync_GivenSuccess_WhenDeserializing_ThenEnsureDecimalPrecision()
+    public async Task GetBalancesAsync_Success_EnsuresDecimalPrecision()
     {
         // Arrange
         _server.Given(Request.Create().WithPath("/api/1/balance").UsingGet().WithHeader("Authorization", "Basic dXNlcjpwYXNz"))
@@ -79,7 +79,7 @@ public class LunoAccountClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given 401 response, When getting balances, Then translate to LunoUnauthorizedException")]
-    public async Task GetBalancesAsync_Given401_WhenRequested_ThenThrowLunoUnauthorizedException()
+    public async Task GetBalancesAsync_401Unauthorized_ThrowsLunoUnauthorizedException()
     {
         // Arrange
         _server.Given(Request.Create().WithPath("/api/1/balance").UsingGet())
@@ -95,7 +95,7 @@ public class LunoAccountClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given 403 response, When getting balances, Then translate to LunoForbiddenException")]
-    public async Task GetBalancesAsync_Given403_WhenRequested_ThenThrowLunoForbiddenException()
+    public async Task GetBalancesAsync_403Forbidden_ThrowsLunoForbiddenException()
     {
         // Arrange
         _server.Given(Request.Create().WithPath("/api/1/balance").UsingGet())
@@ -111,7 +111,7 @@ public class LunoAccountClientTests : IDisposable
     }
 
     [Fact(DisplayName = "Given no credentials, When getting balances, Then fail fast with LunoAuthenticationException")]
-    public async Task GetBalancesAsync_GivenNoCredentials_WhenRequested_ThenFailFast()
+    public async Task GetBalancesAsync_NoCredentials_FailsFast()
     {
         // Arrange
         var client = CreateClient(); // No keys provided

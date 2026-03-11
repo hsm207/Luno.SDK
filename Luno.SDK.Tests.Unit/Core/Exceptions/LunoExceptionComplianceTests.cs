@@ -46,7 +46,7 @@ public class LunoExceptionComplianceTests
 
     [Theory(DisplayName = "Given an exception type, When constructed with parameterless constructor, Then inherit LunoException")]
     [MemberData(nameof(ConcreteExceptionTypes))]
-    public void Constructor_GivenParameterless_WhenConstructed_ThenInheritLunoException(Type exceptionType)
+    public void Constructor_Parameterless_InheritsLunoException(Type exceptionType)
     {
         // Act
         var ex = (Exception)Activator.CreateInstance(exceptionType)!;
@@ -58,7 +58,7 @@ public class LunoExceptionComplianceTests
 
     [Theory(DisplayName = "Given an exception type, When constructed with message, Then set message and inherit LunoException")]
     [MemberData(nameof(ConcreteExceptionTypes))]
-    public void Constructor_GivenMessage_WhenConstructed_ThenSetMessage(Type exceptionType)
+    public void Constructor_Message_SetsMessage(Type exceptionType)
     {
         // Act
         var ex = (Exception)Activator.CreateInstance(exceptionType, _testMessage)!;
@@ -71,7 +71,7 @@ public class LunoExceptionComplianceTests
 
     [Theory(DisplayName = "Given an exception type, When constructed with message and inner exception, Then set both and inherit LunoException")]
     [MemberData(nameof(ConcreteExceptionTypes))]
-    public void Constructor_GivenMessageAndInnerException_WhenConstructed_ThenSetBoth(Type exceptionType)
+    public void Constructor_MessageAndInnerException_SetsBoth(Type exceptionType)
     {
         // Act
         var ex = (Exception)Activator.CreateInstance(exceptionType, _testMessage, _testInnerException)!;
@@ -84,7 +84,7 @@ public class LunoExceptionComplianceTests
     }
 
     [Fact(DisplayName = "Given LunoMappingException, When constructed with dto type, Then set DtoType property")]
-    public void LunoMappingException_GivenDtoType_WhenConstructed_ThenSetDtoType()
+    public void LunoMappingException_DtoType_SetsDtoType()
     {
         // Act
         var ex = new LunoMappingException(_testMessage, "TestDto");
