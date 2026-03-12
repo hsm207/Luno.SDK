@@ -1,7 +1,7 @@
 
 # RFC 003: Domain Exception Hierarchy & High-Fidelity Validation
 
-**Status:** Draft  
+**Status:** Implemented (March 11, 2026)  
 **Date:** 2026-03-04
 
 ## 1. Overview

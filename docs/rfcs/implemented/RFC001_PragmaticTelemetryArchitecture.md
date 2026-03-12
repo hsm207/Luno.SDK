@@ -1,4 +1,6 @@
 # RFC 001: Pragmatic Telemetry Architecture
+**Status:** Implemented (March 11, 2026)  
+**Date:** 2024-03-03
 
 ## 1. Overview
 This RFC documents the architectural decision to implement a decorator-based telemetry system for the Luno SDK using Kiota's `IRequestAdapter`. The design prioritizes **Developer Experience (DX)**, **Performance**, and **Operational Stability** over strict internal decoupling.
