@@ -119,9 +119,10 @@ The following matrix defines the high-fidelity mapping for all 90+ error codes l
 
 ## 7. Definition of Done
 ### Quality Gates
-- 100% pass on `LunoExceptionComplianceTests`.
-- All new exceptions documented with XML `<remarks>` explaining the Luno error code they map to.
-- **TDD Mandate:** Verification must favor behavioral outcomes over internal state. Avoid mocking internal logic; prefer real collaborators unless external/slow I/O is involved.
+- **Exception Integrity:** 100% pass on `LunoExceptionComplianceTests` (verifying inheritance, constructors, and serialization).
+- **Phased Mapping:** Verified mapping for all endpoints implemented in the current and active RFCs (e.g., Ticker and Order placement).
+- **XML Documentation:** All new exceptions documented with XML `<remarks>` explaining the primary Luno error codes they map to.
+- **TDD Mandate:** Verification must favor behavioral outcomes over internal state.
 
 ## 8. Alternatives Considered & Trade-offs
 - **Alternative A:** Mapping by HTTP Status codes. -> Rejected because Luno uses 400 for a massive variety of business, validation, and risk rules.
