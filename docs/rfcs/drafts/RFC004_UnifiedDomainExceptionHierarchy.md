@@ -40,49 +40,66 @@ catch (LunoSecurityException) {
 classDiagram
     class LunoException { <<abstract>> }
     LunoException <|-- LunoClientException : Pre-flight failures
-    LunoException <|-- LunoApiException : Server-side (4xx/5xx)
-    LunoException <|-- LunoMappingException : Response parsing failures
+    LunoException <|-- LunoApiException : Server-side
+    LunoException <|-- LunoMappingException : Parsing failures
 
-    %% Security Family
-    LunoApiException <|-- LunoSecurityException
-    LunoSecurityException <|-- LunoUnauthorizedException : 401
-    LunoSecurityException <|-- LunoForbiddenException : 403
-
-    %% Data/Resource Family
-    LunoApiException <|-- LunoDataException
-    LunoDataException <|-- LunoNotFoundException : 404
-    LunoDataException <|-- LunoValidationException : 400 (Bad Params)
-
-    %% Operational/Actionable Family
+    %% Infrastructure & Security
+    LunoApiException <|-- LunoSecurityException : 401/403
     LunoApiException <|-- LunoRateLimitException : 429
+    LunoApiException <|-- LunoIdempotencyException : 409 (ErrDuplicate)
 
-    %% Business/State Family
-    LunoApiException <|-- LunoBusinessException
-    LunoBusinessException <|-- LunoInsufficientFundsException : 400 (ErrInsufficientFunds)
-    LunoBusinessException <|-- LunoMarketUnavailableException : 503 (ErrUnderMaintenance)
+    %% Policy & Identity
+    LunoApiException <|-- LunoAccountPolicyException : KYC/Verification
+
+    %% Market & Business State
+    LunoApiException <|-- LunoMarketStateException : Maintenance/Post-Only
+    LunoApiException <|-- LunoBusinessRuleException : Abstract Rule Violation
+
+    %% Business Rules (Actionable)
+    LunoBusinessRuleException <|-- LunoInsufficientFundsException
+    LunoBusinessRuleException <|-- LunoOrderRejectedException : Limits/Risk/Validation
+    LunoBusinessRuleException <|-- LunoResourceNotFoundException : 404/Missing ID
 ```
 
 ### Public API Changes
-- **Updated Base:** `LunoApiException` (replaces `LunoServiceException`).
-- **New Abstract Category:** `LunoBusinessException` (for state-based violations).
+- **New Abstract Categories:** 
+    - `LunoBusinessRuleException`: For violations of trading/market rules.
+    - `LunoAccountPolicyException`: For KYC, verification, and permission issues.
+    - `LunoMarketStateException`: For maintenance and restrictive market modes.
 - **New Surgical Exceptions:**
-    - `LunoInsufficientFundsException` (inherits from `LunoBusinessException`).
-    - `LunoRateLimitException` (includes `TimeSpan? RetryAfter`).
-    - `LunoMarketUnavailableException` (inherits from `LunoBusinessException`).
+    - `LunoIdempotencyException` (inherits from `LunoApiException`): For `409 Conflict` / `ErrDuplicateClientOrderID`.
+    - `LunoOrderRejectedException` (inherits from `LunoBusinessRuleException`): For price/volume limits.
+    - `LunoInsufficientFundsException` (inherits from `LunoBusinessRuleException`): Consolidates `ErrInsufficientFunds` and `ErrInsufficientBalance`.
+    - `LunoResourceNotFoundException` (inherits from `LunoBusinessRuleException`): Replaces `LunoNotFoundException`.
 
 ### Phased Implementation
 ### Phase 1: Exception Consolidation
-- **Description:** Update existing exceptions to match the new hierarchy and create the missing surgical types.
+- **Description:** Update existing exceptions to match the new behavioral hierarchy.
 - **Core Changes:** 
-    - Create `LunoBusinessException.cs`.
-    - Create `LunoInsufficientFundsException.cs` and `LunoMarketUnavailableException.cs` under the Business family.
-    - Create `LunoRateLimitException.cs`.
+    - Create `LunoBusinessRuleException.cs`, `LunoAccountPolicyException.cs`, `LunoMarketStateException.cs`.
+    - Create `LunoIdempotencyException.cs`, `LunoOrderRejectedException.cs`, `LunoInsufficientFundsException.cs`.
+    - Rename `LunoNotFoundException` to `LunoResourceNotFoundException`.
 - **Locations:** `Luno.SDK.Core/Exceptions/`
 
 ### Phase 2: Centralized Error Mapping
 - **Description:** Implement the exhaustive mapping logic in the request adapter decorator.
-- **Core Changes:** Update `LunoErrorHandlingAdapter.cs` to map 400/ErrInsufficientFunds and 503 to the Business family.
+- **Core Changes:** Update `LunoErrorHandlingAdapter.cs` to map by `error_code` string rather than HTTP status.
 - **Locations:** `Luno.SDK.Infrastructure/ErrorHandling/LunoErrorHandlingAdapter.cs`
+
+### Error Code Mapping Matrix (Exhaustive)
+The following matrix defines the high-fidelity mapping for all 90+ error codes listed in `luno_api_spec.json`.
+
+| Exception Class | Associated Luno Error Codes |
+| :--- | :--- |
+| **`LunoSecurityException`** | `ErrUnauthorised`, `ErrInsufficientPerms`, `ErrApiKeyRevoked`, `ErrIncorrectPin` |
+| **`LunoRateLimitException`** | `ErrTooManyRequests`, `ErrAddressCreateRateLimitReached` |
+| **`LunoIdempotencyException`** | `ErrDuplicateClientOrderID`, `ErrDuplicateClientMoveID`, `ErrDuplicateExternalID` |
+| **`LunoAccountPolicyException`** | `ErrVerificationLevelTooLow`, `ErrUserNotVerifiedForCurrency`, `ErrTravelRule`, `ErrUpdateRequired`, `ErrUserBlockedForCancelWithdrawal`, `ErrWithdrawalBlocked`, `ErrAccountLimit` |
+| **`LunoMarketStateException`** | `ErrUnderMaintenance`, `ErrMarketUnavailable`, `ErrPostOnlyMode`, `ErrMarketNotAllowed`, `ErrCannotTradeWhileQuoteActive` |
+| **`LunoResourceNotFoundException`** | `ErrNotFound`, `ErrAccountNotFound`, `ErrBeneficiaryNotFound`, `ErrOrderNotFound`, `ErrWithdrawalNotFound`, `ErrFundsMoveNotFound` |
+| **`LunoInsufficientFundsException`** | `ErrInsufficientFunds`, `ErrInsufficientBalance`, `ErrNotEnoughLiquidity` |
+| **`LunoOrderRejectedException`** | `ErrAmountTooSmall`, `ErrAmountTooBig`, `ErrPriceTooHigh`, `ErrPriceTooLow`, `ErrVolumeTooLow`, `ErrVolumeTooHigh`, `ErrLimitOutOfRange`, `ErrInvalidPrice`, `ErrInvalidVolume`, `ErrInvalidOrderSide`, `ErrCannotStopUnknownOrNonPendingOrder`, `ErrNoTradesToInferStopDirection`, `ErrStopPriceTooHigh`, `ErrStopPriceTooLow`, `ErrInvalidStopDirection`, `ErrInvalidStopPrice` |
+| **`LunoValidationException`** | `ErrInvalidParameters`, `ErrInvalidArguments`, `ErrInvalidAccountID`, `ErrInvalidCurrency`, `ErrInvalidAmount`, `ErrInvalidDetails`, `ErrInvalidMarketPair`, `ErrInvalidClientOrderId`, `ErrInvalidOrderRef`, `ErrInvalidRequestType`, `ErrInvalidSourceAccount`, `ErrInvalidBranchCode`, `ErrInvalidAccountNumber`, `ErrAccountsNotDifferent`, `ErrActiveCryptoRequestExists`, `ErrAddressLimitReached`, `ErrBlockedSendsCurrency`, `ErrCounterDenominationNotAllowed`, `ErrCreditAccountNotTransactional`, `ErrCustomRefNotAllowed`, `ErrDeadlineExceeded`, `ErrDebitAccountNotTransactional`, `ErrDescriptionTooLong`, `ErrDifferentCurrencies`, `ErrDisallowedTarget`, `ErrERC20AddressAlreadyAssigned`, `ErrERC20AssignNonDefault`, `ErrIncompatibleBeneficiary`, `ErrInternal`, `ErrPriceDenominationNotAllowed`, `ErrRejectedBeneficiary`, `ErrRequestTypeDoesNotSupportFastWithdrawals`, `ErrTooManyRowsRequested`, `ErrValueTooHigh`, `ErrVolumeDenominationNotAllowed` |
 
 ## 6. Behavioral Specifications
 ### Handling Insufficient Funds
@@ -95,6 +112,11 @@ classDiagram
 - **When:** Any API call is made.
 - **Then:** The SDK throws `LunoRateLimitException` with `RetryAfter` set to 60 seconds.
 
+### Handling Idempotency (409)
+- **Given:** A 409 response with `ErrorCode: "ErrDuplicateClientOrderID"`.
+- **When:** A `PostLimitOrderAsync` call is made with a duplicate ID.
+- **Then:** The SDK throws `LunoIdempotencyException`, allowing the caller to recognize the order already exists.
+
 ## 7. Definition of Done
 ### Quality Gates
 - 100% pass on `LunoExceptionComplianceTests`.
@@ -102,17 +124,20 @@ classDiagram
 - **TDD Mandate:** Verification must favor behavioral outcomes over internal state. Avoid mocking internal logic; prefer real collaborators unless external/slow I/O is involved.
 
 ## 8. Alternatives Considered & Trade-offs
-- **Alternative A:** Inheriting `LunoInsufficientFundsException` from `LunoDataException`. -> Rejected because account balance is a dynamic business state, not a static data integrity issue.
-- **Trade-offs:** Adding one more level (`LunoBusinessException`) slightly increases depth but significantly improves semantic clarity for catch-block strategies.
+- **Alternative A:** Mapping by HTTP Status codes. -> Rejected because Luno uses 400 for a massive variety of business, validation, and risk rules.
+- **Trade-offs:** Mapping by `error_code` string requires maintaining a comprehensive factory but provides the highest possible fidelity for SDK consumers.
 
 ## 9. Financial Breaking Points
-- **Incorrect Mapping:** If we map a recoverable business error to a terminal data exception, trading bots might stop unnecessarily.
+- **Idempotency Failure:** Failing to handle 409s correctly can lead to trading bots double-spending or entering inconsistent states.
+- **Market State Blindness:** Treating "Post-Only" mode as a general "Maintenance" error prevents bots from adjusting their strategy to remain Makers.
 
 ## 10. Pre-Mortem
-- **Failure Scenario:** Luno adds a new "Business Rule" error code (e.g., `ErrOrderTooSmall`).
-- **Mitigation:** Developers can still catch `LunoBusinessException` to handle generic state violations while waiting for a specific type.
+- **Failure Scenario:** Luno adds a new 400 error code that isn't in our factory.
+- **Mitigation:** `LunoApiException` preserves the raw `ErrorCode` string and the `StatusCode`, allowing for manual triage.
 
 ## 11. The Kill List
 - **Killed:** `LunoServiceException` (too generic).
 - **Killed:** Ambiguous 400 errors without semantic context.
 - **Killed:** Misclassifying state issues as data issues.
+- **Killed:** Blindness to Idempotency (409) conflicts.
+- **Killed:** "Classification Fever" (unnecessary nested categories).
