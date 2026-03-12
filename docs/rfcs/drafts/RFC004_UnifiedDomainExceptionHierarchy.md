@@ -42,6 +42,7 @@ classDiagram
     LunoException <|-- LunoClientException : Pre-flight failures
     LunoException <|-- LunoApiException : Server-side
     LunoException <|-- LunoMappingException : Parsing failures
+    LunoException <|-- LunoTimeoutException : 408/Deadline Exceeded
 
     %% Infrastructure & Security
     LunoApiException <|-- LunoSecurityException : 401/403
@@ -77,7 +78,7 @@ classDiagram
 - **Description:** Update existing exceptions to match the new behavioral hierarchy.
 - **Core Changes:** 
     - Create `LunoBusinessRuleException.cs`, `LunoAccountPolicyException.cs`, `LunoMarketStateException.cs`.
-    - Create `LunoIdempotencyException.cs`, `LunoOrderRejectedException.cs`, `LunoInsufficientFundsException.cs`.
+    - Create `LunoIdempotencyException.cs`, `LunoOrderRejectedException.cs`, `LunoInsufficientFundsException.cs`, `LunoTimeoutException.cs`.
     - Rename `LunoNotFoundException` to `LunoResourceNotFoundException`.
 - **Locations:** `Luno.SDK.Core/Exceptions/`
 
@@ -92,14 +93,16 @@ The following matrix defines the high-fidelity mapping for all 90+ error codes l
 | Exception Class | Associated Luno Error Codes |
 | :--- | :--- |
 | **`LunoSecurityException`** | `ErrUnauthorised`, `ErrInsufficientPerms`, `ErrApiKeyRevoked`, `ErrIncorrectPin` |
-| **`LunoRateLimitException`** | `ErrTooManyRequests`, `ErrAddressCreateRateLimitReached` |
+| **`LunoRateLimitException`** | `ErrTooManyRequests`, `ErrAddressCreateRateLimitReached`, `ErrActiveCryptoRequestExists` |
+| **`LunoTimeoutException`** | `ErrDeadlineExceeded` |
+| **`LunoApiException`** | `ErrInternal` (500 Fallback) |
 | **`LunoIdempotencyException`** | `ErrDuplicateClientOrderID`, `ErrDuplicateClientMoveID`, `ErrDuplicateExternalID` |
 | **`LunoAccountPolicyException`** | `ErrVerificationLevelTooLow`, `ErrUserNotVerifiedForCurrency`, `ErrTravelRule`, `ErrUpdateRequired`, `ErrUserBlockedForCancelWithdrawal`, `ErrWithdrawalBlocked`, `ErrAccountLimit` |
 | **`LunoMarketStateException`** | `ErrUnderMaintenance`, `ErrMarketUnavailable`, `ErrPostOnlyMode`, `ErrMarketNotAllowed`, `ErrCannotTradeWhileQuoteActive` |
 | **`LunoResourceNotFoundException`** | `ErrNotFound`, `ErrAccountNotFound`, `ErrBeneficiaryNotFound`, `ErrOrderNotFound`, `ErrWithdrawalNotFound`, `ErrFundsMoveNotFound` |
 | **`LunoInsufficientFundsException`** | `ErrInsufficientFunds`, `ErrInsufficientBalance`, `ErrNotEnoughLiquidity` |
 | **`LunoOrderRejectedException`** | `ErrAmountTooSmall`, `ErrAmountTooBig`, `ErrPriceTooHigh`, `ErrPriceTooLow`, `ErrVolumeTooLow`, `ErrVolumeTooHigh`, `ErrLimitOutOfRange`, `ErrInvalidPrice`, `ErrInvalidVolume`, `ErrInvalidOrderSide`, `ErrCannotStopUnknownOrNonPendingOrder`, `ErrNoTradesToInferStopDirection`, `ErrStopPriceTooHigh`, `ErrStopPriceTooLow`, `ErrInvalidStopDirection`, `ErrInvalidStopPrice` |
-| **`LunoValidationException`** | `ErrInvalidParameters`, `ErrInvalidArguments`, `ErrInvalidAccountID`, `ErrInvalidCurrency`, `ErrInvalidAmount`, `ErrInvalidDetails`, `ErrInvalidMarketPair`, `ErrInvalidClientOrderId`, `ErrInvalidOrderRef`, `ErrInvalidRequestType`, `ErrInvalidSourceAccount`, `ErrInvalidBranchCode`, `ErrInvalidAccountNumber`, `ErrAccountsNotDifferent`, `ErrActiveCryptoRequestExists`, `ErrAddressLimitReached`, `ErrBlockedSendsCurrency`, `ErrCounterDenominationNotAllowed`, `ErrCreditAccountNotTransactional`, `ErrCustomRefNotAllowed`, `ErrDeadlineExceeded`, `ErrDebitAccountNotTransactional`, `ErrDescriptionTooLong`, `ErrDifferentCurrencies`, `ErrDisallowedTarget`, `ErrERC20AddressAlreadyAssigned`, `ErrERC20AssignNonDefault`, `ErrIncompatibleBeneficiary`, `ErrInternal`, `ErrPriceDenominationNotAllowed`, `ErrRejectedBeneficiary`, `ErrRequestTypeDoesNotSupportFastWithdrawals`, `ErrTooManyRowsRequested`, `ErrValueTooHigh`, `ErrVolumeDenominationNotAllowed` |
+| **`LunoValidationException`** | `ErrInvalidParameters`, `ErrInvalidArguments`, `ErrInvalidAccountID`, `ErrInvalidCurrency`, `ErrInvalidAmount`, `ErrInvalidDetails`, `ErrInvalidMarketPair`, `ErrInvalidClientOrderId`, `ErrInvalidOrderRef`, `ErrInvalidRequestType`, `ErrInvalidSourceAccount`, `ErrInvalidBranchCode`, `ErrInvalidAccountNumber`, `ErrAccountsNotDifferent`, `ErrAddressLimitReached`, `ErrBlockedSendsCurrency`, `ErrCounterDenominationNotAllowed`, `ErrCreditAccountNotTransactional`, `ErrCustomRefNotAllowed`, `ErrDebitAccountNotTransactional`, `ErrDescriptionTooLong`, `ErrDifferentCurrencies`, `ErrDisallowedTarget`, `ErrERC20AddressAlreadyAssigned`, `ErrERC20AssignNonDefault`, `ErrIncompatibleBeneficiary`, `ErrPriceDenominationNotAllowed`, `ErrRejectedBeneficiary`, `ErrRequestTypeDoesNotSupportFastWithdrawals`, `ErrTooManyRowsRequested`, `ErrValueTooHigh`, `ErrVolumeDenominationNotAllowed` |
 
 ## 6. Behavioral Specifications
 ### Handling Insufficient Funds
