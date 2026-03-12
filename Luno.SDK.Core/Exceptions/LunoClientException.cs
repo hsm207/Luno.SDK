@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception thrown when a client-side error occurs before a request is sent.
 /// </summary>
+/// <remarks>
+/// This exception represents pre-flight failures or client-side validation errors that occur within the SDK.
+/// </remarks>
 [Serializable]
 public class LunoClientException : LunoException
 {
