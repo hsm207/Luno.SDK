@@ -1,4 +1,4 @@
-# RFC 004: Single-Pair Ticker Retrieval
+# RFC 005: Single-Pair Ticker Retrieval
 
 **Status:** Draft  
 **Date:** 2026-03-11
@@ -65,16 +65,17 @@ sequenceDiagram
 - **Modified `ILunoMarketClient`**:
     - `Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default);`
 - **New Domain Exceptions** (in `Luno.SDK.Core/Exceptions/`):
-    - `LunoRateLimitException`: Thrown on 429 errors.
-        - `TimeSpan? RetryAfter { get; init; }`: The duration to wait before retrying.
-    - `LunoMarketUnavailableException`: Thrown on 503 errors (e.g., `ErrUnderMaintenance`, `ErrMarketUnavailable`).
-    - `LunoNotFoundException`: Thrown on 404 errors (e.g., `ErrInvalidMarketPair`).
+    - `LunoNotFoundException : LunoDataException`: Thrown on 404 errors (e.g., `ErrInvalidMarketPair`). Includes the requested pair.
+    - `LunoRateLimitException : LunoException`: Thrown on 429 errors. Includes `TimeSpan? RetryAfter`.
+    - `LunoMarketUnavailableException : LunoException`: Thrown on 503 errors (e.g., `ErrUnderMaintenance`).
 
 ### Phased Implementation
 ### Phase 1: Core Exceptions & Interface
 - **Description:** Define the new semantic exceptions and update the Market Client interface.
 - **Core Changes:** 
-    - Create `LunoRateLimitException.cs`, `LunoMarketUnavailableException.cs`, `LunoNotFoundException.cs`.
+    - Create `LunoNotFoundException.cs` (inherits from `LunoDataException`).
+    - Create `LunoRateLimitException.cs` (inherits from `LunoException`).
+    - Create `LunoMarketUnavailableException.cs` (inherits from `LunoException`).
     - Modify `ILunoMarketClient.cs`.
 - **Locations:** `Luno.SDK.Core/Exceptions/`, `Luno.SDK.Core/Market/ILunoMarketClient.cs`
 
