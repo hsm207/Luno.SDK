@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
@@ -6,7 +7,7 @@ namespace Luno.SDK;
 /// Exception thrown when a requested resource is not found.
 /// </summary>
 /// <remarks>
-/// Mapped Luno Error Codes: ErrNotFound, ErrAccountNotFound, ErrBeneficiaryNotFound, ErrOrderNotFound, ErrWithdrawalNotFound, ErrFundsMoveNotFound
+/// Mapped Luno Error Codes: ErrNotFound, ErrAccountNotFound, ErrBeneficiaryNotFound, etc.
 /// </remarks>
 [Serializable]
 public class LunoResourceNotFoundException : LunoBusinessRuleException
@@ -27,10 +28,10 @@ public class LunoResourceNotFoundException : LunoBusinessRuleException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoResourceNotFoundException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoResourceNotFoundException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoResourceNotFoundException"/> class.
+    /// Initializes a new instance of the <see cref="LunoResourceNotFoundException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>

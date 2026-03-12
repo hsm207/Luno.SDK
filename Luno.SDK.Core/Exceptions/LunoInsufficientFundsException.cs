@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
@@ -27,10 +28,10 @@ public class LunoInsufficientFundsException : LunoBusinessRuleException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoInsufficientFundsException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoInsufficientFundsException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoInsufficientFundsException"/> class.
+    /// Initializes a new instance of the <see cref="LunoInsufficientFundsException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>

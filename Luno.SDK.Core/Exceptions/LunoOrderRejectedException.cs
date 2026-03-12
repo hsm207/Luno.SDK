@@ -1,12 +1,13 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
 /// <summary>
-/// Exception thrown when an order is rejected due to price/volume limits or other risk/validation rules.
+/// Exception thrown when an order is rejected by the exchange due to limits or risk rules.
 /// </summary>
 /// <remarks>
-/// Mapped Luno Error Codes: ErrAmountTooSmall, ErrAmountTooBig, ErrPriceTooHigh, ErrPriceTooLow, ErrVolumeTooLow, ErrVolumeTooHigh, ErrValueTooHigh, ErrInvalidPrice, ErrInvalidVolume, ErrInvalidOrderSide, ErrCannotStopUnknownOrNonPendingOrder, ErrNoTradesToInferStopDirection, ErrStopPriceTooHigh, ErrStopPriceTooLow, ErrInvalidStopDirection, ErrInvalidStopPrice, ErrNotEnoughLiquidity, ErrPostOnlyNotAllowed, ErrOrderCanceled, ErrPriceDenominationNotAllowed, ErrVolumeDenominationNotAllowed
+/// Mapped Luno Error Codes: ErrAmountTooSmall, ErrAmountTooBig, ErrPriceTooHigh, ErrPriceTooLow, etc.
 /// </remarks>
 [Serializable]
 public class LunoOrderRejectedException : LunoBusinessRuleException
@@ -27,10 +28,10 @@ public class LunoOrderRejectedException : LunoBusinessRuleException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoOrderRejectedException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoOrderRejectedException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoOrderRejectedException"/> class.
+    /// Initializes a new instance of the <see cref="LunoOrderRejectedException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>

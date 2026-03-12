@@ -1,9 +1,10 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
 /// <summary>
-/// Exception thrown when authentication is required for a request but credentials are not provided.
+/// Exception thrown during the authentication process.
 /// </summary>
 [Serializable]
 public class LunoAuthenticationException : LunoSecurityException
@@ -24,10 +25,10 @@ public class LunoAuthenticationException : LunoSecurityException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoAuthenticationException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoAuthenticationException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoAuthenticationException"/> class.
+    /// Initializes a new instance of the <see cref="LunoAuthenticationException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>

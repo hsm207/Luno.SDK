@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
@@ -24,10 +25,10 @@ public class LunoUnauthorizedException : LunoSecurityException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoUnauthorizedException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoUnauthorizedException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoUnauthorizedException"/> class.
+    /// Initializes a new instance of the <see cref="LunoUnauthorizedException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>

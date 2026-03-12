@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
@@ -6,33 +7,33 @@ namespace Luno.SDK;
 /// The base exception for violations of trading or market rules.
 /// </summary>
 [Serializable]
-public abstract class LunoBusinessRuleException : LunoApiException
+public class LunoBusinessRuleException : LunoApiException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoBusinessRuleException"/> class.
     /// </summary>
-    protected LunoBusinessRuleException() : base() { }
+    public LunoBusinessRuleException() : base() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoBusinessRuleException"/> class.
     /// </summary>
     /// <param name="message">The exception message.</param>
-    protected LunoBusinessRuleException(string message) : base(message) { }
+    public LunoBusinessRuleException(string message) : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoBusinessRuleException"/> class.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    protected LunoBusinessRuleException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoBusinessRuleException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoBusinessRuleException"/> class.
+    /// Initializes a new instance of the <see cref="LunoBusinessRuleException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>
     /// <param name="statusCode">The HTTP status code.</param>
     /// <param name="innerException">The inner exception.</param>
-    protected LunoBusinessRuleException(string message, string? errorCode, int? statusCode, Exception? innerException = null)
+    public LunoBusinessRuleException(string message, string? errorCode, int? statusCode, Exception? innerException = null)
         : base(message, errorCode, statusCode, innerException) { }
 }

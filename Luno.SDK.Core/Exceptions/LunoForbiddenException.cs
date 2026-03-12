@@ -1,9 +1,10 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
 /// <summary>
-/// Exception thrown when the API returns a 403 Forbidden status code, indicating lack of permissions.
+/// Exception thrown when the API returns a 403 Forbidden status code, indicating insufficient permissions.
 /// </summary>
 [Serializable]
 public class LunoForbiddenException : LunoSecurityException
@@ -24,10 +25,10 @@ public class LunoForbiddenException : LunoSecurityException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoForbiddenException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoForbiddenException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoForbiddenException"/> class.
+    /// Initializes a new instance of the <see cref="LunoForbiddenException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>

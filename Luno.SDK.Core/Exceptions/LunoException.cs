@@ -3,27 +3,50 @@ using System;
 namespace Luno.SDK;
 
 /// <summary>
-/// The abstract root exception for all custom Luno SDK exceptions.
-/// Allows developers to catch all SDK-specific errors in a single block.
+/// The root exception for all custom Luno SDK exceptions.
 /// </summary>
 [Serializable]
-public abstract class LunoException : Exception
+public class LunoException : Exception
 {
+    /// <summary>
+    /// The raw error code string returned by the Luno API, if applicable.
+    /// </summary>
+    public string? ErrorCode { get; }
+
+    /// <summary>
+    /// The HTTP status code returned by the API, if applicable.
+    /// </summary>
+    public int? StatusCode { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoException"/> class.
     /// </summary>
-    protected LunoException() : base() { }
+    public LunoException() : base() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoException"/> class.
     /// </summary>
     /// <param name="message">The exception message.</param>
-    protected LunoException(string message) : base(message) { }
+    public LunoException(string message) : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoException"/> class.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    protected LunoException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoException(string message, Exception? innerException) : base(message, innerException) { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LunoException"/> class with metadata.
+    /// </summary>
+    /// <param name="message">The exception message.</param>
+    /// <param name="errorCode">The raw error code string.</param>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="innerException">The inner exception.</param>
+    public LunoException(string message, string? errorCode, int? statusCode, Exception? innerException = null)
+        : base(message, innerException)
+    {
+        ErrorCode = errorCode;
+        StatusCode = statusCode;
+    }
 }

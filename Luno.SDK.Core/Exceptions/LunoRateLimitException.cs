@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Luno.SDK;
 
@@ -32,10 +33,10 @@ public class LunoRateLimitException : LunoApiException
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public LunoRateLimitException(string message, Exception innerException) : base(message, innerException) { }
+    public LunoRateLimitException(string message, Exception? innerException) : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoRateLimitException"/> class.
+    /// Initializes a new instance of the <see cref="LunoRateLimitException"/> class with metadata.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="errorCode">The raw error code string from Luno.</param>
