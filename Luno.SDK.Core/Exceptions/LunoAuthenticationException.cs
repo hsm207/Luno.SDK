@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception thrown during the authentication process.
 /// </summary>
+/// <remarks>
+/// Primary Luno error codes: ErrUnauthorised, ErrApiKeyRevoked, ErrIncorrectPin.
+/// </remarks>
 [Serializable]
 public class LunoAuthenticationException : LunoSecurityException
 {

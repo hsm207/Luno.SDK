@@ -6,7 +6,7 @@ namespace Luno.SDK;
 /// Exception thrown when a requested resource is not found.
 /// </summary>
 /// <remarks>
-/// Mapped Luno Error Codes: ErrNotFound, ErrAccountNotFound, ErrBeneficiaryNotFound, etc.
+/// Primary Luno error codes: ErrNotFound, ErrAccountNotFound, ErrBeneficiaryNotFound, ErrOrderNotFound, ErrWithdrawalNotFound, ErrFundsMoveNotFound.
 /// </remarks>
 [Serializable]
 public class LunoResourceNotFoundException : LunoBusinessRuleException

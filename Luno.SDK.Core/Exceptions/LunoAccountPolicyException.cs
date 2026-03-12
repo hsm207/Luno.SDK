@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception representing account policy, KYC, or permission issues.
 /// </summary>
+/// <remarks>
+/// Primary Luno error codes: ErrVerificationLevelTooLow, ErrUserNotVerifiedForCurrency, ErrTravelRule, ErrUpdateRequired, ErrUserBlockedForCancelWithdrawal, ErrWithdrawalBlocked, ErrAccountLimit, ErrNoAddressesAssigned.
+/// </remarks>
 [Serializable]
 public class LunoAccountPolicyException : LunoApiException
 {

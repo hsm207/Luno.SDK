@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception thrown when the API returns a 403 Forbidden status code, indicating insufficient permissions.
 /// </summary>
+/// <remarks>
+/// Primary Luno error codes: ErrInsufficientPerms.
+/// </remarks>
 [Serializable]
 public class LunoForbiddenException : LunoSecurityException
 {

@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception thrown when the API returns a 401 Unauthorized status code, indicating invalid credentials.
 /// </summary>
+/// <remarks>
+/// Primary Luno error codes: ErrUnauthorised, ErrApiKeyRevoked, ErrIncorrectPin.
+/// </remarks>
 [Serializable]
 public class LunoUnauthorizedException : LunoSecurityException
 {

@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// The root exception for all custom Luno SDK exceptions.
 /// </summary>
+/// <remarks>
+/// This is the base exception class from which all other custom exceptions in the Luno SDK derive.
+/// </remarks>
 [Serializable]
 public class LunoException : Exception
 {

@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception representing maintenance and restrictive market modes.
 /// </summary>
+/// <remarks>
+/// Primary Luno error codes: ErrUnderMaintenance, ErrMarketUnavailable, ErrPostOnlyMode, ErrMarketNotAllowed, ErrCannotTradeWhileQuoteActive.
+/// </remarks>
 [Serializable]
 public class LunoMarketStateException : LunoApiException
 {

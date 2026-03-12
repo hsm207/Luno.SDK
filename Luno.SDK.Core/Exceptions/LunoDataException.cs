@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// The base exception for all data-related errors (Mapping, Validation).
 /// </summary>
+/// <remarks>
+/// This exception serves as the base for data-related issues, including parsing and validation errors.
+/// </remarks>
 [Serializable]
 public class LunoDataException : LunoException
 {

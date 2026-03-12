@@ -6,7 +6,7 @@ namespace Luno.SDK;
 /// Exception thrown when an order is rejected by the exchange due to limits or risk rules.
 /// </summary>
 /// <remarks>
-/// Mapped Luno Error Codes: ErrAmountTooSmall, ErrAmountTooBig, ErrPriceTooHigh, ErrPriceTooLow, etc.
+/// Primary Luno error codes: ErrAmountTooSmall, ErrAmountTooBig, ErrPriceTooHigh, ErrPriceTooLow, ErrVolumeTooLow, ErrVolumeTooHigh, ErrValueTooHigh, ErrInvalidPrice, ErrInvalidVolume, ErrInvalidOrderSide, ErrCannotStopUnknownOrNonPendingOrder, ErrNoTradesToInferStopDirection, ErrStopPriceTooHigh, ErrStopPriceTooLow, ErrInvalidStopDirection, ErrInvalidStopPrice, ErrNotEnoughLiquidity, ErrPostOnlyNotAllowed, ErrOrderCanceled, ErrPriceDenominationNotAllowed, ErrVolumeDenominationNotAllowed.
 /// </remarks>
 [Serializable]
 public class LunoOrderRejectedException : LunoBusinessRuleException

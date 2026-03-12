@@ -5,6 +5,9 @@ namespace Luno.SDK;
 /// <summary>
 /// The base exception for violations of trading or market rules.
 /// </summary>
+/// <remarks>
+/// This exception serves as the base for all specific trading and market rule violations.
+/// </remarks>
 [Serializable]
 public class LunoBusinessRuleException : LunoApiException
 {
