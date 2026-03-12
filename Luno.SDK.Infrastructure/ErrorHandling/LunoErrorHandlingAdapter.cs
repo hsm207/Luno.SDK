@@ -254,6 +254,10 @@ public class LunoErrorHandlingAdapter : IRequestAdapter
         string? errorCode = null;
 
         // Try to get "Code" property via reflection if the specific generated ApiException contains it
+        // The Luno OpenAPI spec is inconsistent. Some endpoints define a specific error schema
+        // (resulting in a generated exception class with a 'Code' property), while others do not
+        // (resulting in a generic ApiException without it). We use reflection to safely access
+        // 'Code' if it exists on the actual runtime exception type.
         var codeProp = ex.GetType().GetProperty("Code", BindingFlags.Public | BindingFlags.Instance);
         if (codeProp != null)
         {
