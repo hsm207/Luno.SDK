@@ -6,6 +6,7 @@ namespace Luno.SDK;
 /// The abstract root exception for all custom Luno SDK exceptions.
 /// Allows developers to catch all SDK-specific errors in a single block.
 /// </summary>
+[Serializable]
 public abstract class LunoException : Exception
 {
     /// <summary>

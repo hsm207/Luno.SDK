@@ -5,6 +5,7 @@ namespace Luno.SDK;
 /// <summary>
 /// Exception thrown when the API response data is incomplete or invalid and cannot be mapped to a domain entity.
 /// </summary>
+[Serializable]
 public class LunoMappingException : LunoDataException
 {
     /// <summary>
