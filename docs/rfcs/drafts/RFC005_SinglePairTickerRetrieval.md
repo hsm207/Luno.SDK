@@ -22,6 +22,7 @@ Console.WriteLine($"Price: {ticker.LastTrade} ({ticker.Status})");
     - Leverage the existing, high-fidelity `Ticker` entity.
     - **Ticker Normalization:** Automatically normalize ticker strings to uppercase to prevent `ErrInvalidMarketPair` due to case sensitivity.
     - **Pre-flight Validation:** Fail fast by throwing a `LunoValidationException` if the `pair` parameter is null, empty, or whitespace.
+    - **Compiler Enforcement:** Leverage Nullable Reference Types (NRT) and `WarningsAsErrors` to catch null assignments at compile-time.
     - **High-Fidelity Error Mapping:** Leverage the existing **RFC 004 Unified Domain Exception Hierarchy** to return semantic errors (`LunoUnauthorizedException`, `LunoRateLimitException`, `LunoResourceNotFoundException`, etc.).
 - **Non-Goals:**
     - Implementing client-side ticker length or format validation (Delegated to the API).
@@ -31,6 +32,8 @@ Console.WriteLine($"Price: {ticker.LastTrade} ({ticker.Status})");
 ### High-Level Architecture
 ```mermaid
 sequenceDiagram
+    %% <!-- MachineTruth: SingleTickerRetrievalPipeline -->
+    %% <!-- MachineTruth: NormalizationPolicy: ToUpperInvariant -->
     participant User as SDK User
     participant Client as LunoClient
     participant Market as MarketClient
@@ -72,6 +75,9 @@ The Kiota-generated models for the singular and bulk endpoints are inconsistent:
 - **Bulk (`/api/1/tickers`)**: Returns an array of `Ticker` objects with `long? Timestamp` and `Ticker_status`.
 
 To maintain **Clean Architecture**, the Infrastructure layer must map both DTOs to the unified **`Luno.SDK.Core.Market.Ticker`** domain entity, abstracting these inconsistencies from the consumer.
+
+#### 2. Compiler Mandate (Null-Free Lifestyle)
+To ensure high-fidelity developer experience, the project strictly enforces Nullable Reference Types. The `.csproj` configuration includes `<WarningsAsErrors>nullable</WarningsAsErrors>`, ensuring that "dumbass moves" (like passing `null` to a non-nullable parameter) are caught as hard **Build Errors**, providing immediate feedback during development.
 
 ### Phased Implementation
 - **Phase 1: Core Interface**
