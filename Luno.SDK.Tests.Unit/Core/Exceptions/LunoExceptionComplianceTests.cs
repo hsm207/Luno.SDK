@@ -87,6 +87,7 @@ public class LunoExceptionComplianceTests
         yield return new object[] { typeof(LunoInsufficientFundsException) };
         yield return new object[] { typeof(LunoTimeoutException) };
         yield return new object[] { typeof(LunoResourceNotFoundException) };
+        yield return new object[] { typeof(LunoClientException) };
     }
 
     [Theory(DisplayName = "Given an exception type, When constructed with parameterless constructor, Then inherit LunoException")]
@@ -152,6 +153,14 @@ public class LunoExceptionComplianceTests
         AssertBase(new LunoForbiddenException());
         AssertBase(new LunoUnauthorizedException());
         AssertBase(new LunoMappingException());
+        AssertBase(new LunoRateLimitException());
+        AssertBase(new LunoTimeoutException());
+        AssertBase(new LunoInsufficientFundsException());
+        AssertBase(new LunoOrderRejectedException());
+        AssertBase(new LunoResourceNotFoundException());
+        AssertBase(new LunoIdempotencyException());
+        AssertBase(new LunoValidationException());
+        AssertBase(new LunoClientException());
         AssertBase(new TestLunoException());
         AssertBase(new TestLunoSecurityException());
         AssertBase(new TestLunoDataException());
@@ -165,6 +174,14 @@ public class LunoExceptionComplianceTests
         AssertMsg(new LunoForbiddenException(_testMessage));
         AssertMsg(new LunoUnauthorizedException(_testMessage));
         AssertMsg(new LunoMappingException(_testMessage));
+        AssertMsg(new LunoRateLimitException(_testMessage));
+        AssertMsg(new LunoTimeoutException(_testMessage));
+        AssertMsg(new LunoInsufficientFundsException(_testMessage));
+        AssertMsg(new LunoOrderRejectedException(_testMessage));
+        AssertMsg(new LunoResourceNotFoundException(_testMessage));
+        AssertMsg(new LunoIdempotencyException(_testMessage));
+        AssertMsg(new LunoValidationException(_testMessage));
+        AssertMsg(new LunoClientException(_testMessage));
         AssertMsg(new TestLunoException(_testMessage));
         AssertMsg(new TestLunoSecurityException(_testMessage));
         AssertMsg(new TestLunoDataException(_testMessage));
@@ -178,6 +195,14 @@ public class LunoExceptionComplianceTests
         AssertInner(new LunoForbiddenException(_testMessage, _testInnerException));
         AssertInner(new LunoUnauthorizedException(_testMessage, _testInnerException));
         AssertInner(new LunoMappingException(_testMessage, _testInnerException));
+        AssertInner(new LunoRateLimitException(_testMessage, _testInnerException));
+        AssertInner(new LunoTimeoutException(_testMessage, _testInnerException));
+        AssertInner(new LunoInsufficientFundsException(_testMessage, _testInnerException));
+        AssertInner(new LunoOrderRejectedException(_testMessage, _testInnerException));
+        AssertInner(new LunoResourceNotFoundException(_testMessage, _testInnerException));
+        AssertInner(new LunoIdempotencyException(_testMessage, _testInnerException));
+        AssertInner(new LunoValidationException(_testMessage, _testInnerException));
+        AssertInner(new LunoClientException(_testMessage, _testInnerException));
         AssertInner(new TestLunoException(_testMessage, _testInnerException));
         AssertInner(new TestLunoSecurityException(_testMessage, _testInnerException));
         AssertInner(new TestLunoDataException(_testMessage, _testInnerException));
@@ -221,6 +246,15 @@ public class LunoExceptionComplianceTests
         var insufficientFull = new LunoInsufficientFundsException(_testMessage, "ErrFunds", 400, _testInnerException);
         var notFoundFull = new LunoResourceNotFoundException(_testMessage, "ErrNotFound", 404, _testInnerException);
         var validationFull = new LunoValidationException(_testMessage, "ErrVal", 400, _testInnerException);
+        var clientFull = new LunoClientException(_testMessage, "ErrClient", 400, _testInnerException);
+        var mappingFull = new LunoMappingException(_testMessage, "TestDto", _testInnerException);
+        var mappingMeta = new LunoMappingException(_testMessage, "ErrMap", 400, _testInnerException);
+        var dataMeta = new LunoDataException(_testMessage, "ErrData", 400, _testInnerException);
+        var apiInner = new LunoApiException(_testMessage, _testInnerException);
+        var businessMeta = new LunoBusinessRuleException(_testMessage, "ErrBus", 400, _testInnerException);
+        var policyMeta = new LunoAccountPolicyException(_testMessage, "ErrPol", 400, _testInnerException);
+        var stateMeta = new LunoMarketStateException(_testMessage, "ErrMkt", 400, _testInnerException);
+        var securityMeta = new LunoSecurityException(_testMessage, "ErrSec", 401, _testInnerException);
 
         Assert.Equal("ErrAuth", authFull.ErrorCode);
         Assert.Equal("ErrForb", forbiddenFull.ErrorCode);
@@ -230,5 +264,14 @@ public class LunoExceptionComplianceTests
         Assert.Equal("ErrFunds", insufficientFull.ErrorCode);
         Assert.Equal("ErrNotFound", notFoundFull.ErrorCode);
         Assert.Equal("ErrVal", validationFull.ErrorCode);
+        Assert.Equal("ErrClient", clientFull.ErrorCode);
+        Assert.Equal("TestDto", mappingFull.DtoType);
+        Assert.Equal("ErrMap", mappingMeta.ErrorCode);
+        Assert.Equal("ErrData", dataMeta.ErrorCode);
+        Assert.Equal(_testInnerException, apiInner.InnerException);
+        Assert.Equal("ErrBus", businessMeta.ErrorCode);
+        Assert.Equal("ErrPol", policyMeta.ErrorCode);
+        Assert.Equal("ErrMkt", stateMeta.ErrorCode);
+        Assert.Equal("ErrSec", securityMeta.ErrorCode);
     }
 }
