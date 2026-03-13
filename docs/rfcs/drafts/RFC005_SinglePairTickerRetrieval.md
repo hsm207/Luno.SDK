@@ -64,17 +64,27 @@ sequenceDiagram
 - **Modified `ILunoMarketClient`**:
     - `Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default);`
 
-### Phased Implementation
-### Phase 1: Core Interface
-- **Description:** Update the Market Client interface to support single-pair retrieval.
-- **Core Changes:** 
-    - Modify `ILunoMarketClient.cs`.
-- **Locations:** `Luno.SDK.Core/Market/ILunoMarketClient.cs`
+### Implementation Realities
+#### 1. DTO Discrepancy (Machine Mud)
+The Kiota-generated models for the singular and bulk endpoints are inconsistent:
+- **Singular (`/api/1/ticker`)**: Returns `GetTickerResponse` with `int? Timestamp` and `GetTickerResponse_status`.
+- **Bulk (`/api/1/tickers`)**: Returns an array of `Ticker` objects with `long? Timestamp` and `Ticker_status`.
 
-### Phase 2: Infrastructure Implementation
-- **Description:** Implement the `GetTickerAsync` logic using the Kiota generated client, including ticker normalization.
-- **Core Changes:** Implement the logic in `LunoMarketClient.cs` using `pair.ToUpperInvariant()` normalization. Leverages centralized error handling from RFC 004.
-- **Locations:** `Luno.SDK.Infrastructure/Market/LunoMarketClient.cs`
+To maintain **Clean Architecture**, the Infrastructure layer must map both DTOs to the unified **`Luno.SDK.Core.Market.Ticker`** domain entity, abstracting these inconsistencies from the consumer.
+
+### Phased Implementation
+- **Phase 1: Core Interface**
+    - **Description:** Update the Market Client interface to support single-pair retrieval.
+    - **Core Changes:** Modify `ILunoMarketClient.cs`.
+    - **Locations:** `Luno.SDK.Core/Market/ILunoMarketClient.cs`
+- **Phase 2: Infrastructure Mapping**
+    - **Description:** Implement high-fidelity mapping for the inconsistent Kiota DTOs.
+    - **Core Changes:** Update `MarketMapper.cs` to support mapping from `GetTickerResponse` to the domain `Ticker` entity.
+    - **Locations:** `Luno.SDK.Infrastructure/Market/MarketMapper.cs`
+- **Phase 3: Infrastructure Client Implementation**
+    - **Description:** Implement the `GetTickerAsync` logic using the Kiota generated client, including ticker normalization and centralized error handling.
+    - **Core Changes:** Implement the logic in `LunoMarketClient.cs` using `pair.ToUpperInvariant()` normalization and the new `MarketMapper` logic.
+    - **Locations:** `Luno.SDK.Infrastructure/Market/LunoMarketClient.cs`
 
 ## 6. Behavioral Specifications
 ### Successful Ticker Retrieval with Normalization
