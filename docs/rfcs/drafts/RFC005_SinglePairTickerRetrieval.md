@@ -40,10 +40,10 @@ sequenceDiagram
     participant Kiota as Kiota Engine
     participant API as Luno API
 
-    User->>Client: client.Market.GetTickerAsync("xbtmyr")
-    Client->>Market: GetTickerAsync("xbtmyr")
+    User->>Client: client.Market.GetTickerAsync("xbtmyr", ct)
+    Client->>Market: GetTickerAsync("xbtmyr", ct)
     Note over Market: pair.ToUpperInvariant() normalization
-    Market->>Kiota: ticker("XBTMYR").GetAsync()
+    Market->>Kiota: ticker("XBTMYR").GetAsync(ct)
     Kiota->>API: GET /api/1/ticker?pair=XBTMYR
     alt Success (200)
         API-->>Kiota: 200 OK (Ticker JSON)
@@ -178,3 +178,38 @@ To ensure high-fidelity developer experience, the project strictly enforces Null
 - **Killed:** The inefficient "Fetch All and Filter" pattern for single-pair applications.
 - **Killed:** Guessing how long to wait after a rate limit hit.
 - **Killed:** Ambiguous unmapped exceptions (Superceded by **RFC 004 Exception Hierarchy**).
+
+## Appendix: Raw API Response Examples
+To ensure high-fidelity mapping in `MarketMapper.cs`, the following raw JSON examples from the Luno API should be used as the Source of Truth.
+
+### 1. Singular Ticker (`GET /api/1/ticker`)
+```json
+{
+  "ask": "1000000.00",
+  "bid": "999000.00",
+  "last_trade": "999500.00",
+  "pair": "XBTZAR",
+  "rolling_24_hour_volume": "12.34",
+  "status": "ACTIVE",
+  "timestamp": 1710300000000
+}
+```
+**Note:** Kiota incorrectly generates `int? Timestamp` for this DTO, which will overflow at runtime. The mapper must handle this high-fidelity discrepancy.
+
+### 2. Bulk Tickers (`GET /api/1/tickers`)
+```json
+{
+  "tickers": [
+    {
+      "ask": "1000000.00",
+      "bid": "999000.00",
+      "last_trade": "999500.00",
+      "pair": "XBTZAR",
+      "rolling_24_hour_volume": "12.34",
+      "status": "ACTIVE",
+      "timestamp": 1710300000000
+    }
+  ]
+}
+```
+**Note:** Each item in the array is generated as a `Ticker` DTO with `long? Timestamp`, providing the correct capacity.
