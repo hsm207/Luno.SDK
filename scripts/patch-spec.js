@@ -8,28 +8,18 @@ const outputPath = path.join(__dirname, '..', 'docs', 'luno_api_spec_engine.json
 console.log(`Reading source specification: ${specPath}`);
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 
-// 1. Correct Ticker property types
+// 1. Correct Ticker and GetTickerResponse Timestamp types
+// Kiota inconsistently maps "format: timestamp" to int or long.
+// We force int64 to ensure 13-digit millisecond timestamps never overflow.
 const ticker = spec.components.schemas.Ticker;
 if (ticker) {
     ticker.properties.timestamp.format = 'int64';
-    ticker.properties.ask.format = 'decimal';
-    ticker.properties.bid.format = 'decimal';
-    ticker.properties.last_trade.format = 'decimal';
-    ticker.properties.rolling_24_hour_volume.format = 'decimal';
 }
 
-// 2. Correct GetTickerResponse property types
 const getTickerResponse = spec.components.schemas.GetTickerResponse;
 if (getTickerResponse) {
     getTickerResponse.properties.timestamp.format = 'int64';
-    getTickerResponse.properties.ask.format = 'decimal';
-    getTickerResponse.properties.bid.format = 'decimal';
-    getTickerResponse.properties.last_trade.format = 'decimal';
-    getTickerResponse.properties.rolling_24_hour_volume.format = 'decimal';
 }
-
-// 2. Additional type corrections
-// (Reserved for future type patches)
 
 console.log(`Writing intermediate patched specification: ${outputPath}`);
 fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));

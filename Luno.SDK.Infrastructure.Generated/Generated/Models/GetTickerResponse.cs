@@ -58,7 +58,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         /// <summary>Market current status&lt;code&gt;ACTIVE&lt;/code&gt; when the market is trading normally&lt;code&gt;POSTONLY&lt;/code&gt; when the market has been suspended and only post-only orders will be accepted&lt;code&gt;DISABLED&lt;/code&gt; when the market is shutdown and no orders can be accepted&lt;code&gt;UNKNOWN&lt;/code&gt; the market status could not be determined. This is a temporary state.</summary>
         public global::Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status? Status { get; set; }
         /// <summary>Unix timestamp in milliseconds of the tick</summary>
-        public int? Timestamp { get; set; }
+        public long? Timestamp { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse"/> and sets the default values.
         /// </summary>
@@ -90,7 +90,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "pair", n => { Pair = n.GetStringValue(); } },
                 { "rolling_24_hour_volume", n => { Rolling24HourVolume = n.GetStringValue(); } },
                 { "status", n => { Status = n.GetEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status>(); } },
-                { "timestamp", n => { Timestamp = n.GetIntValue(); } },
+                { "timestamp", n => { Timestamp = n.GetLongValue(); } },
             };
         }
         /// <summary>
@@ -106,7 +106,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteStringValue("pair", Pair);
             writer.WriteStringValue("rolling_24_hour_volume", Rolling24HourVolume);
             writer.WriteEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status>("status", Status);
-            writer.WriteIntValue("timestamp", Timestamp);
+            writer.WriteLongValue("timestamp", Timestamp);
             writer.WriteAdditionalData(AdditionalData);
         }
     }
