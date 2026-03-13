@@ -21,6 +21,7 @@ Console.WriteLine($"Price: {ticker.LastTrade} ({ticker.Status})");
     - Provide a single-pair retrieval method in the Market Client.
     - Leverage the existing, high-fidelity `Ticker` entity.
     - **Ticker Normalization:** Automatically normalize ticker strings to uppercase to prevent `ErrInvalidMarketPair` due to case sensitivity.
+    - **Pre-flight Validation:** Fail fast by throwing a `LunoValidationException` if the `pair` parameter is null, empty, or whitespace.
     - **High-Fidelity Error Mapping:** Leverage the existing **RFC 004 Unified Domain Exception Hierarchy** to return semantic errors (`LunoUnauthorizedException`, `LunoRateLimitException`, `LunoResourceNotFoundException`, etc.).
 - **Non-Goals:**
     - Implementing client-side ticker length or format validation (Delegated to the API).
@@ -95,6 +96,14 @@ To maintain **Clean Architecture**, the Infrastructure layer must map both DTOs 
 - **Then:**
     - The SDK normalizes the pair to "XBTMYR" and returns the `Ticker` record.
     - Telemetry is emitted with the `luno.market.get_ticker` signal.
+
+### Handling Null or Empty Pair
+- **Given:**
+    - A null, empty, or whitespace string provided as the `pair` parameter.
+- **When:**
+    - `GetTickerAsync(pair)` is called.
+- **Then:**
+    - The SDK throws a `LunoValidationException` immediately without making an API request.
 
 ### Handling Invalid Pair (400)
 - **Given:**
