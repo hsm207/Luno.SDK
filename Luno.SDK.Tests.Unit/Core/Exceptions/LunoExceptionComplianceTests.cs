@@ -15,7 +15,7 @@ public class LunoExceptionComplianceTests
     private readonly Exception _testInnerException = new Exception("Inner exception");
 
     // Explicitly test the abstract base classes by creating concrete test stubs
-    private class TestLunoException : LunoException
+    public class TestLunoException : LunoException
     {
         public TestLunoException() : base() { }
         public TestLunoException(string message) : base(message) { }

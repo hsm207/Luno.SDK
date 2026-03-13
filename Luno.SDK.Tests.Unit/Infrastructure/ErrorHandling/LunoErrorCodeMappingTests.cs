@@ -8,6 +8,9 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Infrastructure.ErrorHandling;
 
+/// <summary>
+/// Verifies the high-fidelity mapping of Luno API error codes to semantic domain exceptions.
+/// </summary>
 public class LunoErrorCodeMappingTests
 {
     private class TestApiException : ApiException
@@ -15,7 +18,7 @@ public class LunoErrorCodeMappingTests
         public string? Code { get; set; }
     }
 
-    [Theory]
+    [Theory(DisplayName = "Given a Luno error code, When HandleException is called, Then throw the corresponding semantic exception")]
     [InlineData("ErrUnauthorised", typeof(LunoUnauthorizedException))]
     [InlineData("ErrApiKeyRevoked", typeof(LunoUnauthorizedException))]
     [InlineData("ErrIncorrectPin", typeof(LunoUnauthorizedException))]
@@ -46,7 +49,7 @@ public class LunoErrorCodeMappingTests
         }
     }
 
-    [Fact]
+    [Fact(DisplayName = "Given a rate limit error with Retry-After header, When HandleException is called, Then populate RetryAfter property")]
     public async Task HandleException_WithRetryAfterHeader_PopulatesRateLimitException()
     {
         // Arrange
