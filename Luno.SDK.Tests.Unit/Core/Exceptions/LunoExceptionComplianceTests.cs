@@ -15,7 +15,7 @@ public class LunoExceptionComplianceTests
     private readonly Exception _testInnerException = new Exception("Inner exception");
 
     // Explicitly test the abstract base classes by creating concrete test stubs
-    public class TestLunoException : LunoException
+    private class TestLunoException : LunoException
     {
         public TestLunoException() : base() { }
         public TestLunoException(string message) : base(message) { }
@@ -139,83 +139,52 @@ public class LunoExceptionComplianceTests
         Assert.Equal("TestDto", ex.DtoType);
     }
 
-    [Fact(DisplayName = "Explicit Direct Constructor Tests to guarantee 100% FATALITY in all coverage runners")]
+    [Fact(DisplayName = "Explicit Direct Constructor Tests to guarantee 100% coverage in all coverage runners")]
     public void ExplicitConstructorTests()
     {
-        // Parameterless
-        var ex1 = new LunoAuthenticationException();
-        var ex2 = new LunoForbiddenException();
-        var ex3 = new LunoUnauthorizedException();
-        var ex4 = new LunoMappingException();
-        var exBase1 = new TestLunoException();
-        var exBase2 = new TestLunoSecurityException();
-        var exBase3 = new TestLunoDataException();
-        var exBase4 = new TestLunoApiException();
-        var exBase5 = new TestLunoBusinessRuleException();
-        var exBase6 = new TestLunoAccountPolicyException();
-        var exBase7 = new TestLunoMarketStateException();
+        // Local helpers to reduce boilerplate and variable noise
+        void AssertBase(Exception ex) => Assert.NotNull(ex);
+        void AssertMsg(Exception ex) => Assert.Equal(_testMessage, ex.Message);
+        void AssertInner(Exception ex) => Assert.Equal(_testInnerException, ex.InnerException);
 
-        Assert.NotNull(ex1);
-        Assert.NotNull(ex2);
-        Assert.NotNull(ex3);
-        Assert.NotNull(ex4);
-        Assert.NotNull(exBase1);
-        Assert.NotNull(exBase2);
-        Assert.NotNull(exBase3);
-        Assert.NotNull(exBase4);
-        Assert.NotNull(exBase5);
-        Assert.NotNull(exBase6);
-        Assert.NotNull(exBase7);
+        // Parameterless
+        AssertBase(new LunoAuthenticationException());
+        AssertBase(new LunoForbiddenException());
+        AssertBase(new LunoUnauthorizedException());
+        AssertBase(new LunoMappingException());
+        AssertBase(new TestLunoException());
+        AssertBase(new TestLunoSecurityException());
+        AssertBase(new TestLunoDataException());
+        AssertBase(new TestLunoApiException());
+        AssertBase(new TestLunoBusinessRuleException());
+        AssertBase(new TestLunoAccountPolicyException());
+        AssertBase(new TestLunoMarketStateException());
 
         // Message
-        var ex5 = new LunoAuthenticationException(_testMessage);
-        var ex6 = new LunoForbiddenException(_testMessage);
-        var ex7 = new LunoUnauthorizedException(_testMessage);
-        var ex8 = new LunoMappingException(_testMessage);
-        var exBase8 = new TestLunoException(_testMessage);
-        var exBase9 = new TestLunoSecurityException(_testMessage);
-        var exBase10 = new TestLunoDataException(_testMessage);
-        var exBase11 = new TestLunoApiException(_testMessage);
-        var exBase12 = new TestLunoBusinessRuleException(_testMessage);
-        var exBase13 = new TestLunoAccountPolicyException(_testMessage);
-        var exBase14 = new TestLunoMarketStateException(_testMessage);
-
-        Assert.Equal(_testMessage, ex5.Message);
-        Assert.Equal(_testMessage, ex6.Message);
-        Assert.Equal(_testMessage, ex7.Message);
-        Assert.Equal(_testMessage, ex8.Message);
-        Assert.Equal(_testMessage, exBase8.Message);
-        Assert.Equal(_testMessage, exBase9.Message);
-        Assert.Equal(_testMessage, exBase10.Message);
-        Assert.Equal(_testMessage, exBase11.Message);
-        Assert.Equal(_testMessage, exBase12.Message);
-        Assert.Equal(_testMessage, exBase13.Message);
-        Assert.Equal(_testMessage, exBase14.Message);
+        AssertMsg(new LunoAuthenticationException(_testMessage));
+        AssertMsg(new LunoForbiddenException(_testMessage));
+        AssertMsg(new LunoUnauthorizedException(_testMessage));
+        AssertMsg(new LunoMappingException(_testMessage));
+        AssertMsg(new TestLunoException(_testMessage));
+        AssertMsg(new TestLunoSecurityException(_testMessage));
+        AssertMsg(new TestLunoDataException(_testMessage));
+        AssertMsg(new TestLunoApiException(_testMessage));
+        AssertMsg(new TestLunoBusinessRuleException(_testMessage));
+        AssertMsg(new TestLunoAccountPolicyException(_testMessage));
+        AssertMsg(new TestLunoMarketStateException(_testMessage));
 
         // Inner Exception
-        var ex9 = new LunoAuthenticationException(_testMessage, _testInnerException);
-        var ex10 = new LunoForbiddenException(_testMessage, _testInnerException);
-        var ex11 = new LunoUnauthorizedException(_testMessage, _testInnerException);
-        var ex12 = new LunoMappingException(_testMessage, _testInnerException);
-        var exBase15 = new TestLunoException(_testMessage, _testInnerException);
-        var exBase16 = new TestLunoSecurityException(_testMessage, _testInnerException);
-        var exBase17 = new TestLunoDataException(_testMessage, _testInnerException);
-        var exBase18 = new TestLunoApiException(_testMessage, _testInnerException);
-        var exBase19 = new TestLunoBusinessRuleException(_testMessage, _testInnerException);
-        var exBase20 = new TestLunoAccountPolicyException(_testMessage, _testInnerException);
-        var exBase21 = new TestLunoMarketStateException(_testMessage, _testInnerException);
-
-        Assert.Equal(_testInnerException, ex9.InnerException);
-        Assert.Equal(_testInnerException, ex10.InnerException);
-        Assert.Equal(_testInnerException, ex11.InnerException);
-        Assert.Equal(_testInnerException, ex12.InnerException);
-        Assert.Equal(_testInnerException, exBase15.InnerException);
-        Assert.Equal(_testInnerException, exBase16.InnerException);
-        Assert.Equal(_testInnerException, exBase17.InnerException);
-        Assert.Equal(_testInnerException, exBase18.InnerException);
-        Assert.Equal(_testInnerException, exBase19.InnerException);
-        Assert.Equal(_testInnerException, exBase20.InnerException);
-        Assert.Equal(_testInnerException, exBase21.InnerException);
+        AssertInner(new LunoAuthenticationException(_testMessage, _testInnerException));
+        AssertInner(new LunoForbiddenException(_testMessage, _testInnerException));
+        AssertInner(new LunoUnauthorizedException(_testMessage, _testInnerException));
+        AssertInner(new LunoMappingException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoSecurityException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoDataException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoApiException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoBusinessRuleException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoAccountPolicyException(_testMessage, _testInnerException));
+        AssertInner(new TestLunoMarketStateException(_testMessage, _testInnerException));
 
         // Properties on LunoApiException
         var exApiFull = new TestLunoApiException(_testMessage, "ErrTest", 400, _testInnerException);
