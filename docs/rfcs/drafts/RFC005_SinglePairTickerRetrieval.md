@@ -24,6 +24,7 @@ Console.WriteLine($"Price: {ticker.LastTrade} ({ticker.Status})");
     - **Pre-flight Validation:** Fail fast by throwing a `LunoValidationException` if the `pair` parameter is null, empty, or whitespace.
     - **Compiler Enforcement:** Leverage Nullable Reference Types (NRT) and `WarningsAsErrors` to catch null assignments at compile-time.
     - **High-Fidelity Error Mapping:** Leverage the existing **RFC 004 Unified Domain Exception Hierarchy** to return semantic errors (`LunoUnauthorizedException`, `LunoRateLimitException`, `LunoResourceNotFoundException`, etc.).
+    - **High-Fidelity Demonstration:** Add a new concept to the `Luno.SDK.Cli` gallery to demonstrate targeted ticker retrieval.
 - **Non-Goals:**
     - Implementing client-side ticker length or format validation (Delegated to the API).
     - Implementing an automatic retry policy (Out of Scope for this RFC).
@@ -93,6 +94,11 @@ To ensure high-fidelity developer experience, the project strictly enforces Null
     - **Core Changes:** Implement the logic in `LunoMarketClient.cs` using `pair.ToUpperInvariant()` normalization and the new `MarketMapper` logic.
     - **Locations:** `Luno.SDK.Infrastructure/Market/LunoMarketClient.cs`
 
+- **Phase 4: CLI Demonstration**
+    - **Description:** Add a new high-fidelity demonstration to the CLI gallery.
+    - **Core Changes:** Create `Concept04_SingleTicker.cs` and update `Program.cs` to include the new menu option.
+    - **Locations:** `Luno.SDK.Cli/Concepts/Concept04_SingleTicker.cs`, `Luno.SDK.Cli/Program.cs`
+
 ## 6. Behavioral Specifications
 ### Successful Ticker Retrieval with Normalization
 - **Given:**
@@ -155,6 +161,7 @@ To ensure high-fidelity developer experience, the project strictly enforces Null
 ## 7. Definition of Done
 ### Quality Gates
 - 100% test pass on project-core and project-infrastructure.
+- **CLI Victory:** 100% success rate for `Concept04_SingleTicker` in the Demonstration Gallery.
 - XML Documentation for the new method and all new exceptions.
 - **TDD Mandate:** Verification must favor behavioral outcomes over internal state. Avoid mocking internal logic; prefer real collaborators unless external/slow I/O is involved.
 
