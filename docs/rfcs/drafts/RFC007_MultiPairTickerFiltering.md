@@ -33,15 +33,17 @@ The system will use a decorator-based approach to intercept and filter the reque
 
 ```mermaid
 sequenceDiagram
+    %% <!-- MachineTruth: TickerFilteringPipeline -->
+    %% <!-- MachineTruth: NormalizationPolicy: ToUpperInvariant -->
     participant User as SDK User
     participant App as Application Layer
     participant Infra as Infrastructure Layer
     participant Kiota as Kiota Engine
 
-    User->>App: GetTickersAsync({"xbtmyr", "ethmyr"})
+    User->>App: GetTickersAsync({"xbtmyr", "ethmyr"}, ct)
     App->>App: Normalize to {"XBTMYR", "ETHMYR"}
-    App->>Infra: GetTickersAsync({"XBTMYR", "ETHMYR"})
-    Infra->>Kiota: tickers.GetAsync(q => q.Pair = {"XBTMYR", "ETHMYR"})
+    App->>Infra: GetTickersAsync({"XBTMYR", "ETHMYR"}, ct)
+    Infra->>Kiota: tickers.GetAsync(q => q.Pair = {"XBTMYR", "ETHMYR"}, ct)
     Kiota->>Infra: ListTickersResponse
     Infra->>App: IEnumerable<Ticker>
     App->>User: IEnumerable<Ticker> (Domain Entities)
@@ -94,6 +96,18 @@ sequenceDiagram
 - Run `dotnet test --filter "Category=Unit&FullyQualifiedName~Market"`
 - Run `dotnet test --filter "Category=Integration&FullyQualifiedName~Market"`
 
-## 8. Alternatives Considered & Trade-offs
-- **Alternative A:** Creating a separate `GetFilteredTickersAsync` method. -> Rejected because it adds unnecessary surface area to the API. Optional parameters are more idiomatic for filtering.
-- **Trade-offs:** Minimal; ensures the SDK stays thin while empowering power users.
+## 8. Financial Breaking Points
+- **URL Length Limits**: Extremely large filter arrays (e.g., hundreds of pairs) could theoretically exceed the standard HTTP URL length limit (~2000 characters). The implementation must account for this by either capping input or implementing batching in future iterations.
+
+## 9. Pre-Mortem
+- **Failure Scenario**: Kiota fails to explode the array parameter into multiple `pair` query strings.
+- **Mitigation**: Verify the request adapter's serialization behavior in unit tests using a `StubRequestAdapter` to inspect the `RequestInformation` query parameters.
+
+## 10. Alternatives Considered & Trade-offs
+- **Alternative A**: Creating a separate `GetFilteredTickersAsync` method. -> Rejected because it adds unnecessary surface area to the API. Optional parameters are more idiomatic for filtering.
+- **Trade-offs**: Minimal; ensures the SDK stays thin while empowering power users.
+
+## 11. The Kill List
+- **Killed**: Manual client-side filtering of ticker collections.
+- **Killed**: Inconsistent case-handling for multi-pair requests.
+- **Killed**: "All-or-Nothing" data fetching for targeted use cases.
