@@ -80,10 +80,11 @@ The project strictly enforces Nullable Reference Types and treats warnings as bu
         - Update `MarketMapper.cs` to support mapping from `GetTickerResponse`.
         - Implement `GetTickerAsync` in `LunoMarketClient.cs` using the query parameter pattern.
 - **Phase 3: Application Orchestration**
-    - **Description:** Implement the handler and fluent extension.
+    - **Description:** Implement the handler and fluent extension using high-fidelity mapping patterns.
     - **Core Changes:** 
-        - Create `GetTickerHandler.cs` using the existing `TickerResponse`.
-        - Add `GetTickerAsync` extension method to `LunoClientExtensions.cs`.
+        - Create `GetTickerHandler.cs` leveraging the extracted `TickerResponse` and `MarketMappingExtensions.ToResponse()`.
+        - Add `GetTickerAsync` extension method to `LunoMarketExtensions.cs`.
+    - **Locations:** `Luno.SDK.Application/Market/GetTicker.cs`, `Luno.SDK.Application/Market/LunoMarketExtensions.cs`
 - **Phase 4: CLI Demonstration**
     - **Description:** Add a new high-fidelity demonstration to the CLI gallery.
     - **Core Changes:** Create `Concept04_SingleTicker.cs` and update `Program.cs`.
