@@ -300,5 +300,9 @@ public class LunoErrorHandlingAdapter : IRequestAdapter
             case 504:
                 throw new LunoTimeoutException("Request timed out.", errorCode, statusCode, ex);
         }
+
+        // Fallback for unmapped errors (e.g. 500 Internal Server Error, or unknown 400s)
+        // ensures strict adherence to RFC004 Goal: Standardize on LunoException.
+        throw new LunoApiException($"An unexpected API error occurred (HTTP {statusCode})", errorCode, statusCode, ex);
     }
 }

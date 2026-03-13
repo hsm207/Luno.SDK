@@ -154,6 +154,7 @@ public class LunoErrorCodeMappingTests
     [InlineData(409, typeof(LunoIdempotencyException))]
     [InlineData(408, typeof(LunoTimeoutException))]
     [InlineData(504, typeof(LunoTimeoutException))]
+    [InlineData(502, typeof(LunoApiException))] // Hits the new catch-all!
     public async Task HandleException_FallsBackToStatusCodeWhenErrorCodeIsMissing(int statusCode, Type expectedExceptionType)
     {
         // Arrange

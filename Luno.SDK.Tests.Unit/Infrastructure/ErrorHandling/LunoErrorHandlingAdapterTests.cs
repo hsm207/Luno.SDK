@@ -97,8 +97,8 @@ public class LunoErrorHandlingAdapterTests
         await Assert.ThrowsAsync<LunoForbiddenException>(() => errorAdapter.SendAsync<DummyParsable>(requestInfo, Factory));
     }
 
-    [Fact(DisplayName = "Given ApiException with 500, When SendAsync is called, Then re-throw ApiException")]
-    public async Task SendAsync_500_RethrowsApiEx()
+    [Fact(DisplayName = "Given ApiException with 500, When SendAsync is called, Then throw LunoApiException")]
+    public async Task SendAsync_500_ThrowsLunoApiException()
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 500 };
@@ -107,8 +107,8 @@ public class LunoErrorHandlingAdapterTests
         var requestInfo = new RequestInformation();
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<ApiException>(() => errorAdapter.SendAsync<DummyParsable>(requestInfo, Factory));
-        Assert.Equal(500, ex.ResponseStatusCode);
+        var ex = await Assert.ThrowsAsync<LunoApiException>(() => errorAdapter.SendAsync<DummyParsable>(requestInfo, Factory));
+        Assert.Equal(500, ex.StatusCode);
     }
 
     [Theory(DisplayName = "Given 401 ApiException, When calling any Send method, Then throw LunoUnauthorizedException")]
@@ -179,12 +179,12 @@ public class LunoErrorHandlingAdapterTests
         });
     }
 
-    [Theory(DisplayName = "Given 500 ApiException, When calling any Send method, Then re-throw ApiException")]
+    [Theory(DisplayName = "Given 500 ApiException, When calling any Send method, Then throw LunoApiException")]
     [InlineData("SendCollectionAsync")]
     [InlineData("SendPrimitiveAsync")]
     [InlineData("SendPrimitiveCollectionAsync")]
     [InlineData("SendNoContentAsync")]
-    public async Task AllSendMethods_500_RethrowsApiEx(string methodName)
+    public async Task AllSendMethods_500_ThrowsLunoApiException(string methodName)
     {
         // Arrange
         var apiEx = new ApiException { ResponseStatusCode = 500 };
@@ -193,7 +193,7 @@ public class LunoErrorHandlingAdapterTests
         var requestInfo = new RequestInformation();
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<ApiException>(async () =>
+        var ex = await Assert.ThrowsAsync<LunoApiException>(async () =>
         {
             switch (methodName)
             {
@@ -212,7 +212,7 @@ public class LunoErrorHandlingAdapterTests
             }
         });
 
-        Assert.Equal(500, ex.ResponseStatusCode);
+        Assert.Equal(500, ex.StatusCode);
     }
 
     [Fact(DisplayName = "Given ConvertToNativeRequestAsync, When called, Then delegate faithfully")]
