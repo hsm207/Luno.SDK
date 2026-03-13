@@ -77,7 +77,7 @@ public class MarketMapperTests
     public void MapStatus_Null_ReturnsUnknown()
     {
         // Act
-        var result = MarketMapper.MapStatus(null);
+        var result = MarketMapper.MapStatus((Luno.SDK.Infrastructure.Generated.Models.Ticker_status?)null);
 
         // Assert
         Assert.Equal(MarketStatus.Unknown, result);

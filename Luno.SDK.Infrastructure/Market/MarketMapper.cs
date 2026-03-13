@@ -3,6 +3,8 @@ using System.Text.Json;
 using Luno.SDK.Market;
 using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;
+using GeneratedGetTickerResponse = Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse;
+using GeneratedGetTickerStatus = Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status;
 
 namespace Luno.SDK.Infrastructure.Market;
 
@@ -25,8 +27,25 @@ internal static class MarketMapper
         DateTimeOffset.FromUnixTimeMilliseconds(GetTimestamp(dto))
     );
 
+    /// <summary>
+    /// Maps a generated single ticker response DTO to a domain entity.
+    /// </summary>
+    /// <exception cref="LunoMappingException">Thrown when the ticker DTO is missing required data.</exception>
+    public static Ticker MapToEntity(GeneratedGetTickerResponse dto) => new(
+        dto.Pair ?? throw new LunoMappingException("API returned a ticker without a valid market pair identifier.", nameof(GeneratedGetTickerResponse)),
+        ParseDecimal(dto.Ask),
+        ParseDecimal(dto.Bid),
+        ParseDecimal(dto.LastTrade),
+        ParseDecimal(dto.Rolling24HourVolume),
+        MapStatus(dto.Status),
+        DateTimeOffset.FromUnixTimeMilliseconds(GetTimestamp(dto))
+    );
+
     private static long GetTimestamp(GeneratedTicker dto) =>
         dto.Timestamp ?? throw new LunoMappingException("API returned a ticker without a valid timestamp.", nameof(GeneratedTicker));
+
+    private static long GetTimestamp(GeneratedGetTickerResponse dto) =>
+        dto.Timestamp ?? throw new LunoMappingException("API returned a ticker without a valid timestamp.", nameof(GeneratedGetTickerResponse));
 
     private static decimal ParseDecimal(string? value) =>
         decimal.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0m;
@@ -39,6 +58,17 @@ internal static class MarketMapper
         GeneratedStatus.ACTIVE => MarketStatus.Active,
         GeneratedStatus.POSTONLY => MarketStatus.PostOnly,
         GeneratedStatus.DISABLED => MarketStatus.Disabled,
+        _ => MarketStatus.Unknown
+    };
+
+    /// <summary>
+    /// Maps the generated GetTickerResponse status to the domain status enum.
+    /// </summary>
+    public static MarketStatus MapStatus(GeneratedGetTickerStatus? status) => status switch
+    {
+        GeneratedGetTickerStatus.ACTIVE => MarketStatus.Active,
+        GeneratedGetTickerStatus.POSTONLY => MarketStatus.PostOnly,
+        GeneratedGetTickerStatus.DISABLED => MarketStatus.Disabled,
         _ => MarketStatus.Unknown
     };
 }

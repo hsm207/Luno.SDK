@@ -20,4 +20,20 @@ public static class LunoMarketExtensions
         var handler = new GetTickersHandler(client.Market);
         return handler.HandleAsync(new GetTickersQuery(), ct);
     }
+
+    /// <summary>
+    /// Asynchronously fetches a market ticker for a specific pair.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoClient"/> instance to use for the request.</param>
+    /// <param name="pair">The market pair to fetch (e.g., XBTZAR).</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a <see cref="TickerResponse"/> representing the market state.</returns>
+    public static Task<TickerResponse> GetTickerAsync(
+        this ILunoClient client,
+        string pair,
+        CancellationToken ct = default)
+    {
+        var handler = new GetTickerHandler(client.Market);
+        return handler.HandleAsync(new GetTickerQuery(pair), ct);
+    }
 }

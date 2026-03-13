@@ -30,4 +30,26 @@ internal class LunoMarketClient(IRequestAdapter requestAdapter) : ILunoMarketCli
             yield return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(dto);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(pair))
+        {
+            throw new LunoValidationException("Pair cannot be null or whitespace.");
+        }
+
+        var response = await _apiClient.Api.One.Ticker.GetAsync(req =>
+        {
+            req.QueryParameters.Pair = pair;
+            req.Options.Add(new LunoTelemetryOptions("GetMarketTicker"));
+        }, ct);
+
+        if (response is null)
+        {
+            throw new LunoMappingException("The API response was successful but the ticker was missing or null.", "GetTickerResponse");
+        }
+
+        return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(response);
+    }
 }
