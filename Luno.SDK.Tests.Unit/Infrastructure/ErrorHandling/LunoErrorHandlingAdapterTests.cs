@@ -12,6 +12,7 @@ using Xunit;
 namespace Luno.SDK.Tests.Unit.Infrastructure.ErrorHandling;
 
 // A simple stub adapter to avoid using Moq
+[Trait("Category", "Unit")]
 public class StubRequestAdapter : IRequestAdapter
 {
     private readonly Exception? _exceptionToThrow;
@@ -61,6 +62,7 @@ public class StubRequestAdapter : IRequestAdapter
     }
 }
 
+[Trait("Category", "Unit")]
 public class LunoErrorHandlingAdapterTests
 {
     private class DummyParsable : IParsable

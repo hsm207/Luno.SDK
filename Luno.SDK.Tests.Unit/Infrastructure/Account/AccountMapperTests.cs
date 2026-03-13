@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Infrastructure.Account;
 
+[Trait("Category", "Unit")]
 public class AccountMapperTests
 {
     [Fact(DisplayName = "Given valid AccountBalance, When mapping to domain, Then use InvariantCulture to parse safely")]

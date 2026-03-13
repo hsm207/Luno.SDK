@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Infrastructure.Telemetry;
 
+[Trait("Category", "Unit")]
 public class TelemetryAdapterTests
 {
     private readonly Mock<IRequestAdapter> _innerMock;

@@ -11,6 +11,7 @@ namespace Luno.SDK.Tests.Unit.Infrastructure.ErrorHandling;
 /// <summary>
 /// Verifies the high-fidelity mapping of Luno API error codes to semantic domain exceptions.
 /// </summary>
+[Trait("Category", "Unit")]
 public class LunoErrorCodeMappingTests
 {
     private class TestApiException : ApiException
