@@ -180,9 +180,15 @@ To ensure high-fidelity developer experience, the project strictly enforces Null
 - **Killed:** Ambiguous unmapped exceptions (Superceded by **RFC 004 Exception Hierarchy**).
 
 ## Appendix: Raw API Response Examples
-To ensure high-fidelity mapping in `MarketMapper.cs`, the following raw JSON examples from the Luno API should be used as the Source of Truth.
+To ensure high-fidelity mapping in `MarketMapper.cs`, the following raw JSON examples and official **Luno Conventions** should be used as the Source of Truth.
 
-### 1. Singular Ticker (`GET /api/1/ticker`)
+### 1. Official Timestamp Convention
+As per the `luno_api_spec.json` Conventions section:
+> "Timestamps are always represented as an integer number of milliseconds since the UTC Epoch (a Unix timestamp)."
+
+**Mandate:** All domain entities and infrastructure mappings must use `long` (64-bit) for timestamps to prevent overflow of 13-digit millisecond values.
+
+### 2. Singular Ticker (`GET /api/1/ticker`)
 ```json
 {
   "ask": "1000000.00",
