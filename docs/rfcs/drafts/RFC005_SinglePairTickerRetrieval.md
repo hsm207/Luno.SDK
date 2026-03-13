@@ -21,8 +21,7 @@ Console.WriteLine($"Price: {ticker.LastTrade} ({ticker.Status})");
     - Provide a single-pair retrieval method in the Market Client.
     - Leverage the existing, high-fidelity `Ticker` entity.
     - **Ticker Normalization:** Automatically normalize ticker strings to uppercase to prevent `ErrInvalidMarketPair` due to case sensitivity.
-    - **High-Fidelity Error Mapping:** Rely on the API as the Source of Truth and map errors (`401`, `403`, `404`, `429`, `503`) to clear, semantic domain exceptions.
-    - **Rate Limit Resilience:** Expose `Retry-After` information in the `LunoRateLimitException` to enable graceful back-off in consumer applications.
+    - **High-Fidelity Error Mapping:** Leverage the existing **RFC 004 Unified Domain Exception Hierarchy** to return semantic errors (`LunoUnauthorizedException`, `LunoRateLimitException`, `LunoResourceNotFoundException`, etc.).
 - **Non-Goals:**
     - Implementing client-side ticker length or format validation (Delegated to the API).
     - Implementing an automatic retry policy (Out of Scope for this RFC).
@@ -50,47 +49,31 @@ sequenceDiagram
         API-->>Kiota: 429 Too Many Requests (Retry-After: 30)
         Kiota-->>Market: ApiException (Headers: Retry-After=30)
         Market-->>User: throw LunoRateLimitException(RetryAfter: 30s)
-    else Not Found (404)
-        API-->>Kiota: 404 Not Found (ErrInvalidMarketPair)
+    else Invalid Pair (400)
+        API-->>Kiota: 400 Bad Request (ErrInvalidMarketPair)
         Kiota-->>Market: ApiException
-        Market-->>User: throw LunoNotFoundException("XBTMYR", inner)
+        Market-->>User: throw LunoValidationException(inner)
     else Maintenance (503)
         API-->>Kiota: 503 Service Unavailable (ErrUnderMaintenance)
         Kiota-->>Market: ApiException
-        Market-->>User: throw LunoMarketUnavailableException(inner)
+        Market-->>User: throw LunoMarketStateException(inner)
     end
 ```
 
 ### Public API Changes
 - **Modified `ILunoMarketClient`**:
     - `Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default);`
-- **New Domain Exceptions** (in `Luno.SDK.Core/Exceptions/`):
-    - `LunoNotFoundException : LunoDataException`: Thrown on 404 errors (e.g., `ErrInvalidMarketPair`). Includes the requested pair.
-    - `LunoRateLimitException : LunoException`: Thrown on 429 errors. Includes `TimeSpan? RetryAfter`.
-    - `LunoMarketUnavailableException : LunoException`: Thrown on 503 errors (e.g., `ErrUnderMaintenance`).
 
 ### Phased Implementation
-### Phase 1: Core Exceptions & Interface
-- **Description:** Define the new semantic exceptions and update the Market Client interface.
+### Phase 1: Core Interface
+- **Description:** Update the Market Client interface to support single-pair retrieval.
 - **Core Changes:** 
-    - Create `LunoNotFoundException.cs` (inherits from `LunoDataException`).
-    - Create `LunoRateLimitException.cs` (inherits from `LunoException`).
-    - Create `LunoMarketUnavailableException.cs` (inherits from `LunoException`).
     - Modify `ILunoMarketClient.cs`.
-- **Locations:** `Luno.SDK.Core/Exceptions/`, `Luno.SDK.Core/Market/ILunoMarketClient.cs`
+- **Locations:** `Luno.SDK.Core/Market/ILunoMarketClient.cs`
 
-### Phase 2: Infrastructure Error Mapping
-- **Description:** Update the central error handling adapter to translate HTTP codes and extract the `Retry-After` header.
-- **Core Changes:** Update `HandleException` in `LunoErrorHandlingAdapter.cs`.
-    - Extract `Retry-After` from `ApiException.ResponseHeaders`.
-    - Map 404 -> `LunoNotFoundException`.
-    - Map 429 -> `LunoRateLimitException(retryAfter)`.
-    - Map 503 -> `LunoMarketUnavailableException`.
-- **Locations:** `Luno.SDK.Infrastructure/ErrorHandling/LunoErrorHandlingAdapter.cs`
-
-### Phase 3: Infrastructure Client Implementation
+### Phase 2: Infrastructure Implementation
 - **Description:** Implement the `GetTickerAsync` logic using the Kiota generated client, including ticker normalization.
-- **Core Changes:** Implement the logic in `LunoMarketClient.cs` using `pair.ToUpperInvariant()` normalization.
+- **Core Changes:** Implement the logic in `LunoMarketClient.cs` using `pair.ToUpperInvariant()` normalization. Leverages centralized error handling from RFC 004.
 - **Locations:** `Luno.SDK.Infrastructure/Market/LunoMarketClient.cs`
 
 ## 6. Behavioral Specifications
@@ -103,13 +86,13 @@ sequenceDiagram
     - The SDK normalizes the pair to "XBTMYR" and returns the `Ticker` record.
     - Telemetry is emitted with the `luno.market.get_ticker` signal.
 
-### Handling Non-Existent Pair (404)
+### Handling Invalid Pair (400)
 - **Given:**
-    - A non-existent trading pair "NOTAFX".
+    - An invalid trading pair identifier "NOTAFX".
 - **When:**
     - `GetTickerAsync("NOTAFX")` is called.
 - **Then:**
-    - The SDK throws a `LunoNotFoundException` containing the requested pair.
+    - The SDK throws a `LunoValidationException` (mapped via RFC 004).
     - The original `ApiException` is preserved as the `InnerException`.
 
 ### Handling Rate Limits (429) with Retry Info
@@ -126,7 +109,7 @@ sequenceDiagram
 - **When:**
     - `GetTickerAsync("XBTMYR")` is called.
 - **Then:**
-    - The SDK throws a `LunoMarketUnavailableException`.
+    - The SDK throws a `LunoMarketStateException`.
 
 ### Handling Permission Denied (403)
 - **Given:**
@@ -169,4 +152,4 @@ sequenceDiagram
 - **Killed:** Brittle client-side ticker validation logic.
 - **Killed:** The inefficient "Fetch All and Filter" pattern for single-pair applications.
 - **Killed:** Guessing how long to wait after a rate limit hit.
-- **Killed:** Ambiguous `ApiException` errors that don't explain *why* a call failed.
+- **Killed:** Ambiguous unmapped exceptions (Superceded by **RFC 004 Exception Hierarchy**).
