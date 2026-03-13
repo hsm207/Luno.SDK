@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Kiota.Abstractions;
+using Luno.SDK;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -142,7 +143,7 @@ public class LunoMarketClientTests : IDisposable
         Assert.True(hasSuccessMeasurement);
     }
 
-    [Fact(DisplayName = "Given the Luno API returns a 500 error, When fetching tickers, Then bubble up the correct ApiException AND emit an error trace signal.")]
+    [Fact(DisplayName = "Given the Luno API returns a 500 error, When fetching tickers, Then bubble up the correct LunoApiException AND emit an error trace signal.")]
     public async Task GetTickers_ApiFails_BubblesExceptionAndEmitsErrorTrace()
     {
         // Arrange
@@ -157,7 +158,7 @@ public class LunoMarketClientTests : IDisposable
         using var activityListener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ApiException>(async () =>
+        await Assert.ThrowsAsync<LunoApiException>(async () =>
         {
             await foreach (var _ in client.GetTickersAsync()) { }
         });

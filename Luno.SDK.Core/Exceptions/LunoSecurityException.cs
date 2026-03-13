@@ -5,23 +5,38 @@ namespace Luno.SDK;
 /// <summary>
 /// The base exception for all security-related errors (Authentication, Authorization).
 /// </summary>
-public abstract class LunoSecurityException : LunoException
+/// <remarks>
+/// Mapped Luno Error Codes: ErrUnauthorised, ErrInsufficientPerms, ErrApiKeyRevoked, ErrIncorrectPin
+/// </remarks>
+[Serializable]
+public class LunoSecurityException : LunoApiException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoSecurityException"/> class.
     /// </summary>
-    protected LunoSecurityException() : base() { }
+    public LunoSecurityException() : base() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoSecurityException"/> class.
     /// </summary>
     /// <param name="message">The exception message.</param>
-    protected LunoSecurityException(string message) : base(message) { }
+    public LunoSecurityException(string message) : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoSecurityException"/> class.
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="innerException">The inner exception.</param>
-    protected LunoSecurityException(string message, Exception innerException) : base(message, innerException) { }
-}
+    public LunoSecurityException(string message, Exception? innerException) : base(message, innerException) { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LunoSecurityException"/> class with metadata.
+    /// </summary>
+    /// <param name="message">The exception message.</param>
+    /// <param name="errorCode">The raw error code string from Luno.</param>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="innerException">The inner exception.</param>
+    public LunoSecurityException(string message, string? errorCode, int? statusCode, Exception? innerException = null)
+        : base(message, errorCode, statusCode, innerException) { }
+    }
+
