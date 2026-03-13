@@ -186,7 +186,7 @@ To ensure high-fidelity mapping in `MarketMapper.cs`, the following raw JSON exa
 As per the `luno_api_spec.json` Conventions section:
 > "Timestamps are always represented as an integer number of milliseconds since the UTC Epoch (a Unix timestamp)."
 
-**Mandate:** All domain entities and infrastructure mappings must use `long` (64-bit) for timestamps to prevent overflow of 13-digit millisecond values.
+**Mandate:** The Infrastructure layer must parse raw 13-digit millisecond values using `long` (64-bit) to prevent overflow. These values must then be mapped to the **`DateTimeOffset`** type in the Core domain entity to provide a high-fidelity, type-safe developer experience.
 
 ### 2. Singular Ticker (`GET /api/1/ticker`)
 ```json
