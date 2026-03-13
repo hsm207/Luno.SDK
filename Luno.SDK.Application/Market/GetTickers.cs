@@ -9,22 +9,6 @@ namespace Luno.SDK.Application.Market;
 public record GetTickersQuery;
 
 /// <summary>
-/// Represents the application-layer response containing ticker data for a specific pair.
-/// </summary>
-/// <param name="Pair">The market pair (e.g., XBTZAR).</param>
-/// <param name="Price">Last trade price.</param>
-/// <param name="Spread">The current bid/ask spread.</param>
-/// <param name="IsActive">Indicates if the market is currently active.</param>
-/// <param name="Timestamp">Unix timestamp in milliseconds of the tick.</param>
-public record TickerResponse(
-    string Pair,
-    decimal Price,
-    decimal Spread,
-    bool IsActive,
-    DateTimeOffset Timestamp
-);
-
-/// <summary>
 /// Orchestrates the retrieval of market tickers from the Luno API.
 /// </summary>
 /// <param name="marketClient">The specialized market client used to fetch raw market data.</param>
@@ -42,13 +26,7 @@ public class GetTickersHandler(ILunoMarketClient marketClient)
     {
         await foreach (var ticker in marketClient.GetTickersAsync(ct).WithCancellation(ct))
         {
-            yield return new TickerResponse(
-                ticker.Pair,
-                ticker.LastTrade,
-                ticker.Spread,
-                ticker.IsActive,
-                ticker.Timestamp
-            );
+            yield return ticker.ToResponse();
         }
     }
 }

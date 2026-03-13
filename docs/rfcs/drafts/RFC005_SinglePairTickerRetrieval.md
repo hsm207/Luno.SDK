@@ -4,7 +4,7 @@
 **Date:** 2026-03-11
 
 ## 1. Overview
-This RFC proposes adding a surgical `GetTickerAsync(string pair)` method to the `ILunoMarketClient`. This allows consumers to fetch the market state of a single trading pair (e.g., "XBTMYR") without the overhead of retrieving all tickers.
+This RFC proposes adding a surgical `GetTickerAsync(string pair)` method to the `ILunoMarketClient` and exposing it via the fluent `LunoClient` API. This allows consumers to fetch the market state of a single trading pair (e.g., "XBTMYR") without the overhead of retrieving all tickers.
 
 ## 2. Motivation
 Currently, `ILunoMarketClient` only provides `GetTickersAsync`, which returns a list of all available tickers. For applications focused on a specific pair (like a "price-watch" app or a targeted trading bot), this is inefficient and forces unnecessary data processing on the client side. A targeted method improves **Developer Experience (DX)** and **Performance**.
@@ -12,104 +12,108 @@ Currently, `ILunoMarketClient` only provides `GetTickersAsync`, which returns a 
 ## 3. Future State
 Developers can access a specific ticker with a single, clear call:
 ```csharp
-var ticker = await client.Market.GetTickerAsync("xbtmyr"); // Auto-normalized to "XBTMYR"
-Console.WriteLine($"Price: {ticker.LastTrade} ({ticker.Status})");
+var ticker = await client.GetTickerAsync("XBTZAR"); 
+Console.WriteLine($"Price: {ticker.Price} ({ticker.IsActive})");
 ```
 
 ## 4. Goals & Non-Goals
 - **Goals:**
     - Provide a single-pair retrieval method in the Market Client.
     - Leverage the existing, high-fidelity `Ticker` entity.
-    - **Ticker Normalization:** Automatically normalize ticker strings to uppercase to prevent `ErrInvalidMarketPair` due to case sensitivity.
-    - **High-Fidelity Error Mapping:** Rely on the API as the Source of Truth and map errors (`401`, `403`, `404`, `429`, `503`) to clear, semantic domain exceptions.
-    - **Rate Limit Resilience:** Expose `Retry-After` information in the `LunoRateLimitException` to enable graceful back-off in consumer applications.
+    - **Pre-flight Validation:** Fail fast by throwing a `LunoValidationException` if the `pair` parameter is null, empty, or whitespace.
+    - **Compiler Enforcement:** Leverage Nullable Reference Types (NRT) and `WarningsAsErrors` to catch null assignments at compile-time.
+    - **High-Fidelity Error Mapping:** Leverage the existing **RFC 004 Unified Domain Exception Hierarchy** to return semantic errors (`LunoUnauthorizedException`, `LunoRateLimitException`, `LunoValidationException`, etc.).
+    - **High-Fidelity Demonstration:** Add a new concept to the `Luno.SDK.Cli` gallery to demonstrate targeted ticker retrieval.
 - **Non-Goals:**
+    - Implementing client-side ticker normalization or casing logic (Delegated to User).
     - Implementing client-side ticker length or format validation (Delegated to the API).
-    - Implementing an automatic retry policy (Out of Scope for this RFC).
 
 ## 5. Proposed Technical Design
 ### High-Level Architecture
 ```mermaid
 sequenceDiagram
+    %% <!-- MachineTruth: SingleTickerRetrievalPipeline -->
     participant User as SDK User
-    participant Client as LunoClient
-    participant Market as MarketClient
+    participant App as Application Layer
+    participant Infra as Infrastructure Layer
     participant Kiota as Kiota Engine
     participant API as Luno API
 
-    User->>Client: client.Market.GetTickerAsync("xbtmyr")
-    Client->>Market: GetTickerAsync("xbtmyr")
-    Note over Market: pair.ToUpperInvariant() normalization
-    Market->>Kiota: ticker("XBTMYR").GetAsync()
-    Kiota->>API: GET /api/1/ticker?pair=XBTMYR
+    User->>App: GetTickerAsync("XBTZAR", ct)
+    App->>Infra: GetTickerAsync("XBTZAR", ct)
+    Infra->>Kiota: ticker.GetAsync(q => q.QueryParameters.Pair = "XBTZAR", ct)
+    Kiota->>API: GET /api/1/ticker?pair=XBTZAR
     alt Success (200)
         API-->>Kiota: 200 OK (Ticker JSON)
-        Kiota-->>Market: Ticker (Generated)
-        Market-->>User: Ticker (Domain Entity)
-    else Rate Limited (429)
-        API-->>Kiota: 429 Too Many Requests (Retry-After: 30)
-        Kiota-->>Market: ApiException (Headers: Retry-After=30)
-        Market-->>User: throw LunoRateLimitException(RetryAfter: 30s)
-    else Not Found (404)
-        API-->>Kiota: 404 Not Found (ErrInvalidMarketPair)
-        Kiota-->>Market: ApiException
-        Market-->>User: throw LunoNotFoundException("XBTMYR", inner)
-    else Maintenance (503)
-        API-->>Kiota: 503 Service Unavailable (ErrUnderMaintenance)
-        Kiota-->>Market: ApiException
-        Market-->>User: throw LunoMarketUnavailableException(inner)
+        Kiota-->>Infra: GetTickerResponse (Generated)
+        Infra->>App: Ticker (Domain Entity)
+        App->>User: TickerResponse (Application DTO)
+    else Invalid Pair (400)
+        API-->>Kiota: 400 Bad Request (ErrInvalidMarketPair)
+        Kiota-->>Infra: ApiException
+        Infra-->>App: throw LunoValidationException
+        App-->>User: throw LunoValidationException
     end
 ```
 
 ### Public API Changes
 - **Modified `ILunoMarketClient`**:
     - `Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default);`
-- **New Domain Exceptions** (in `Luno.SDK.Core/Exceptions/`):
-    - `LunoNotFoundException : LunoDataException`: Thrown on 404 errors (e.g., `ErrInvalidMarketPair`). Includes the requested pair.
-    - `LunoRateLimitException : LunoException`: Thrown on 429 errors. Includes `TimeSpan? RetryAfter`.
-    - `LunoMarketUnavailableException : LunoException`: Thrown on 503 errors (e.g., `ErrUnderMaintenance`).
+- **Application Layer**:
+    - `GetTickerQuery`: A record containing the pair string.
+    - `GetTickerHandler`: Orchestrates the retrieval and maps the entity to `TickerResponse`.
+
+### Implementation Realities
+#### 1. DTO Discrepancy (Resolved via Patch)
+The singular and bulk endpoints return different DTO types (`GetTickerResponse` vs `Ticker`). However, both have been patched in `patch-spec.js` to ensure the `timestamp` field utilizes **`int64`** to prevent overflow. The Infrastructure layer must map these distinct DTOs to the unified **`Luno.SDK.Core.Market.Ticker`** domain entity.
+
+#### 2. Compiler Mandate (Null-Free Lifestyle)
+The project strictly enforces Nullable Reference Types and treats warnings as build errors via `.csproj` configuration. This ensures that null assignments to the `pair` parameter are caught during development.
 
 ### Phased Implementation
-### Phase 1: Core Exceptions & Interface
-- **Description:** Define the new semantic exceptions and update the Market Client interface.
-- **Core Changes:** 
-    - Create `LunoNotFoundException.cs` (inherits from `LunoDataException`).
-    - Create `LunoRateLimitException.cs` (inherits from `LunoException`).
-    - Create `LunoMarketUnavailableException.cs` (inherits from `LunoException`).
-    - Modify `ILunoMarketClient.cs`.
-- **Locations:** `Luno.SDK.Core/Exceptions/`, `Luno.SDK.Core/Market/ILunoMarketClient.cs`
-
-### Phase 2: Infrastructure Error Mapping
-- **Description:** Update the central error handling adapter to translate HTTP codes and extract the `Retry-After` header.
-- **Core Changes:** Update `HandleException` in `LunoErrorHandlingAdapter.cs`.
-    - Extract `Retry-After` from `ApiException.ResponseHeaders`.
-    - Map 404 -> `LunoNotFoundException`.
-    - Map 429 -> `LunoRateLimitException(retryAfter)`.
-    - Map 503 -> `LunoMarketUnavailableException`.
-- **Locations:** `Luno.SDK.Infrastructure/ErrorHandling/LunoErrorHandlingAdapter.cs`
-
-### Phase 3: Infrastructure Client Implementation
-- **Description:** Implement the `GetTickerAsync` logic using the Kiota generated client, including ticker normalization.
-- **Core Changes:** Implement the logic in `LunoMarketClient.cs` using `pair.ToUpperInvariant()` normalization.
-- **Locations:** `Luno.SDK.Infrastructure/Market/LunoMarketClient.cs`
+- **Phase 1: Core Interface**
+    - **Description:** Update the Market Client interface to support single-pair retrieval.
+    - **Core Changes:** Modify `ILunoMarketClient.cs`.
+- **Phase 2: Infrastructure Implementation**
+    - **Description:** Implement high-fidelity mapping and client logic.
+    - **Core Changes:** 
+        - Update `MarketMapper.cs` to support mapping from `GetTickerResponse`.
+        - Implement `GetTickerAsync` in `LunoMarketClient.cs` using the query parameter pattern.
+- **Phase 3: Application Orchestration**
+    - **Description:** Implement the handler and fluent extension using high-fidelity mapping patterns.
+    - **Core Changes:** 
+        - Create `GetTickerHandler.cs` leveraging the extracted `TickerResponse` and `MarketMappingExtensions.ToResponse()`.
+        - Add `GetTickerAsync` extension method to `LunoMarketExtensions.cs`.
+    - **Locations:** `Luno.SDK.Application/Market/GetTicker.cs`, `Luno.SDK.Application/Market/LunoMarketExtensions.cs`
+- **Phase 4: CLI Demonstration**
+    - **Description:** Add a new high-fidelity demonstration to the CLI gallery.
+    - **Core Changes:** Create `Concept04_SingleTicker.cs` and update `Program.cs`.
 
 ## 6. Behavioral Specifications
-### Successful Ticker Retrieval with Normalization
+### Successful Ticker Retrieval
 - **Given:**
-    - A lowercase trading pair "xbtmyr".
+    - A valid trading pair identifier "XBTZAR".
 - **When:**
-    - `GetTickerAsync("xbtmyr")` is called.
+    - `GetTickerAsync("XBTZAR")` is called.
 - **Then:**
-    - The SDK normalizes the pair to "XBTMYR" and returns the `Ticker` record.
+    - The SDK returns the `Ticker` record for the requested pair.
     - Telemetry is emitted with the `luno.market.get_ticker` signal.
 
-### Handling Non-Existent Pair (404)
+### Handling Null or Empty Pair
 - **Given:**
-    - A non-existent trading pair "NOTAFX".
+    - A null, empty, or whitespace string provided as the `pair` parameter.
+- **When:**
+    - `GetTickerAsync(pair)` is called.
+- **Then:**
+    - The SDK throws a `LunoValidationException` immediately without making an API request.
+
+### Handling Invalid Pair (400)
+- **Given:**
+    - An invalid trading pair identifier "NOTAFX".
 - **When:**
     - `GetTickerAsync("NOTAFX")` is called.
 - **Then:**
-    - The SDK throws a `LunoNotFoundException` containing the requested pair.
+    - The SDK throws a `LunoValidationException` (mapped via RFC 004).
     - The original `ApiException` is preserved as the `InnerException`.
 
 ### Handling Rate Limits (429) with Retry Info
@@ -126,7 +130,7 @@ sequenceDiagram
 - **When:**
     - `GetTickerAsync("XBTMYR")` is called.
 - **Then:**
-    - The SDK throws a `LunoMarketUnavailableException`.
+    - The SDK throws a `LunoMarketStateException`.
 
 ### Handling Permission Denied (403)
 - **Given:**
@@ -147,6 +151,7 @@ sequenceDiagram
 ## 7. Definition of Done
 ### Quality Gates
 - 100% test pass on project-core and project-infrastructure.
+- **CLI Victory:** 100% success rate for `Concept04_SingleTicker` in the Demonstration Gallery.
 - XML Documentation for the new method and all new exceptions.
 - **TDD Mandate:** Verification must favor behavioral outcomes over internal state. Avoid mocking internal logic; prefer real collaborators unless external/slow I/O is involved.
 
@@ -169,4 +174,45 @@ sequenceDiagram
 - **Killed:** Brittle client-side ticker validation logic.
 - **Killed:** The inefficient "Fetch All and Filter" pattern for single-pair applications.
 - **Killed:** Guessing how long to wait after a rate limit hit.
-- **Killed:** Ambiguous `ApiException` errors that don't explain *why* a call failed.
+- **Killed:** Ambiguous unmapped exceptions (Superceded by **RFC 004 Exception Hierarchy**).
+
+## Appendix: Raw API Response Examples
+To ensure high-fidelity mapping in `MarketMapper.cs`, the following raw JSON examples and official **Luno Conventions** should be used as the Source of Truth.
+
+### 1. Official Timestamp Convention
+As per the `luno_api_spec.json` Conventions section:
+> "Timestamps are always represented as an integer number of milliseconds since the UTC Epoch (a Unix timestamp)."
+
+**Mandate:** The Infrastructure layer must parse raw 13-digit millisecond values using `long` (64-bit) to prevent overflow. These values must then be mapped to the **`DateTimeOffset`** type in the Core domain entity to provide a high-fidelity, type-safe developer experience.
+
+### 2. Singular Ticker (`GET /api/1/ticker`)
+```json
+{
+  "ask": "1000000.00",
+  "bid": "999000.00",
+  "last_trade": "999500.00",
+  "pair": "XBTZAR",
+  "rolling_24_hour_volume": "12.34",
+  "status": "ACTIVE",
+  "timestamp": 1710300000000
+}
+```
+**Note:** The intermediate specification patch in `patch-spec.js` forces Kiota to generate `long? Timestamp` for this DTO, ensuring high-fidelity mapping without overflow risk.
+
+### 3. Bulk Tickers (`GET /api/1/tickers`)
+```json
+{
+  "tickers": [
+    {
+      "ask": "1000000.00",
+      "bid": "999000.00",
+      "last_trade": "999500.00",
+      "pair": "XBTZAR",
+      "rolling_24_hour_volume": "12.34",
+      "status": "ACTIVE",
+      "timestamp": 1710300000000
+    }
+  ]
+}
+```
+**Note:** Each item in the array is generated as a `Ticker` DTO with `long? Timestamp`, providing the correct capacity.
