@@ -18,6 +18,16 @@ if (ticker) {
     ticker.properties.rolling_24_hour_volume.format = 'decimal';
 }
 
+// 2. Correct GetTickerResponse property types
+const getTickerResponse = spec.components.schemas.GetTickerResponse;
+if (getTickerResponse) {
+    getTickerResponse.properties.timestamp.format = 'int64';
+    getTickerResponse.properties.ask.format = 'decimal';
+    getTickerResponse.properties.bid.format = 'decimal';
+    getTickerResponse.properties.last_trade.format = 'decimal';
+    getTickerResponse.properties.rolling_24_hour_volume.format = 'decimal';
+}
+
 // 2. Additional type corrections
 // (Reserved for future type patches)
 
