@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Application.Market;
 
+[Trait("Category", "Unit")]
 public class GetTickersTests
 {
     private static LunoMarketClient CreateMarketClient(HttpMessageHandler handler)

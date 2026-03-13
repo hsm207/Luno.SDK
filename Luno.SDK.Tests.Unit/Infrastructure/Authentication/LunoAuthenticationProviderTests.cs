@@ -4,6 +4,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Infrastructure.Authentication;
 
+[Trait("Category", "Unit")]
 public class LunoAuthenticationProviderTests
 {
     [Fact(DisplayName = "Given no credentials and explicit required request, When authenticating, Then throw LunoAuthenticationException")]

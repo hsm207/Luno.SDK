@@ -9,6 +9,7 @@ namespace Luno.SDK.Tests.Unit.Core.Exceptions;
 /// Contains lightweight unit tests for exception constructors to satisfy
 /// architectural compliance and coverage mandates without using ExcludeFromCodeCoverage.
 /// </summary>
+[Trait("Category", "Unit")]
 public class LunoExceptionComplianceTests
 {
     private readonly string _testMessage = "Test message";

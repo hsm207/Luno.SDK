@@ -3,6 +3,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Infrastructure.Telemetry;
 
+[Trait("Category", "Unit")]
 public class LunoTelemetryTests
 {
     [Fact(DisplayName = "Given telemetry instance, When disposing, Then release all resources faithfully.")]

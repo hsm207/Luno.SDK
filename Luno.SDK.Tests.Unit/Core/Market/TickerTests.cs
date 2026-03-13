@@ -3,6 +3,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Core.Market;
 
+[Trait("Category", "Unit")]
 public class TickerTests
 {
     [Fact(DisplayName = "Given ask and bid prices, When accessing spread, Then return the difference.")]

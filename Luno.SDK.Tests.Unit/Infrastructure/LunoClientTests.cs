@@ -4,6 +4,7 @@ using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Infrastructure;
 
+[Trait("Category", "Unit")]
 public class LunoClientTests
 {
     [Fact(DisplayName = "Given default constructor, When creating LunoClient, Then initialize with default options and pooled client.")]
