@@ -26,6 +26,22 @@ public static class LunoTradingExtensions
     }
 
     /// <summary>
+    /// Asynchronously stops an active order using its command parameters.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoClient"/> instance to use.</param>
+    /// <param name="command">The stop order command.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A boolean indicating success.</returns>
+    public static Task<bool> StopOrderAsync(
+        this ILunoClient client,
+        StopOrderCommand command,
+        CancellationToken ct = default)
+    {
+        var handler = new StopOrderHandler(client.Trading);
+        return handler.HandleAsync(command, ct);
+    }
+
+    /// <summary>
     /// Asynchronously stops an active order using the exchange OrderId.
     /// </summary>
     /// <param name="client">The <see cref="ILunoClient"/> instance to use.</param>
@@ -37,8 +53,7 @@ public static class LunoTradingExtensions
         string orderId,
         CancellationToken ct = default)
     {
-        var handler = new StopOrderHandler(client.Trading);
-        return handler.HandleAsync(new StopOrderCommand { OrderId = orderId }, ct);
+        return client.StopOrderAsync(new StopOrderCommand { OrderId = orderId }, ct);
     }
 
     /// <summary>
@@ -53,7 +68,6 @@ public static class LunoTradingExtensions
         string clientOrderId,
         CancellationToken ct = default)
     {
-        var handler = new StopOrderHandler(client.Trading);
-        return handler.HandleAsync(new StopOrderCommand { ClientOrderId = clientOrderId }, ct);
+        return client.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId }, ct);
     }
 }

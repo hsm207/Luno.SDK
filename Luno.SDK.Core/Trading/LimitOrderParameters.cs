@@ -87,5 +87,10 @@ public record LimitOrderParameters
         {
             throw new LunoValidationException("Explicit Account Mandate violated: Both BaseAccountId and CounterAccountId must be explicitly provided to prevent accidental trading on default accounts.");
         }
+
+        if (StopPrice.HasValue != StopDirection.HasValue)
+        {
+            throw new LunoValidationException("For Stop-Limit orders, both StopPrice and StopDirection must be provided together.");
+        }
     }
 }

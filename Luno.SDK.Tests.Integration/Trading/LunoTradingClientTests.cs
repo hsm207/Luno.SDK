@@ -143,4 +143,61 @@ public class LunoTradingClientTests : IDisposable
 
         Assert.Equal(403, ex.StatusCode);
     }
+
+    [Fact(DisplayName = "Given a valid OrderId, When stopping order, Then SDK calls delete endpoint directly.")]
+    public async Task StopOrderAsync_ValidOrderId_StopsSuccessfully()
+    {
+        // Arrange
+        var orderId = "BX123";
+        _server.Given(Request.Create().WithPath("/api/1/stoporder").UsingPost().WithParam("order_id", orderId))
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { success = true }));
+
+        var client = CreateClient();
+
+        // Act
+        var result = await client.StopOrderAsync(new StopOrderCommand { OrderId = orderId });
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact(DisplayName = "Given neither OrderId nor ClientOrderId, When stopping order, Then throw LunoValidationException.")]
+    public async Task StopOrderAsync_NoIdsProvided_ThrowsValidationException()
+    {
+        // Arrange
+        var client = CreateClient();
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
+            await client.StopOrderAsync(new StopOrderCommand()));
+
+        Assert.Contains("Either OrderId or ClientOrderId must be provided", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given StopPrice but no StopDirection, When posting limit order, Then throw LunoValidationException.")]
+    public async Task PostLimitOrderAsync_PartialStopLimitParams_ThrowsValidationException()
+    {
+        // Arrange
+        var client = CreateClient();
+        var command = new PostLimitOrderCommand
+        {
+            Pair = "XBTZAR",
+            Type = OrderType.Bid,
+            Volume = 1m,
+            Price = 1000m,
+            BaseAccountId = 1,
+            CounterAccountId = 2,
+            StopPrice = 900m
+            // Missing StopDirection
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
+            await client.PostLimitOrderAsync(command));
+
+        Assert.Contains("both StopPrice and StopDirection must be provided", ex.Message);
+    }
 }
