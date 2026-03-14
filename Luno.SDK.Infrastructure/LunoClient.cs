@@ -8,6 +8,8 @@ using Luno.SDK.Infrastructure.ErrorHandling;
 using Luno.SDK.Infrastructure.Telemetry;
 using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
+using Luno.SDK.Trading;
+using Luno.SDK.Infrastructure.Trading;
 
 namespace Luno.SDK;
 
@@ -28,12 +30,16 @@ public class LunoClient : ILunoClient
     private readonly IRequestAdapter _requestAdapter;
     private readonly Lazy<ILunoMarketClient> _market;
     private readonly Lazy<ILunoAccountClient> _accounts;
+    private readonly Lazy<ILunoTradingClient> _trading;
 
     /// <inheritdoc />
     public ILunoMarketClient Market => _market.Value;
 
     /// <inheritdoc />
     public ILunoAccountClient Accounts => _accounts.Value;
+
+    /// <inheritdoc />
+    public ILunoTradingClient Trading => _trading.Value;
 
     /// <inheritdoc />
     public ILunoTelemetry Telemetry => _telemetry;
@@ -72,6 +78,7 @@ public class LunoClient : ILunoClient
 
         _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_requestAdapter));
         _accounts = new Lazy<ILunoAccountClient>(() => new LunoAccountClient(_requestAdapter));
+        _trading = new Lazy<ILunoTradingClient>(() => new LunoTradingClient(_requestAdapter));
     }
 
     private static HttpClient CreatePooledClient(LunoClientOptions options)
