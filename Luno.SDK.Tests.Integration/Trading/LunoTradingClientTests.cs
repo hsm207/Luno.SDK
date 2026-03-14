@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Luno.SDK;
 using Luno.SDK.Trading;
+using Luno.SDK.Application.Trading;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -65,7 +66,7 @@ public class LunoTradingClientTests : IDisposable
                 }));
 
         var client = CreateClient();
-        var request = new PostLimitOrderRequest
+        var command = new PostLimitOrderCommand
         {
             Pair = "XBTMYR",
             Type = OrderType.Bid, // Expected "BUY"
@@ -77,7 +78,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var response = await client.Trading.PostLimitOrderAsync(request);
+        var response = await client.PostLimitOrderAsync(command);
 
         // Assert
         Assert.NotNull(response);
@@ -108,7 +109,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.Trading.StopOrderByClientOrderIdAsync(clientId);
+        var result = await client.StopOrderByClientOrderIdAsync(clientId);
 
         // Assert
         Assert.True(result);
@@ -125,7 +126,7 @@ public class LunoTradingClientTests : IDisposable
                 .WithBodyAsJson(new { error = "Forbidden", code = "ErrInsufficientPerms" }));
 
         var client = CreateClient();
-        var request = new PostLimitOrderRequest
+        var command = new PostLimitOrderCommand
         {
             Pair = "XBTMYR",
             Type = OrderType.Bid,
@@ -138,7 +139,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoForbiddenException>(async () =>
-            await client.Trading.PostLimitOrderAsync(request));
+            await client.PostLimitOrderAsync(command));
 
         Assert.Equal(403, ex.StatusCode);
     }

@@ -13,40 +13,38 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
 {
     private readonly LunoApiClient _apiClient = new(requestAdapter);
 
-    public async Task<OrderResponse> PostLimitOrderAsync(PostLimitOrderRequest request, CancellationToken ct = default)
+    public async Task<OrderReference> PostLimitOrderAsync(LimitOrderParameters parameters, CancellationToken ct = default)
     {
-        ValidatePreFlight(request);
+        // Note: Pre-flight validation is now handled by the Application Layer (LimitOrderParameters.Validate())
+        // But we still wrap the raw API call and handle Idempotency.
 
         try
         {
             var response = await _apiClient.Api.One.Postorder.PostAsync(req =>
             {
                 // Mandatory fields
-                req.QueryParameters.Pair = request.Pair;
-                req.QueryParameters.TypeAsPostTypeQueryParameterType = MapType(request.Type);
-                req.QueryParameters.Volume = request.Volume.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                req.QueryParameters.Price = request.Price.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                req.QueryParameters.Pair = parameters.Pair;
+                req.QueryParameters.TypeAsPostTypeQueryParameterType = MapType(parameters.Type);
+                req.QueryParameters.Volume = parameters.Volume.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                req.QueryParameters.Price = parameters.Price.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 
                 // Account explicitly mandated by validation
-                req.QueryParameters.BaseAccountId = (int?)request.BaseAccountId;
-                req.QueryParameters.CounterAccountId = (int?)request.CounterAccountId;
+                req.QueryParameters.BaseAccountId = (int?)parameters.BaseAccountId;
+                req.QueryParameters.CounterAccountId = (int?)parameters.CounterAccountId;
                 
                 // Optional idempotency / behavior
-                req.QueryParameters.ClientOrderId = request.ClientOrderId;
-                req.QueryParameters.PostOnly = request.PostOnly;
-                req.QueryParameters.StopPrice = request.StopPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                req.QueryParameters.Timestamp = (int?)request.Timestamp;
-                req.QueryParameters.Ttl = (int?)request.TTL;
+                req.QueryParameters.ClientOrderId = parameters.ClientOrderId;
+                req.QueryParameters.PostOnly = parameters.PostOnly;
+                req.QueryParameters.StopPrice = parameters.StopPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                req.QueryParameters.Timestamp = (int?)parameters.Timestamp;
+                req.QueryParameters.Ttl = (int?)parameters.TTL;
 
-                if (request.StopDirection.HasValue)
+                if (parameters.StopDirection.HasValue)
                 {
-                    req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(request.StopDirection.Value);
+                    req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(parameters.StopDirection.Value);
                 }
 
-                if (request.TimeInForce.HasValue)
-                {
-                    req.QueryParameters.TimeInForceAsPostTimeInForceQueryParameterType = MapTimeInForce(request.TimeInForce.Value);
-                }
+                req.QueryParameters.TimeInForceAsPostTimeInForceQueryParameterType = MapTimeInForce(parameters.TimeInForce);
 
                 req.Options.Add(new LunoTelemetryOptions("PostLimitOrder"));
             }, ct);
@@ -56,11 +54,11 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
                 throw new LunoMappingException("The API response was successful but no OrderId was returned.", "PostLimitOrderResponse");
             }
 
-            return new OrderResponse { OrderId = response.OrderId };
+            return new OrderReference { OrderId = response.OrderId };
         }
-        catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(request.ClientOrderId))
+        catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(parameters.ClientOrderId))
         {
-            return await ReconcileDuplicateOrderAsync(request, ct);
+            return await ReconcileDuplicateOrderAsync(parameters, ct);
         }
     }
 
@@ -101,47 +99,36 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
         return await StopOrderAsync(existingOrder.OrderId, ct);
     }
 
-    private void ValidatePreFlight(PostLimitOrderRequest request)
-    {
-        if (request.BaseAccountId == null || request.CounterAccountId == null)
-        {
-            throw new LunoValidationException("Explicit Account Mandate violated: BaseAccountId and CounterAccountId must be provided.");
-        }
+    // ValidatePreFlight removed, validation happens in Application layer via LimitOrderParameters.Validate()
 
-        if (request.PostOnly == true && (request.TimeInForce == TimeInForce.IOC || request.TimeInForce == TimeInForce.FOK))
-        {
-            throw new LunoValidationException("Pre-flight validation failed: PostOnly cannot be used with IOC or FOK TimeInForce.");
-        }
-    }
-
-    private async Task<OrderResponse> ReconcileDuplicateOrderAsync(PostLimitOrderRequest request, CancellationToken ct)
+    private async Task<OrderReference> ReconcileDuplicateOrderAsync(LimitOrderParameters parameters, CancellationToken ct)
     {
         var existingOrder = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
         {
-            req.QueryParameters.ClientOrderId = request.ClientOrderId;
+            req.QueryParameters.ClientOrderId = parameters.ClientOrderId;
             req.Options.Add(new LunoTelemetryOptions("ReconcileDuplicateOrder"));
         }, ct);
 
         if (existingOrder == null)
         {
-            throw new LunoResourceNotFoundException($"Idempotency failed: Received 409 but lookup by ClientOrderId '{request.ClientOrderId}' returned empty.");
+            throw new LunoResourceNotFoundException($"Idempotency failed: Received 409 but lookup by ClientOrderId '{parameters.ClientOrderId}' returned empty.");
         }
 
         bool parametersMatch = true;
 
         if (existingOrder.LimitPrice != null && decimal.TryParse(existingOrder.LimitPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var existingPrice))
         {
-            if (existingPrice != request.Price) parametersMatch = false;
+            if (existingPrice != parameters.Price) parametersMatch = false;
         }
 
         if (existingOrder.LimitVolume != null && decimal.TryParse(existingOrder.LimitVolume, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var existingVolume))
         {
-            if (existingVolume != request.Volume) parametersMatch = false;
+            if (existingVolume != parameters.Volume) parametersMatch = false;
         }
 
         if (existingOrder.Side.HasValue)
         {
-            var requiredSide = request.Type == OrderType.Bid ? "BUY" : "SELL";
+            var requiredSide = parameters.Type == OrderType.Bid ? "BUY" : "SELL";
             if (!existingOrder.Side.Value.ToString().Equals(requiredSide, StringComparison.OrdinalIgnoreCase)) 
             {
                 parametersMatch = false;
@@ -153,7 +140,7 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
             throw new LunoIdempotencyException("Idempotency failed: A previous order exists with the same ClientOrderId but the request parameters differ.");
         }
 
-        return new OrderResponse { OrderId = existingOrder.OrderId ?? string.Empty };
+        return new OrderReference { OrderId = existingOrder.OrderId ?? string.Empty };
     }
 
     private PostTypeQueryParameterType MapType(OrderType type)

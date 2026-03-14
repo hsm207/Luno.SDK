@@ -1,31 +1,29 @@
-using System;
 using System.Threading.Tasks;
-using Microsoft.Kiota.Abstractions;
 using Moq;
 using Xunit;
 using Luno.SDK;
 using Luno.SDK.Trading;
-using Luno.SDK.Infrastructure.Trading;
+using Luno.SDK.Application.Trading;
 
 namespace Luno.SDK.Tests.Unit.Trading;
 
 public class LunoTradingClientTests
 {
-    private readonly Mock<IRequestAdapter> _requestAdapterMock;
-    private readonly ILunoTradingClient _tradingClient;
+    private readonly Mock<ILunoTradingClient> _tradingClientMock;
+    private readonly Mock<ILunoClient> _lunoClientMock;
 
     public LunoTradingClientTests()
     {
-        _requestAdapterMock = new Mock<IRequestAdapter>();
-        _requestAdapterMock.Setup(x => x.BaseUrl).Returns("https://api.luno.com");
-        _tradingClient = new LunoTradingClient(_requestAdapterMock.Object);
+        _tradingClientMock = new Mock<ILunoTradingClient>();
+        _lunoClientMock = new Mock<ILunoClient>();
+        _lunoClientMock.Setup(c => c.Trading).Returns(_tradingClientMock.Object);
     }
 
     [Fact(DisplayName = "Given a request with PostOnly = true and TimeInForce = IOC, When posting limit order, Then throw LunoValidationException.")]
     public async Task PostLimitOrderAsync_PostOnlyWithIOC_ThrowsValidationException()
     {
         // Arrange
-        var request = new PostLimitOrderRequest
+        var command = new PostLimitOrderCommand
         {
             Pair = "XBTZAR",
             Type = OrderType.Bid,
@@ -39,7 +37,7 @@ public class LunoTradingClientTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await _tradingClient.PostLimitOrderAsync(request));
+            await _lunoClientMock.Object.PostLimitOrderAsync(command));
 
         Assert.Contains("PostOnly cannot be used", ex.Message);
     }
@@ -48,7 +46,7 @@ public class LunoTradingClientTests
     public async Task PostLimitOrderAsync_NullAccounts_ThrowsValidationException()
     {
         // Arrange
-        var request = new PostLimitOrderRequest
+        var command = new PostLimitOrderCommand
         {
             Pair = "XBTZAR",
             Type = OrderType.Bid,
@@ -60,7 +58,7 @@ public class LunoTradingClientTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await _tradingClient.PostLimitOrderAsync(request));
+            await _lunoClientMock.Object.PostLimitOrderAsync(command));
 
         Assert.Contains("Explicit Account Mandate violated", ex.Message);
     }
