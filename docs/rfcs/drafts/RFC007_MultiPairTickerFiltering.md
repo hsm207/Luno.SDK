@@ -68,33 +68,37 @@ sequenceDiagram
     - **Locations:** `Luno.SDK.Application/Market/GetTickers.cs`
 
 ## 6. Behavioral Specifications
+Every specification below must define its **Verification Tier** to prevent redundant "mock-heavy" testing.
+
 ### Multi-Pair Filtering with Normalization
-- **Given:**
-    - A list of lowercase pairs `{"xbtmyr", "ethzar"}`.
-- **When:**
-    - `GetTickersAsync(pairs)` is called.
-- **Then:**
-    - The SDK normalizes the input to `{"XBTMYR", "ETHZAR"}`.
-    - The request is sent to the API with multiple `pair` query parameters.
-    - Telemetry signal `luno.market.get_tickers` includes `filter_count: 2`.
+- **Tier:** Integration
+- **Given:** A list of lowercase pairs `{"xbtmyr", "ethzar"}`.
+- **When:** `GetTickersAsync(pairs)` is called.
+- **Then:** The SDK normalizes the input to `{"XBTMYR", "ETHZAR"}` and the request is sent to the API with multiple `pair` query parameters.
+- **Verification:** WireMock verifies the `/api/1/tickers?pair=XBTMYR&pair=ETHZAR` path and Kiota array serialization. Telemetry signal includes `filter_count: 2`.
+
+### Normalization Logic
+- **Tier:** Unit
+- **Given:** Various casing and whitespace variations in pair strings.
+- **When:** The internal normalization logic is exercised.
+- **Then:** All pairs are converted to `ToUpperInvariant()`.
+- **Verification:** High-fidelity unit tests for the Application-layer normalization logic.
 
 ### Error Handling (RFC 004 Integration)
-- **Given:**
-    - An invalid pair name in the filter list.
-- **When:**
-    - The API returns a 400 with `ErrInvalidMarketPair`.
-- **Then:**
-    - The SDK throws a `LunoResourceNotFoundException` via the `LunoErrorHandlingAdapter`.
+- **Tier:** Integration
+- **Given:** An invalid pair name in the filter list.
+- **When:** The API returns a 400 with `ErrInvalidMarketPair`.
+- **Then:** The SDK throws a `LunoResourceNotFoundException` (or appropriate RFC 004 exception).
+- **Verification:** Verified via WireMock error injection.
 
 ## 7. Definition of Done
 ### Quality Gates
 - **Functional Coverage**: 100% verified hits for the new filtered paths in both unit and integration tests.
 - **Architecture**: Zero leakage of Kiota-specific parameter types to the Application layer.
-- **TDD Mandate**: Verification must favor behavioral outcomes over internal state. Avoid mocking internal logic; prefer real collaborators unless external/slow I/O is involved.
+- **TDD Mandate:** Verification must favor behavioral outcomes over internal state. **Less is More:** achieve 100% coverage with the minimum number of high-fidelity tests.
 
 ### Verification Strategy
-- Run `dotnet test --filter "Category=Unit&FullyQualifiedName~Market"`
-- Run `dotnet test --filter "Category=Integration&FullyQualifiedName~Market"`
+- `dotnet test --filter "FullyQualifiedName~Market"` (Runs both Unit and Integration tiers).
 
 ## 8. Financial Breaking Points
 - **URL Length Limits**: Extremely large filter arrays (e.g., hundreds of pairs) could theoretically exceed the standard HTTP URL length limit (~2000 characters). The implementation must account for this by either capping input or implementing batching in future iterations.
