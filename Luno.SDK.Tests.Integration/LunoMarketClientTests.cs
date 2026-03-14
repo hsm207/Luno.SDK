@@ -218,4 +218,123 @@ public class LunoMarketClientTests : IDisposable
         Assert.Equal("XBTZAR", results[0].Pair);
         Assert.False(results[0].IsActive);
     }
+
+    [Fact(DisplayName = "Given a successful API request for a single pair, When fetching ticker, Then verify real telemetry and proper mapping.")]
+    [Trait("Category", "Integration")]
+    public async Task GetTickerAsync_Success_ReturnsTickerResponse()
+    {
+        // Arrange
+        var operationName = "GetMarketTicker";
+
+        _server.Given(Request.Create().WithPath("/api/1/ticker").WithParam("pair", "XBTZAR").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    pair = "XBTZAR",
+                    timestamp = 1772555388322,
+                    bid = "1000000",
+                    ask = "1000100",
+                    last_trade = "1000050",
+                    rolling_24_hour_volume = "500",
+                    status = "ACTIVE"
+                }));
+
+        var client = CreateClient();
+
+        Activity? capturedActivity = null;
+        using var activityStoppedEvent = new ManualResetEventSlim();
+        using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
+
+        // Act
+        var result = await client.GetTickerAsync("XBTZAR");
+
+        // Wait for the telemetry activity to physically stop
+        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("XBTZAR", result.Pair);
+        Assert.Equal(1000050m, result.Price);
+        Assert.True(result.IsActive);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1772555388322), result.Timestamp);
+
+        Assert.NotNull(capturedActivity);
+        Assert.Equal(operationName, capturedActivity.OperationName);
+        Assert.Equal("Success", capturedActivity.GetTagItem("luno.status"));
+    }
+
+    [Theory(DisplayName = "Given various API errors, When fetching ticker, Then bubble up the correct domain exception and emit an error trace.")]
+    [Trait("Category", "Integration")]
+    [InlineData(500, typeof(LunoApiException))]
+    [InlineData(503, typeof(LunoApiException))]
+    [InlineData(401, typeof(LunoUnauthorizedException))]
+    [InlineData(403, typeof(LunoForbiddenException))]
+    [InlineData(429, typeof(LunoRateLimitException))]
+    public async Task GetTickerAsync_ApiFails_BubblesExceptionAndEmitsErrorTrace(int statusCode, Type expectedExceptionType)
+    {
+        // Arrange
+        var operationName = "GetMarketTicker";
+        _server.Given(Request.Create().WithPath("/api/1/ticker").WithParam("pair", "XBTZAR").UsingGet())
+            .RespondWith(Response.Create().WithStatusCode(statusCode).WithBody("Error response"));
+
+        var client = CreateClient();
+
+        Activity? capturedActivity = null;
+        using var activityStoppedEvent = new ManualResetEventSlim();
+        using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
+
+        // Act & Assert
+        await Assert.ThrowsAsync(expectedExceptionType, async () =>
+        {
+            await client.GetTickerAsync("XBTZAR");
+        });
+
+        // Wait for the telemetry activity to physically stop
+        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
+
+        Assert.NotNull(capturedActivity);
+        Assert.Equal(operationName, capturedActivity.OperationName);
+        Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));
+    }
+
+    [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing optional fields for a single ticker, When fetching ticker, Then map successfully and gracefully handle missing properties.")]
+    [Trait("Category", "Integration")]
+    public async Task GetTickerAsync_QuirkyJson_HandlesGracefully()
+    {
+        // Arrange
+        var operationName = "GetMarketTicker";
+        _server.Given(Request.Create().WithPath("/api/1/ticker").WithParam("pair", "XBTZAR").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    pair = "XBTZAR",
+                    timestamp = 1772555388322
+                }));
+
+        var client = CreateClient();
+
+        Activity? capturedActivity = null;
+        using var activityStoppedEvent = new ManualResetEventSlim();
+        using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
+
+        // Act
+        var result = await client.GetTickerAsync("XBTZAR");
+
+        // Wait for the telemetry activity to physically stop
+        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("XBTZAR", result.Pair);
+        Assert.False(result.IsActive); // Missing status maps to Unknown, IsActive = false
+        Assert.Equal(0m, result.Price); // Missing price parses as 0
+
+        Assert.NotNull(capturedActivity);
+        Assert.Equal(operationName, capturedActivity.OperationName);
+        Assert.Equal("Success", capturedActivity.GetTagItem("luno.status"));
+    }
 }

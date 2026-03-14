@@ -1,6 +1,6 @@
 # RFC 005: Single-Pair Ticker Retrieval
 
-**Status:** Draft  
+**Status:** Implemented  
 **Date:** 2026-03-11
 
 ## 1. Overview
