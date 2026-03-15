@@ -359,7 +359,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
-        Assert.Contains("parameters differ", ex.Message);
+        Assert.Contains("Price", ex.Message);
     }
 
     [Fact(DisplayName = "Given Idempotency Reconcilation, When Side differs, Then throw LunoIdempotencyException.")]
@@ -398,7 +398,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
-        Assert.Contains("parameters differ", ex.Message);
+        Assert.Contains("Side", ex.Message);
     }
 
     [Theory(DisplayName = "Given an order ID, When looking up order, Then maps statuses correctly.")]
