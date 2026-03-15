@@ -10,12 +10,13 @@ namespace Luno.SDK;
 public interface ILunoTradingClient
 {
     /// <summary>
-    /// Asynchronously posts a new limit order to Luno, reconciling 409 Idempotency Conflicts natively.
+    /// Asynchronously posts a new limit order to Luno.
+    /// The caller (Application layer) is responsible for validation and idempotency reconciliation.
     /// </summary>
-    /// <param name="parameters">The parameters defining the limit order.</param>
+    /// <param name="request">The boundary DTO carrying raw, already-validated order parameters.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>A <see cref="Task"/> returning the <see cref="OrderReference"/> from the exchange.</returns>
-    Task<OrderReference> PostLimitOrderAsync(LimitOrderParameters parameters, CancellationToken ct = default);
+    Task<OrderReference> PostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct = default);
 
     /// <summary>
     /// Asynchronously stops an active order using the Luno standard Order ID.
@@ -32,6 +33,5 @@ public interface ILunoTradingClient
     /// <param name="clientOrderId">Optional Client Order ID.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>Detailed order information.</returns>
-    /// <exception cref="LunoValidationException">Thrown if neither ID is provided.</exception>
     Task<Order> GetOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default);
 }
