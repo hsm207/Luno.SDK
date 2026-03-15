@@ -88,8 +88,10 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
             Generated.Models.GetOrder2Response_status.AWAITING  => OrderStatus.Awaiting,
             Generated.Models.GetOrder2Response_status.PENDING   => OrderStatus.Pending,
             Generated.Models.GetOrder2Response_status.COMPLETE  => OrderStatus.Complete,
-            _                                                    => OrderStatus.Awaiting,
+            null                                                 => OrderStatus.Awaiting,
+            _ => throw new LunoMappingException($"Unmapped order status '{status}'.", nameof(Generated.Models.GetOrder2Response_status)),
         };
+
 
     private static OrderType? MapSide(Generated.Models.GetOrder2Response_side? side) =>
         side switch
