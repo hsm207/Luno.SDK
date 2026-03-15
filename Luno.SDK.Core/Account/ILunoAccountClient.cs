@@ -1,14 +1,23 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Luno.SDK.Account;
 
 /// <summary>
-/// Defines operations for interacting with Luno accounts and balances.
+/// Defines the contract for Luno Account operations.
 /// </summary>
 public interface ILunoAccountClient
 {
     /// <summary>
-    /// Gets a static snapshot of all balances for the authenticated user.
+    /// Gets the command dispatcher used to orchestrate account application-layer logic.
     /// </summary>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A read-only list of balances.</returns>
-    Task<IReadOnlyList<Balance>> GetBalancesAsync(CancellationToken cancellationToken = default);
+    ILunoCommandDispatcher Commands { get; }
+
+    /// <summary>
+    /// Asynchronously fetches a list of account balances.
+    /// </summary>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A <see cref="Task"/> containing a read-only list of <see cref="Balance"/>.</returns>
+    Task<IReadOnlyList<Balance>> FetchBalancesAsync(CancellationToken ct = default);
 }
