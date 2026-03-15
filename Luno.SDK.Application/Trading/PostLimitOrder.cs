@@ -54,7 +54,7 @@ public record PostLimitOrderCommand
 /// Owns validation, boundary-DTO mapping, and idempotency reconciliation.
 /// </summary>
 /// <param name="tradingClient">The specialized trading client used to post order parameters.</param>
-public class PostLimitOrderHandler(ILunoTradingClient tradingClient)
+public class PostLimitOrderHandler(ILunoTradingClient tradingClient) : ICommandHandler<PostLimitOrderCommand, Task<OrderResponse>>
 {
     /// <summary>Handles the limit order command.</summary>
     /// <param name="command">The command parameters.</param>
@@ -102,7 +102,7 @@ public class PostLimitOrderHandler(ILunoTradingClient tradingClient)
         // 3. Post the order. Let LunoIdempotencyException propagate when no ClientOrderId was given.
         try
         {
-            var reference = await tradingClient.PostLimitOrderAsync(request, ct).ConfigureAwait(false);
+            var reference = await tradingClient.FetchPostLimitOrderAsync(request, ct).ConfigureAwait(false);
             return new OrderResponse { OrderId = reference.OrderId };
         }
         catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(parameters.ClientOrderId))
@@ -115,7 +115,7 @@ public class PostLimitOrderHandler(ILunoTradingClient tradingClient)
 
     private async Task<OrderResponse> ReconcileDuplicateAsync(LimitOrderParameters expected, CancellationToken ct)
     {
-        var existing = await tradingClient.GetOrderAsync(clientOrderId: expected.ClientOrderId, ct: ct)
+        var existing = await tradingClient.FetchOrderAsync(clientOrderId: expected.ClientOrderId, ct: ct)
                                           .ConfigureAwait(false);
 
         EnsureParametersMatch(existing, expected);

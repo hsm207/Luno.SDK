@@ -12,8 +12,8 @@ public record GetTickerQuery(string Pair);
 /// <summary>
 /// Orchestrates the retrieval of a single market ticker from the Luno API.
 /// </summary>
-/// <param name="marketClient">The specialized market client used to fetch raw market data.</param>
-public class GetTickerHandler(ILunoMarketClient marketClient)
+/// <param name="marketClient">The specialized market client used to fetch core ticker entities.</param>
+public class GetTickerHandler(ILunoMarketClient marketClient) : ICommandHandler<GetTickerQuery, Task<TickerResponse>>
 {
     /// <summary>
     /// Returns the latest ticker indicators for a specific pair.
@@ -25,7 +25,7 @@ public class GetTickerHandler(ILunoMarketClient marketClient)
         GetTickerQuery query,
         CancellationToken ct = default)
     {
-        var ticker = await marketClient.GetTickerAsync(query.Pair, ct);
+        var ticker = await marketClient.FetchTickerAsync(query.Pair, ct);
         return ticker.ToResponse();
     }
 }

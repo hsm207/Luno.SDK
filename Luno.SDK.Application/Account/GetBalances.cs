@@ -16,7 +16,7 @@ public record GetBalancesQuery;
 /// Orchestrates the retrieval of account balances from the Luno API.
 /// </summary>
 /// <param name="accountClient">The specialized account client used to fetch core balance entities.</param>
-public class GetBalancesHandler(ILunoAccountClient accountClient)
+public class GetBalancesHandler(ILunoAccountClient accountClient) : ICommandHandler<GetBalancesQuery, Task<IReadOnlyList<AccountBalanceResponse>>>
 {
     /// <summary>
     /// The list of all Accounts and their respective balances for the requesting user.
@@ -29,7 +29,7 @@ public class GetBalancesHandler(ILunoAccountClient accountClient)
         GetBalancesQuery query,
         CancellationToken ct = default)
     {
-        var balances = await accountClient.GetBalancesAsync(ct).ConfigureAwait(false);
+        var balances = await accountClient.FetchBalancesAsync(ct).ConfigureAwait(false);
 
         return balances.Select(b => b.ToResponse()).ToList().AsReadOnly();
     }
