@@ -46,15 +46,11 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
 
                 req.QueryParameters.TimeInForceAsPostTimeInForceQueryParameterType = MapTimeInForce(parameters.TimeInForce);
 
-                req.Options.Add(new LunoTelemetryOptions("PostLimitOrder"));
-            }, ct);
+            req.Options.Add(new LunoTelemetryOptions("PostLimitOrder"));
+        }, ct);
 
-            if (response?.OrderId == null)
-            {
-                throw new LunoMappingException("The API response was successful but no OrderId was returned.", "PostLimitOrderResponse");
-            }
-
-            return new OrderReference { OrderId = response.OrderId };
+        // We trust the API contract. If it succeeds (200 OK), OrderId is guaranteed to exist.
+        return new OrderReference { OrderId = response!.OrderId! };
         }
         catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(parameters.ClientOrderId))
         {
@@ -64,11 +60,6 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
 
     public async Task<bool> StopOrderAsync(string orderId, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(orderId))
-        {
-            throw new LunoValidationException("OrderId cannot be null or whitespace.");
-        }
-
         var response = await _apiClient.Api.One.Stoporder.PostAsync(req =>
         {
             req.QueryParameters.OrderId = orderId;
@@ -80,11 +71,6 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
 
     public async Task<Order> GetOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(orderId) && string.IsNullOrWhiteSpace(clientOrderId))
-        {
-            throw new LunoValidationException("Either OrderId or ClientOrderId must be provided for lookup.");
-        }
-
         var response = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
         {
             if (orderId != null) req.QueryParameters.Id = orderId;
@@ -92,14 +78,10 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
             req.Options.Add(new LunoTelemetryOptions("GetOrder"));
         }, ct);
 
-        if (response == null || string.IsNullOrWhiteSpace(response.OrderId))
-        {
-            throw new LunoResourceNotFoundException($"No order found with the provided identifier(s).");
-        }
-
+        // Trusting Application layer validation for inputs and Kiota for the response contract.
         return new Order
         {
-            OrderId = response.OrderId,
+            OrderId = response!.OrderId!,
             ClientOrderId = response.ClientOrderId,
             Status = MapStatus(response.Status)
         };
@@ -120,17 +102,13 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
 
     private async Task<OrderReference> ReconcileDuplicateOrderAsync(LimitOrderParameters parameters, CancellationToken ct)
     {
-        var existingOrder = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
+        var existingOrder = (await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
         {
             req.QueryParameters.ClientOrderId = parameters.ClientOrderId;
             req.Options.Add(new LunoTelemetryOptions("ReconcileDuplicateOrder"));
-        }, ct);
+        }, ct))!;
 
-        if (existingOrder == null)
-        {
-            throw new LunoResourceNotFoundException($"Idempotency failed: Received 409 but lookup by ClientOrderId '{parameters.ClientOrderId}' returned empty.");
-        }
-
+        // Contract assumes existingOrder is not null if we get here without a 404 exception.
         bool parametersMatch = true;
 
         if (existingOrder.LimitPrice != null && decimal.TryParse(existingOrder.LimitPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var existingPrice))

@@ -143,6 +143,59 @@ public class LunoTradingClientTests : IDisposable
         Assert.Equal(403, ex.StatusCode);
     }
 
+    [Fact(DisplayName = "Given valid parameters, When posting limit order (Bid/GTC), Then returns OrderReference successfully.")]
+    public async Task PostLimitOrderAsync_HappyPath_ReturnsOrderReference()
+    {
+        // Arrange
+        var expectedOrderId = "BX123_SUCCESS";
+        _server.Given(Request.Create().WithPath("/api/1/postorder").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { order_id = expectedOrderId }));
+
+        var client = CreateClient();
+        var command = new PostLimitOrderCommand
+        {
+            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = TimeInForce.GTC
+        };
+
+        // Act
+        var result = await client.PostLimitOrderAsync(command);
+
+        // Assert
+        Assert.Equal(expectedOrderId, result.OrderId);
+    }
+
+    [Theory(DisplayName = "Given valid parameters with varying enums, When posting limit order, Then returns successfully.")]
+    [InlineData(OrderType.Ask, TimeInForce.IOC, null)]
+    [InlineData(OrderType.Bid, TimeInForce.FOK, null)]
+    [InlineData(OrderType.Bid, TimeInForce.GTC, StopDirection.Above)]
+    [InlineData(OrderType.Bid, TimeInForce.GTC, StopDirection.Below)]
+    [InlineData(OrderType.Ask, TimeInForce.GTC, StopDirection.RelativeLastTrade)]
+    public async Task PostLimitOrderAsync_EnumVariations_ReturnsOrderReference(OrderType type, TimeInForce tif, StopDirection? stopDir)
+    {
+        // Arrange
+        var expectedOrderId = "BX123_ENUMS";
+        _server.Given(Request.Create().WithPath("/api/1/postorder").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { order_id = expectedOrderId }));
+
+        var client = CreateClient();
+        var command = new PostLimitOrderCommand
+        {
+            Pair = "XBTMYR", Type = type, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = tif, StopPrice = stopDir.HasValue ? 100m : null, StopDirection = stopDir
+        };
+
+        // Act
+        var result = await client.PostLimitOrderAsync(command);
+
+        // Assert
+        Assert.Equal(expectedOrderId, result.OrderId);
+    }
+
     [Fact(DisplayName = "Given a valid OrderId, When stopping order, Then SDK calls delete endpoint directly.")]
     public async Task StopOrderAsync_ValidOrderId_StopsSuccessfully()
     {
@@ -307,5 +360,75 @@ public class LunoTradingClientTests : IDisposable
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
         Assert.Contains("parameters differ", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given Idempotency Reconcilation, When Side differs, Then throw LunoIdempotencyException.")]
+    public async Task PostLimitOrderAsync_IdempotencyReconciliation_SideMismatch_ThrowsException()
+    {
+        // Arrange
+        var clientId = "unique-uuid-123";
+
+        // 1. Post Limit Order returns 409 Conflict
+        _server.Given(Request.Create().WithPath("/api/1/postorder").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(409)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { error = "Duplicate", code = "ErrDuplicateClientOrderID" }));
+
+        // 2. Lookup returns order with different Side (SELL instead of expected BUY from Bid)
+        _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("client_order_id", clientId).UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    order_id = "BX123",
+                    client_order_id = clientId,
+                    limit_price = "250000",
+                    limit_volume = "0.001",
+                    side = "SELL", // Mismatch!
+                    pair = "XBTMYR"
+                }));
+
+        var client = CreateClient();
+        var command = new PostLimitOrderCommand
+        {
+            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
+        Assert.Contains("parameters differ", ex.Message);
+    }
+
+    [Theory(DisplayName = "Given an order ID, When looking up order, Then maps statuses correctly.")]
+    [InlineData("AWAITING", OrderStatus.Awaiting)]
+    [InlineData("PENDING", OrderStatus.Pending)]
+    [InlineData("UNKNOWN_NONSENSE", OrderStatus.Awaiting)] // Unmapped default fallback
+    public async Task GetOrderAsync_StatusMappings_MapsCorrectly(string apiStatus, OrderStatus expectedStatus)
+    {
+        var orderId = "BX123_STATUS";
+        
+        _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("id", orderId).UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new 
+                { 
+                    order_id = orderId, 
+                    status = apiStatus, 
+                    side = "BUY",
+                    pair = "XBTZAR",
+                    limit_price = "1000",
+                    limit_volume = "1"
+                }));
+
+        var client = CreateClient();
+        
+        // Expose public method to call the interface lookup (via Trading.GetOrderAsync is not directly exposed as Command, so we cast to test infra)
+        var infraClient = (ILunoTradingClient)client.Trading;
+        var result = await infraClient.GetOrderAsync(orderId: orderId);
+
+        Assert.Equal(expectedStatus, result.Status);
     }
 }
