@@ -82,10 +82,48 @@ private static void EnsureParametersMatch(Order existing, LimitOrderParameters e
 
 ---
 
-## Summary — The Three Diagnostics to Run on Every Infrastructure Method
+## Violation 4 — Silent Catch-All Enum Mappings Corrupt Data
+
+### What Was Wrong
+```csharp
+_ => MarketStatus.Unknown   // silently swallows any new API value
+_ => OrderStatus.Awaiting   // lies about the order state
+```
+Both `MarketMapper.MapStatus` and `LunoTradingClient.MapStatus` used wildcard catch-alls that silently converted unrecognized enum values into a "safe" default.
+If the API adds a new status value (e.g., `SUSPENDED`), our code would never crash and never log — it would just quietly return the wrong status.
+For a financial SDK, mapping an order to `Awaiting` when it's actually in a state we've never seen is a data integrity violation.
+
+### The Rule
+> **Enum switch expressions must explicitly map every known value and throw on the catch-all.**
+> The `_` arm is a safety net for impossible states, not a convenience default.
+> If the API spec defines an `UNKNOWN` value, map it explicitly. Then throw `LunoMappingException` on `_`.
+> The `null` arm is separate and may have a legitimate default (e.g., `null => MarketStatus.Unknown`).
+
+### The Kiota Nuance
+Kiota deserializes unrecognized enum strings as `null`, not as an invalid enum integer.
+The throwing `_` catch-all is only reachable via corrupted data or force-casted invalid values.
+The `null` arm is the practical fallback for unrecognized API strings, and it must have a deliberate, documented mapping — not an accidental one from a lazy wildcard.
+
+### Correct Form
+```csharp
+status switch
+{
+    GeneratedStatus.ACTIVE   => MarketStatus.Active,
+    GeneratedStatus.POSTONLY => MarketStatus.PostOnly,
+    GeneratedStatus.DISABLED => MarketStatus.Disabled,
+    GeneratedStatus.UNKNOWN  => MarketStatus.Unknown,  // explicit API value
+    null                     => MarketStatus.Unknown,  // Kiota couldn't parse
+    _ => throw new LunoMappingException(...),          // safety net
+};
+```
+
+---
+
+## Summary — The Four Diagnostics to Run on Every Infrastructure Method
 
 | Check | Question | If "no" → action |
 |-------|----------|-----------------|
 | **Dumb pipe test** | Would this method survive a vendor swap? | Move logic to Application |
 | **Boundary type test** | Does the parameter/return type have methods? | Create a separate plain DTO |
 | **Testability test** | Can this be unit-tested without HTTP/WireMock? | Logic is in the wrong layer |
+| **Fail-fast test** | Does every enum switch throw on unrecognized values? | Replace silent catch-all with `LunoMappingException` |
