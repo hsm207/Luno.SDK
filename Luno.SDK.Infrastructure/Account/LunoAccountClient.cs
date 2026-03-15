@@ -1,5 +1,5 @@
-using Microsoft.Kiota.Abstractions;
 using Luno.SDK.Account;
+using Luno.SDK.Infrastructure.Generated;
 
 namespace Luno.SDK.Infrastructure.Account;
 
@@ -7,28 +7,22 @@ namespace Luno.SDK.Infrastructure.Account;
 /// Provides a concrete implementation of the <see cref="ILunoAccountClient"/> interface
 /// using the generated Kiota client.
 /// </summary>
-/// <param name="requestAdapter">The decorated request adapter pipeline.</param>
-internal class LunoAccountClient(IRequestAdapter requestAdapter) : ILunoAccountClient
+/// <param name="api">The generated Kiota API client.</param>
+/// <param name="commands">The command dispatcher for the application layer.</param>
+public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoAccountClient
 {
-    private readonly Luno.SDK.Infrastructure.Generated.LunoApiClient _apiClient = new(requestAdapter);
+    /// <inheritdoc />
+    public ILunoCommandDispatcher Commands { get; } = commands;
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<Balance>> GetBalancesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Balance>> FetchBalancesAsync(CancellationToken ct = default)
     {
-        var response = await _apiClient.Api.One.Balance.GetAsync(requestConfiguration =>
+        var response = await api.Api.One.Balance.GetAsync(requestConfiguration =>
         {
             requestConfiguration.Options.Add(new Luno.SDK.Infrastructure.Telemetry.LunoTelemetryOptions("GetBalances"));
-        }, cancellationToken).ConfigureAwait(false);
+        }, ct).ConfigureAwait(false);
 
-        var results = new List<Balance>();
-        foreach (var balanceDto in response!.Balance!)
-        {
-            if (balanceDto != null)
-            {
-                results.Add(balanceDto.ToDomain());
-            }
-        }
-
-        return results;
+        return response?.Balance?.Where(b => b != null).Select(b => b!.ToDomain()).ToList().AsReadOnly()
+            ?? throw new LunoMappingException("API returned a null balances collection.", "BalanceResponse");
     }
 }

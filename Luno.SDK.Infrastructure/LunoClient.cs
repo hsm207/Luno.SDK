@@ -10,6 +10,11 @@ using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
 using Luno.SDK.Trading;
 using Luno.SDK.Infrastructure.Trading;
+using Luno.SDK.Application;
+using Luno.SDK.Application.Trading;
+using Luno.SDK.Application.Account;
+using Luno.SDK.Application.Market;
+using Luno.SDK.Infrastructure.Generated;
 
 namespace Luno.SDK;
 
@@ -28,6 +33,8 @@ public class LunoClient : ILunoClient
     private readonly LunoClientOptions _options;
     private readonly ILunoTelemetry _telemetry;
     private readonly IRequestAdapter _requestAdapter;
+    private readonly LunoApiClient _apiClient;
+    private readonly ILunoCommandDispatcher _dispatcher;
     private readonly Lazy<ILunoMarketClient> _market;
     private readonly Lazy<ILunoAccountClient> _accounts;
     private readonly Lazy<ILunoTradingClient> _trading;
@@ -43,6 +50,9 @@ public class LunoClient : ILunoClient
 
     /// <inheritdoc />
     public ILunoTelemetry Telemetry => _telemetry;
+
+    /// <inheritdoc />
+    public ILunoCommandDispatcher Commands => _dispatcher;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LunoClient"/> class using standalone defaults.
@@ -76,9 +86,41 @@ public class LunoClient : ILunoClient
             telemetryImpl,
             _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
 
-        _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_requestAdapter));
-        _accounts = new Lazy<ILunoAccountClient>(() => new LunoAccountClient(_requestAdapter));
-        _trading = new Lazy<ILunoTradingClient>(() => new LunoTradingClient(_requestAdapter));
+        _apiClient = new LunoApiClient(_requestAdapter);
+
+        // 5. Setup the Command Dispatcher (The Application Orchestration Layer)
+        var factory = new DefaultCommandHandlerFactory(
+            new LazyTradingProxy(this),
+            new LazyAccountProxy(this),
+            new LazyMarketProxy(this),
+            _options.CommandHandlerDecorator);
+
+        _dispatcher = new LunoCommandDispatcher(factory.CreateHandler);
+
+        // 6. Setup the specialized sub-clients
+        _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_apiClient, _dispatcher));
+        _accounts = new Lazy<ILunoAccountClient>(() => new LunoAccountClient(_apiClient, _dispatcher));
+        _trading = new Lazy<ILunoTradingClient>(() => new LunoTradingClient(_apiClient, _dispatcher));
+    }
+
+    // ── Lazy Proxies to break circular dependency during factory initialization ──────────────────
+    
+    private class LazyTradingProxy(LunoClient parent) : ILunoTradingClient {
+        public ILunoCommandDispatcher Commands => parent.Trading.Commands;
+        public Task<OrderReference> FetchPostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct = default) => parent.Trading.FetchPostLimitOrderAsync(request, ct);
+        public Task<bool> FetchStopOrderAsync(string orderId, CancellationToken ct = default) => parent.Trading.FetchStopOrderAsync(orderId, ct);
+        public Task<Order> FetchOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default) => parent.Trading.FetchOrderAsync(orderId, clientOrderId, ct);
+    }
+
+    private class LazyAccountProxy(LunoClient parent) : ILunoAccountClient {
+        public ILunoCommandDispatcher Commands => parent.Accounts.Commands;
+        public Task<IReadOnlyList<Balance>> FetchBalancesAsync(CancellationToken ct = default) => parent.Accounts.FetchBalancesAsync(ct);
+    }
+
+    private class LazyMarketProxy(LunoClient parent) : ILunoMarketClient {
+        public ILunoCommandDispatcher Commands => parent.Market.Commands;
+        public IAsyncEnumerable<Ticker> FetchTickersAsync(CancellationToken ct = default) => parent.Market.FetchTickersAsync(ct);
+        public Task<Ticker> FetchTickerAsync(string pair, CancellationToken ct = default) => parent.Market.FetchTickerAsync(pair, ct);
     }
 
     private static HttpClient CreatePooledClient(LunoClientOptions options)
