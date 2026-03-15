@@ -404,7 +404,7 @@ public class LunoTradingClientTests : IDisposable
     [Theory(DisplayName = "Given an order ID, When looking up order, Then maps statuses correctly.")]
     [InlineData("AWAITING", OrderStatus.Awaiting)]
     [InlineData("PENDING", OrderStatus.Pending)]
-    [InlineData("UNKNOWN_NONSENSE", OrderStatus.Awaiting)] // Unmapped default fallback
+    [InlineData("COMPLETE", OrderStatus.Complete)]
     public async Task GetOrderAsync_StatusMappings_MapsCorrectly(string apiStatus, OrderStatus expectedStatus)
     {
         var orderId = "BX123_STATUS";
@@ -430,5 +430,32 @@ public class LunoTradingClientTests : IDisposable
         var result = await infraClient.GetOrderAsync(orderId: orderId);
 
         Assert.Equal(expectedStatus, result.Status);
+    }
+
+    [Fact(DisplayName = "Given an unrecognized order status string, When looking up order, Then Kiota deserializes as null and maps to Awaiting.")]
+    public async Task GetOrderAsync_UnrecognizedStatus_FallsBackToAwaiting()
+    {
+        var orderId = "BX123_UNMAPPED";
+
+        _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("id", orderId).UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    order_id = orderId,
+                    status = "UNKNOWN_NONSENSE", // Kiota deserializes unrecognized enum strings as null
+                    side = "BUY",
+                    pair = "XBTZAR",
+                    limit_price = "1000",
+                    limit_volume = "1"
+                }));
+
+        var client = CreateClient();
+        var infraClient = (ILunoTradingClient)client.Trading;
+        var result = await infraClient.GetOrderAsync(orderId: orderId);
+
+        // Kiota returns null for unrecognized enum strings; our null arm maps to Awaiting
+        Assert.Equal(OrderStatus.Awaiting, result.Status);
     }
 }
