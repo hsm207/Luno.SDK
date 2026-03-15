@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Kiota.Abstractions;
@@ -13,49 +14,37 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
 {
     private readonly LunoApiClient _apiClient = new(requestAdapter);
 
-    public async Task<OrderReference> PostLimitOrderAsync(LimitOrderParameters parameters, CancellationToken ct = default)
+    public async Task<OrderReference> PostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct = default)
     {
-        // Note: Pre-flight validation is now handled by the Application Layer (LimitOrderParameters.Validate())
-        // But we still wrap the raw API call and handle Idempotency.
-
-        try
+        var response = await _apiClient.Api.One.Postorder.PostAsync(req =>
         {
-            var response = await _apiClient.Api.One.Postorder.PostAsync(req =>
-            {
-                // Mandatory fields
-                req.QueryParameters.Pair = parameters.Pair;
-                req.QueryParameters.TypeAsPostTypeQueryParameterType = MapType(parameters.Type);
-                req.QueryParameters.Volume = parameters.Volume.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                req.QueryParameters.Price = parameters.Price.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                
-                // Account explicitly mandated by validation
-                req.QueryParameters.BaseAccountId = (int?)parameters.BaseAccountId;
-                req.QueryParameters.CounterAccountId = (int?)parameters.CounterAccountId;
-                
-                // Optional idempotency / behavior
-                req.QueryParameters.ClientOrderId = parameters.ClientOrderId;
-                req.QueryParameters.PostOnly = parameters.PostOnly;
-                req.QueryParameters.StopPrice = parameters.StopPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                req.QueryParameters.Timestamp = (int?)parameters.Timestamp;
-                req.QueryParameters.Ttl = (int?)parameters.TTL;
+            // Mandatory fields
+            req.QueryParameters.Pair = request.Pair;
+            req.QueryParameters.TypeAsPostTypeQueryParameterType = MapType(request.Type);
+            req.QueryParameters.Volume = request.Volume.ToString(CultureInfo.InvariantCulture);
+            req.QueryParameters.Price = request.Price.ToString(CultureInfo.InvariantCulture);
 
-                if (parameters.StopDirection.HasValue)
-                {
-                    req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(parameters.StopDirection.Value);
-                }
+            // Account explicitly mandated by application-layer validation
+            req.QueryParameters.BaseAccountId = (int?)request.BaseAccountId;
+            req.QueryParameters.CounterAccountId = (int?)request.CounterAccountId;
 
-                req.QueryParameters.TimeInForceAsPostTimeInForceQueryParameterType = MapTimeInForce(parameters.TimeInForce);
+            // Optional idempotency / behavior fields
+            req.QueryParameters.ClientOrderId = request.ClientOrderId;
+            req.QueryParameters.PostOnly = request.PostOnly;
+            req.QueryParameters.StopPrice = request.StopPrice?.ToString(CultureInfo.InvariantCulture);
+            req.QueryParameters.Timestamp = (int?)request.Timestamp;
+            req.QueryParameters.Ttl = (int?)request.TTL;
+
+            if (request.StopDirection.HasValue)
+                req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(request.StopDirection.Value);
+
+            req.QueryParameters.TimeInForceAsPostTimeInForceQueryParameterType = MapTimeInForce(request.TimeInForce);
 
             req.Options.Add(new LunoTelemetryOptions("PostLimitOrder"));
         }, ct);
 
-        // We trust the API contract. If it succeeds (200 OK), OrderId is guaranteed to exist.
+        // Trust the API contract: a 200 OK guarantees OrderId is present.
         return new OrderReference { OrderId = response!.OrderId! };
-        }
-        catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(parameters.ClientOrderId))
-        {
-            return await ReconcileDuplicateOrderAsync(parameters, ct);
-        }
     }
 
     public async Task<bool> StopOrderAsync(string orderId, CancellationToken ct = default)
@@ -78,95 +67,64 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
             req.Options.Add(new LunoTelemetryOptions("GetOrder"));
         }, ct);
 
-        // Trusting Application layer validation for inputs and Kiota for the response contract.
+        // Infrastructure's only job here: map Kiota response fields → domain model.
+        // Parsing is Infrastructure's concern; business logic (comparison) belongs to the caller.
         return new Order
         {
-            OrderId = response!.OrderId!,
+            OrderId      = response!.OrderId!,
             ClientOrderId = response.ClientOrderId,
-            Status = MapStatus(response.Status)
+            Status       = MapStatus(response.Status),
+            LimitPrice   = TryParseDecimal(response.LimitPrice),
+            LimitVolume  = TryParseDecimal(response.LimitVolume),
+            Side         = MapSide(response.Side),
         };
     }
 
-    private static OrderStatus MapStatus(Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status? status)
-    {
-        return status switch
+    // ── Private mappers ─────────────────────────────────────────────────────────
+
+    private static OrderStatus MapStatus(Generated.Models.GetOrder2Response_status? status) =>
+        status switch
         {
-            Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status.AWAITING => OrderStatus.Awaiting,
-            Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status.PENDING => OrderStatus.Pending,
-            Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status.COMPLETE => OrderStatus.Complete,
-            _ => OrderStatus.Awaiting // Default to safest
+            Generated.Models.GetOrder2Response_status.AWAITING  => OrderStatus.Awaiting,
+            Generated.Models.GetOrder2Response_status.PENDING   => OrderStatus.Pending,
+            Generated.Models.GetOrder2Response_status.COMPLETE  => OrderStatus.Complete,
+            _                                                    => OrderStatus.Awaiting,
         };
-    }
 
-    // ValidatePreFlight removed, validation happens in Application layer via LimitOrderParameters.Validate()
-
-    private async Task<OrderReference> ReconcileDuplicateOrderAsync(LimitOrderParameters parameters, CancellationToken ct)
-    {
-        var existingOrder = (await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
+    private static OrderType? MapSide(Generated.Models.GetOrder2Response_side? side) =>
+        side switch
         {
-            req.QueryParameters.ClientOrderId = parameters.ClientOrderId;
-            req.Options.Add(new LunoTelemetryOptions("ReconcileDuplicateOrder"));
-        }, ct))!;
+            Generated.Models.GetOrder2Response_side.BUY  => OrderType.Bid,
+            Generated.Models.GetOrder2Response_side.SELL => OrderType.Ask,
+            _                                            => null,
+        };
 
-        // Contract assumes existingOrder is not null if we get here without a 404 exception.
-        bool parametersMatch = true;
+    private static decimal? TryParseDecimal(string? raw) =>
+        raw != null && decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : null;
 
-        if (existingOrder.LimitPrice != null && decimal.TryParse(existingOrder.LimitPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var existingPrice))
-        {
-            if (existingPrice != parameters.Price) parametersMatch = false;
-        }
-
-        if (existingOrder.LimitVolume != null && decimal.TryParse(existingOrder.LimitVolume, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var existingVolume))
-        {
-            if (existingVolume != parameters.Volume) parametersMatch = false;
-        }
-
-        if (existingOrder.Side.HasValue)
-        {
-            var requiredSide = parameters.Type == OrderType.Bid ? "BUY" : "SELL";
-            if (!existingOrder.Side.Value.ToString().Equals(requiredSide, StringComparison.OrdinalIgnoreCase)) 
-            {
-                parametersMatch = false;
-            }
-        }
-
-        if (!parametersMatch)
-        {
-            throw new LunoIdempotencyException("Idempotency failed: A previous order exists with the same ClientOrderId but the request parameters differ.");
-        }
-
-        return new OrderReference { OrderId = existingOrder.OrderId ?? string.Empty };
-    }
-
-    private PostTypeQueryParameterType MapType(OrderType type)
-    {
-        return type switch
+    private static PostTypeQueryParameterType MapType(OrderType type) =>
+        type switch
         {
             OrderType.Bid => PostTypeQueryParameterType.BID,
             OrderType.Ask => PostTypeQueryParameterType.ASK,
-            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(type), "Invalid order type."))
+            _             => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(type), "Invalid order type.")),
         };
-    }
 
-    private PostStop_directionQueryParameterType MapStopDirection(StopDirection direction)
-    {
-        return direction switch
+    private static PostStop_directionQueryParameterType MapStopDirection(StopDirection direction) =>
+        direction switch
         {
             StopDirection.RelativeLastTrade => PostStop_directionQueryParameterType.RELATIVE_LAST_TRADE,
-            StopDirection.Above => PostStop_directionQueryParameterType.ABOVE,
-            StopDirection.Below => PostStop_directionQueryParameterType.BELOW,
-            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(direction), "Invalid stop direction."))
+            StopDirection.Above             => PostStop_directionQueryParameterType.ABOVE,
+            StopDirection.Below             => PostStop_directionQueryParameterType.BELOW,
+            _                               => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(direction), "Invalid stop direction.")),
         };
-    }
 
-    private PostTime_in_forceQueryParameterType MapTimeInForce(TimeInForce tif)
-    {
-        return tif switch
+    private static PostTime_in_forceQueryParameterType MapTimeInForce(TimeInForce tif) =>
+        tif switch
         {
             TimeInForce.GTC => PostTime_in_forceQueryParameterType.GTC,
             TimeInForce.IOC => PostTime_in_forceQueryParameterType.IOC,
             TimeInForce.FOK => PostTime_in_forceQueryParameterType.FOK,
-            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(tif), "Invalid time in force."))
+            _               => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(tif), "Invalid time in force.")),
         };
-    }
 }
