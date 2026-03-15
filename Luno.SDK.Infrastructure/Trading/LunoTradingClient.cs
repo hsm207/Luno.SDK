@@ -10,11 +10,16 @@ using Luno.SDK.Infrastructure.Telemetry;
 
 namespace Luno.SDK.Infrastructure.Trading;
 
-internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingClient
+/// <summary>
+/// </summary>
+/// <param name="api">The generated Kiota API client.</param>
+/// <param name="commands">The command dispatcher for the application layer.</param>
+internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoTradingClient
 {
-    private readonly LunoApiClient _apiClient = new(requestAdapter);
+    private readonly LunoApiClient _apiClient = api;
+    public ILunoCommandDispatcher Commands { get; } = commands;
 
-    public async Task<OrderReference> PostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct = default)
+    public async Task<OrderReference> FetchPostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct = default)
     {
         var response = await _apiClient.Api.One.Postorder.PostAsync(req =>
         {
@@ -47,7 +52,7 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
         return new OrderReference { OrderId = response!.OrderId! };
     }
 
-    public async Task<bool> StopOrderAsync(string orderId, CancellationToken ct = default)
+    public async Task<bool> FetchStopOrderAsync(string orderId, CancellationToken ct = default)
     {
         var response = await _apiClient.Api.One.Stoporder.PostAsync(req =>
         {
@@ -58,7 +63,7 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
         return response?.Success ?? false;
     }
 
-    public async Task<Order> GetOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default)
+    public async Task<Order> FetchOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default)
     {
         var response = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
         {

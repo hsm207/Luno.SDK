@@ -48,7 +48,7 @@ public static class Concept03_AccountBalances
         {
             Console.WriteLine("Fetching balances...");
             // Use the application-layer extension method directly on the client!
-            var balances = await client.GetBalancesAsync();
+            var balances = await client.Accounts.GetBalancesAsync();
 
             Console.WriteLine($"Successfully retrieved {balances.Count} balances:");
             foreach (var balance in balances)

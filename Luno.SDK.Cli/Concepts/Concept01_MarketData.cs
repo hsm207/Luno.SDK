@@ -21,7 +21,7 @@ public static class Concept01_MarketData
 
         // 2. Use the fluent extension to stream tickers
         // This method automatically maps the raw domain entities to application-layer DTOs.
-        await foreach (var ticker in luno.GetTickersAsync())
+        await foreach (var ticker in luno.Market.GetTickersAsync())
         {
             var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
             Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");

@@ -11,8 +11,8 @@ public record GetTickersQuery;
 /// <summary>
 /// Orchestrates the retrieval of market tickers from the Luno API.
 /// </summary>
-/// <param name="marketClient">The specialized market client used to fetch raw market data.</param>
-public class GetTickersHandler(ILunoMarketClient marketClient)
+/// <param name="marketClient">The specialized market client used to fetch core ticker entities.</param>
+public class GetTickersHandler(ILunoMarketClient marketClient) : ICommandHandler<GetTickersQuery, IAsyncEnumerable<TickerResponse>>
 {
     /// <summary>
     /// Returns the latest ticker indicators from all active Luno exchanges.
@@ -24,7 +24,7 @@ public class GetTickersHandler(ILunoMarketClient marketClient)
         GetTickersQuery query,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
-        await foreach (var ticker in marketClient.GetTickersAsync(ct).WithCancellation(ct))
+        await foreach (var ticker in marketClient.FetchTickersAsync(ct).WithCancellation(ct))
         {
             yield return ticker.ToResponse();
         }
