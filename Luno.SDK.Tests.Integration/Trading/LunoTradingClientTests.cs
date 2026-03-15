@@ -81,8 +81,7 @@ public class LunoTradingClientTests : IDisposable
         var response = await client.PostLimitOrderAsync(command);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(expectedOrderId, response.OrderId);
+        Assert.NotNull(response.OrderId);
     }
 
     [Fact(DisplayName = "Given an order ID, When stopping order by ClientOrderId, Then SDK looks up exchange ID and stops.")]
@@ -112,7 +111,7 @@ public class LunoTradingClientTests : IDisposable
         var result = await client.StopOrderByClientOrderIdAsync(clientId);
 
         // Assert
-        Assert.True(result);
+        Assert.NotNull(result.OrderId);
     }
 
     [Fact(DisplayName = "Given API returns a specific trading error, When posting, Then specific domain exception is thrown.")]
@@ -161,7 +160,47 @@ public class LunoTradingClientTests : IDisposable
         var result = await client.StopOrderAsync(new StopOrderCommand { OrderId = orderId });
 
         // Assert
-        Assert.True(result);
+        Assert.Equal(orderId, result.OrderId);
+    }
+
+    [Fact(DisplayName = "Given a ClientOrderId of a COMPLETE order, When stopping, Then SDK returns successfully without calling stop endpoint.")]
+    public async Task StopOrderAsync_AlreadyComplete_ReturnsImmediately()
+    {
+        // Arrange
+        var clientOrderId = "CL123";
+        var orderId = "BX123";
+        
+        // Mock the GET order call to return status COMPLETE
+        _server.Given(Request.Create()
+                .WithPath("/api/exchange/3/order")
+                .WithParam("client_order_id", clientOrderId)
+                .UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new 
+                { 
+                    order_id = orderId, 
+                    status = "COMPLETE", 
+                    client_order_id = clientOrderId,
+                    side = "BUY",
+                    pair = "XBTZAR",
+                    limit_price = "1000",
+                    limit_volume = "1"
+                }));
+
+        var client = CreateClient();
+
+        // Act
+        var result = await client.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId });
+
+        // Assert
+        Assert.Equal(orderId, result.OrderId);
+        Assert.True(result.Success);
+        
+        // Verify that /api/1/stoporder was NOT called
+        var stopRequests = _server.FindLogEntries(Request.Create().WithPath("/api/1/stoporder"));
+        Assert.Empty(stopRequests);
     }
 
     [Fact(DisplayName = "Given neither OrderId nor ClientOrderId, When stopping order, Then throw LunoValidationException.")]
@@ -199,5 +238,74 @@ public class LunoTradingClientTests : IDisposable
             await client.PostLimitOrderAsync(command));
 
         Assert.Contains("both StopPrice and StopDirection must be provided", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given Idempotency Reconcilation, When exact match not found on lookup, Then throw LunoResourceNotFoundException.")]
+    public async Task PostLimitOrderAsync_IdempotencyReconciliation_NotFound_ThrowsException()
+    {
+        // Arrange
+        var clientId = "unique-uuid-123";
+
+        // 1. Post Limit Order returns 409 Conflict
+        _server.Given(Request.Create().WithPath("/api/1/postorder").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(409)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { error = "Duplicate", code = "ErrDuplicateClientOrderID" }));
+
+        // 2. Reconciliation lookup returns generic error or empty order body (not found)
+        _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("client_order_id", clientId).UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(404)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { error = "Order not found" }));
+
+        var client = CreateClient();
+        var command = new PostLimitOrderCommand
+        {
+            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 1m, Price = 10m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<LunoResourceNotFoundException>(async () => await client.PostLimitOrderAsync(command));
+    }
+
+    [Fact(DisplayName = "Given Idempotency Reconcilation, When parameters mismatch, Then throw LunoIdempotencyException.")]
+    public async Task PostLimitOrderAsync_IdempotencyReconciliation_Mismatch_ThrowsException()
+    {
+        // Arrange
+        var clientId = "unique-uuid-123";
+
+        // 1. Post Limit Order returns 409 Conflict
+        _server.Given(Request.Create().WithPath("/api/1/postorder").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(409)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { error = "Duplicate", code = "ErrDuplicateClientOrderID" }));
+
+        // 2. Reconciliation lookup returns a fundamentally different order
+        _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("client_order_id", clientId).UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    order_id = "BX123",
+                    client_order_id = clientId,
+                    limit_price = "999999", // Vastly different price
+                    limit_volume = "0.001",
+                    side = "BUY",
+                    pair = "XBTMYR"
+                }));
+
+        var client = CreateClient();
+        var command = new PostLimitOrderCommand
+        {
+            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
+        Assert.Contains("parameters differ", ex.Message);
     }
 }

@@ -78,25 +78,42 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
         return response?.Success ?? false;
     }
 
-    public async Task<bool> StopOrderByClientOrderIdAsync(string clientOrderId, CancellationToken ct = default)
+    public async Task<Order> GetOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(clientOrderId))
+        if (string.IsNullOrWhiteSpace(orderId) && string.IsNullOrWhiteSpace(clientOrderId))
         {
-            throw new LunoValidationException("ClientOrderId cannot be null or whitespace.");
+            throw new LunoValidationException("Either OrderId or ClientOrderId must be provided for lookup.");
         }
 
-        var existingOrder = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
+        var response = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
         {
-            req.QueryParameters.ClientOrderId = clientOrderId;
-            req.Options.Add(new LunoTelemetryOptions("GetOrderByClientOrderId"));
+            if (orderId != null) req.QueryParameters.Id = orderId;
+            if (clientOrderId != null) req.QueryParameters.ClientOrderId = clientOrderId;
+            req.Options.Add(new LunoTelemetryOptions("GetOrder"));
         }, ct);
 
-        if (string.IsNullOrWhiteSpace(existingOrder?.OrderId))
+        if (response == null || string.IsNullOrWhiteSpace(response.OrderId))
         {
-            throw new LunoResourceNotFoundException($"No existing order found with ClientOrderId: {clientOrderId}");
+            throw new LunoResourceNotFoundException($"No order found with the provided identifier(s).");
         }
 
-        return await StopOrderAsync(existingOrder.OrderId, ct);
+        return new Order
+        {
+            OrderId = response.OrderId,
+            ClientOrderId = response.ClientOrderId,
+            Status = MapStatus(response.Status)
+        };
+    }
+
+    private static OrderStatus MapStatus(Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status? status)
+    {
+        return status switch
+        {
+            Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status.AWAITING => OrderStatus.Awaiting,
+            Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status.PENDING => OrderStatus.Pending,
+            Luno.SDK.Infrastructure.Generated.Models.GetOrder2Response_status.COMPLETE => OrderStatus.Complete,
+            _ => OrderStatus.Awaiting // Default to safest
+        };
     }
 
     // ValidatePreFlight removed, validation happens in Application layer via LimitOrderParameters.Validate()
@@ -149,7 +166,7 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
         {
             OrderType.Bid => PostTypeQueryParameterType.BID,
             OrderType.Ask => PostTypeQueryParameterType.ASK,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), "Invalid order type.")
+            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(type), "Invalid order type."))
         };
     }
 
@@ -160,7 +177,7 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
             StopDirection.RelativeLastTrade => PostStop_directionQueryParameterType.RELATIVE_LAST_TRADE,
             StopDirection.Above => PostStop_directionQueryParameterType.ABOVE,
             StopDirection.Below => PostStop_directionQueryParameterType.BELOW,
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), "Invalid stop direction.")
+            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(direction), "Invalid stop direction."))
         };
     }
 
@@ -171,7 +188,7 @@ internal class LunoTradingClient(IRequestAdapter requestAdapter) : ILunoTradingC
             TimeInForce.GTC => PostTime_in_forceQueryParameterType.GTC,
             TimeInForce.IOC => PostTime_in_forceQueryParameterType.IOC,
             TimeInForce.FOK => PostTime_in_forceQueryParameterType.FOK,
-            _ => throw new ArgumentOutOfRangeException(nameof(tif), "Invalid time in force.")
+            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(tif), "Invalid time in force."))
         };
     }
 }

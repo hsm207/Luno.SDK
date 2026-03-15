@@ -31,8 +31,8 @@ public static class LunoTradingExtensions
     /// <param name="client">The <see cref="ILunoClient"/> instance to use.</param>
     /// <param name="command">The stop order command.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A boolean indicating success.</returns>
-    public static Task<bool> StopOrderAsync(
+    /// <returns>A response containing the stopped Order ID.</returns>
+    public static Task<OrderResponse> StopOrderAsync(
         this ILunoClient client,
         StopOrderCommand command,
         CancellationToken ct = default)
@@ -47,8 +47,8 @@ public static class LunoTradingExtensions
     /// <param name="client">The <see cref="ILunoClient"/> instance to use.</param>
     /// <param name="orderId">The Luno-assigned Order ID.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A boolean indicating success.</returns>
-    public static Task<bool> StopOrderAsync(
+    /// <returns>A response containing the stopped Order ID.</returns>
+    public static Task<OrderResponse> StopOrderAsync(
         this ILunoClient client,
         string orderId,
         CancellationToken ct = default)
@@ -62,8 +62,8 @@ public static class LunoTradingExtensions
     /// <param name="client">The <see cref="ILunoClient"/> instance to use.</param>
     /// <param name="clientOrderId">The client-defined deduplication ID.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A boolean indicating success.</returns>
-    public static Task<bool> StopOrderByClientOrderIdAsync(
+    /// <returns>A response containing the stopped Order ID.</returns>
+    public static Task<OrderResponse> StopOrderByClientOrderIdAsync(
         this ILunoClient client,
         string clientOrderId,
         CancellationToken ct = default)

@@ -9,4 +9,9 @@ public record OrderResponse
     /// Gets or sets the unique Luno-assigned Order ID.
     /// </summary>
     public required string OrderId { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether the action was successful.
+    /// </summary>
+    public bool Success { get; init; } = true;
 }

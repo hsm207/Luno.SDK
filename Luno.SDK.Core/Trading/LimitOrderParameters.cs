@@ -78,6 +78,21 @@ public record LimitOrderParameters
     /// <exception cref="LunoValidationException">Thrown if rules are violated.</exception>
     public void Validate()
     {
+        if (!Enum.IsDefined(typeof(OrderType), Type))
+        {
+            throw new LunoValidationException($"Invalid OrderType: {Type}");
+        }
+
+        if (!Enum.IsDefined(typeof(TimeInForce), TimeInForce))
+        {
+            throw new LunoValidationException($"Invalid TimeInForce: {TimeInForce}");
+        }
+
+        if (StopDirection.HasValue && !Enum.IsDefined(typeof(StopDirection), StopDirection.Value))
+        {
+            throw new LunoValidationException($"Invalid StopDirection: {StopDirection.Value}");
+        }
+
         if (PostOnly && TimeInForce != TimeInForce.GTC)
         {
             throw new LunoValidationException("PostOnly cannot be used with a TimeInForce other than GTC.");

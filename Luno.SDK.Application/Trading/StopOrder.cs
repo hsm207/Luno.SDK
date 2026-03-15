@@ -33,21 +33,35 @@ public class StopOrderHandler(ILunoTradingClient tradingClient)
     /// </summary>
     /// <param name="command">The command parameters specifying which ID to use.</param>
     /// <param name="ct">A cancellation token.</param>
-    /// <returns>True if the order was successfully stopped.</returns>
-    public async Task<bool> HandleAsync(
+    /// <returns>A response containing the Order ID that was stopped.</returns>
+    public async Task<OrderResponse> HandleAsync(
         StopOrderCommand command,
         CancellationToken ct = default)
     {
-        if (!string.IsNullOrWhiteSpace(command.OrderId))
+        string? orderId = command.OrderId;
+
+        if (string.IsNullOrWhiteSpace(orderId))
         {
-            return await tradingClient.StopOrderAsync(command.OrderId, ct).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(command.ClientOrderId))
+            {
+                throw new LunoValidationException("Either OrderId or ClientOrderId must be provided to stop an order.");
+            }
+
+            // High-level Policy: Lookup the order to get the exchange-assigned ID if not known.
+            var order = await tradingClient.GetOrderAsync(clientOrderId: command.ClientOrderId, ct: ct).ConfigureAwait(false);
+            
+            // Optimization: If the order is already complete (Filled or Cancelled), we satisfy the user's intent immediately.
+            if (order.IsClosed)
+            {
+                return new OrderResponse { OrderId = order.OrderId };
+            }
+
+            orderId = order.OrderId;
         }
 
-        if (!string.IsNullOrWhiteSpace(command.ClientOrderId))
-        {
-            return await tradingClient.StopOrderByClientOrderIdAsync(command.ClientOrderId, ct).ConfigureAwait(false);
-        }
+        // Dispatch the atomic stop operation
+        await tradingClient.StopOrderAsync(orderId, ct).ConfigureAwait(false);
 
-        throw new LunoValidationException("Either OrderId or ClientOrderId must be provided to stop an order.");
+        return new OrderResponse { OrderId = orderId };
     }
 }
