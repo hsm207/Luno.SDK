@@ -32,4 +32,11 @@ public class LunoClientOptions
     /// Gets or sets the API Key Secret for authenticated requests.
     /// </summary>
     public string? ApiKeySecret { get; set; }
+
+    /// <summary>
+    /// Gets or sets a decorator function that can wrap command handlers with custom behaviors 
+    /// (e.g., logging, retries, auditing).
+    /// The function receives the concrete handler and should return a decorated version of it.
+    /// </summary>
+    public Func<object, object>? CommandHandlerDecorator { get; set; }
 }
