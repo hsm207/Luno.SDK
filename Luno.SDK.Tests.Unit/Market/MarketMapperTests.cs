@@ -70,6 +70,7 @@ public class MarketMapperTests
     [InlineData(GeneratedStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedStatus.POSTONLY, MarketStatus.PostOnly)]
     [InlineData(GeneratedStatus.DISABLED, MarketStatus.Disabled)]
+    [InlineData(GeneratedStatus.UNKNOWN, MarketStatus.Unknown)]
     public void MapStatus_EnumIsProvided_ReturnsEquivalentStatus(GeneratedStatus status, MarketStatus expected)
     {
         // Act
@@ -150,6 +151,7 @@ public class MarketMapperTests
     [InlineData(GeneratedGetTickerStatus.ACTIVE, MarketStatus.Active)]
     [InlineData(GeneratedGetTickerStatus.POSTONLY, MarketStatus.PostOnly)]
     [InlineData(GeneratedGetTickerStatus.DISABLED, MarketStatus.Disabled)]
+    [InlineData(GeneratedGetTickerStatus.UNKNOWN, MarketStatus.Unknown)]
     public void MapStatus_GetTickerResponseEnumIsProvided_ReturnsEquivalentStatus(GeneratedGetTickerStatus status, MarketStatus expected)
     {
         // Act
@@ -168,5 +170,27 @@ public class MarketMapperTests
 
         // Assert
         Assert.Equal(MarketStatus.Unknown, result);
+    }
+
+    [Fact(DisplayName = "Given a force-casted invalid Ticker_status, When mapping status, Then throw LunoMappingException.")]
+    [Trait("Category", "Unit")]
+    public void MapStatus_InvalidTickerStatus_ThrowsLunoMappingException()
+    {
+        // Arrange — bypass normal enum values via explicit cast
+        var invalidStatus = (Luno.SDK.Infrastructure.Generated.Models.Ticker_status)999;
+
+        // Act & Assert
+        Assert.Throws<LunoMappingException>(() => MarketMapper.MapStatus(invalidStatus));
+    }
+
+    [Fact(DisplayName = "Given a force-casted invalid GetTickerResponse_status, When mapping status, Then throw LunoMappingException.")]
+    [Trait("Category", "Unit")]
+    public void MapStatus_InvalidGetTickerResponseStatus_ThrowsLunoMappingException()
+    {
+        // Arrange
+        var invalidStatus = (Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status)999;
+
+        // Act & Assert
+        Assert.Throws<LunoMappingException>(() => MarketMapper.MapStatus(invalidStatus));
     }
 }
