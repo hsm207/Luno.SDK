@@ -58,11 +58,11 @@ public class PostLimitOrderHandlerTests
         var existingOrder = BuildExistingOrder();
 
         tradingClientMock
-            .Setup(x => x.PostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new LunoIdempotencyException("409"));
 
         tradingClientMock
-            .Setup(x => x.GetOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOrder);
 
         var result = await handler.HandleAsync(command);
@@ -81,11 +81,11 @@ public class PostLimitOrderHandlerTests
         var existingOrder = BuildExistingOrder(limitPrice: 1500m);
 
         tradingClientMock
-            .Setup(x => x.PostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new LunoIdempotencyException("409"));
 
         tradingClientMock
-            .Setup(x => x.GetOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOrder);
 
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
@@ -103,11 +103,11 @@ public class PostLimitOrderHandlerTests
         var existingOrder = BuildExistingOrder(limitVolume: 5m);
 
         tradingClientMock
-            .Setup(x => x.PostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new LunoIdempotencyException("409"));
 
         tradingClientMock
-            .Setup(x => x.GetOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOrder);
 
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
@@ -125,11 +125,11 @@ public class PostLimitOrderHandlerTests
         var existingOrder = BuildExistingOrder(side: OrderType.Ask);   // mismatch!
 
         tradingClientMock
-            .Setup(x => x.PostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new LunoIdempotencyException("409"));
 
         tradingClientMock
-            .Setup(x => x.GetOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOrder);
 
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
@@ -146,14 +146,14 @@ public class PostLimitOrderHandlerTests
         var command = BuildValidCommand(clientOrderId: null);  // no clientOrderId, nothing to reconcile
 
         tradingClientMock
-            .Setup(x => x.PostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new LunoIdempotencyException("409"));
 
         await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
 
         // Verify we never attempted a lookup when there's nothing to reconcile against
         tradingClientMock.Verify(
-            x => x.GetOrderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.FetchOrderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -169,11 +169,11 @@ public class PostLimitOrderHandlerTests
         var existingOrder = BuildExistingOrder(limitPrice: null, limitVolume: null, side: null);
 
         tradingClientMock
-            .Setup(x => x.PostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new LunoIdempotencyException("409"));
 
         tradingClientMock
-            .Setup(x => x.GetOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOrder);
 
         var result = await handler.HandleAsync(command);

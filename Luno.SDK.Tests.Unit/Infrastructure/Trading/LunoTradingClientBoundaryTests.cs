@@ -22,7 +22,8 @@ public class LunoTradingClientBoundaryTests
     [Fact(DisplayName = "Given an invalid OrderType bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
     public async Task PostLimitOrderAsync_InvalidOrderType_ThrowsInvalidOperationException()
     {
-        var client = new LunoTradingClient(_requestAdapterMock.Object);
+        var apiClient = new LunoApiClient(_requestAdapterMock.Object);
+        var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
 
         var request = new LimitOrderRequest
         {
@@ -34,7 +35,7 @@ public class LunoTradingClientBoundaryTests
             CounterAccountId = 2,
         };
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.PostLimitOrderAsync(request));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
         Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
         Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
         Assert.Contains("Invalid order type", ex.InnerException!.Message);
@@ -43,7 +44,8 @@ public class LunoTradingClientBoundaryTests
     [Fact(DisplayName = "Given an invalid TimeInForce bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
     public async Task PostLimitOrderAsync_InvalidTimeInForce_ThrowsInvalidOperationException()
     {
-        var client = new LunoTradingClient(_requestAdapterMock.Object);
+        var apiClient = new LunoApiClient(_requestAdapterMock.Object);
+        var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
 
         var request = new LimitOrderRequest
         {
@@ -56,7 +58,7 @@ public class LunoTradingClientBoundaryTests
             TimeInForce      = (TimeInForce)999,
         };
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.PostLimitOrderAsync(request));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
         Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
         Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
         Assert.Contains("Invalid time in force", ex.InnerException!.Message);
@@ -65,7 +67,8 @@ public class LunoTradingClientBoundaryTests
     [Fact(DisplayName = "Given an invalid StopDirection bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
     public async Task PostLimitOrderAsync_InvalidStopDirection_ThrowsInvalidOperationException()
     {
-        var client = new LunoTradingClient(_requestAdapterMock.Object);
+        var apiClient = new LunoApiClient(_requestAdapterMock.Object);
+        var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
 
         var request = new LimitOrderRequest
         {
@@ -79,7 +82,7 @@ public class LunoTradingClientBoundaryTests
             StopDirection    = (StopDirection)999,
         };
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.PostLimitOrderAsync(request));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
         Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
         Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
         Assert.Contains("Invalid stop direction", ex.InnerException!.Message);

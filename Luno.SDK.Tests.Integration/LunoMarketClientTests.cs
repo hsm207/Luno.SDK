@@ -127,7 +127,7 @@ public class LunoMarketClientTests : IDisposable
 
         // Act
         var results = new List<Luno.SDK.Application.Market.TickerResponse>();
-        await foreach (var ticker in client.GetTickersAsync())
+        await foreach (var ticker in client.Market.GetTickersAsync())
         {
             results.Add(ticker);
         }
@@ -160,7 +160,7 @@ public class LunoMarketClientTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<LunoApiException>(async () =>
         {
-            await foreach (var _ in client.GetTickersAsync()) { }
+            await foreach (var _ in client.Market.GetTickersAsync()) { }
         });
 
         // Wait for the telemetry activity to physically stop
@@ -187,7 +187,7 @@ public class LunoMarketClientTests : IDisposable
 
         // Act
         var results = new List<Luno.SDK.Application.Market.TickerResponse>();
-        await foreach (var ticker in client.GetTickersAsync())
+        await foreach (var ticker in client.Market.GetTickersAsync())
         {
             results.Add(ticker);
         }
@@ -227,7 +227,7 @@ public class LunoMarketClientTests : IDisposable
         using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         // Act
-        var result = await client.GetTickerAsync("XBTZAR");
+        var result = await client.Market.GetTickerAsync("XBTZAR");
 
         // Wait for the telemetry activity to physically stop
         activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
@@ -267,7 +267,7 @@ public class LunoMarketClientTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync(expectedExceptionType, async () =>
         {
-            await client.GetTickerAsync("XBTZAR");
+            await client.Market.GetTickerAsync("XBTZAR");
         });
 
         // Wait for the telemetry activity to physically stop
@@ -301,7 +301,7 @@ public class LunoMarketClientTests : IDisposable
         using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         // Act
-        var result = await client.GetTickerAsync("XBTZAR");
+        var result = await client.Market.GetTickerAsync("XBTZAR");
 
         // Wait for the telemetry activity to physically stop
         activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));

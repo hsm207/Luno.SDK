@@ -61,7 +61,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act
-        var balances = await client.GetBalancesAsync(); // Uses Application Layer extension!
+        var balances = await client.Accounts.GetBalancesAsync(); // Uses Application Layer extension!
 
         // Assert
         Assert.NotNull(balances);

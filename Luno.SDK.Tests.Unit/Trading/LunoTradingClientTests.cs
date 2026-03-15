@@ -3,6 +3,9 @@ using Moq;
 using Xunit;
 using Luno.SDK;
 using Luno.SDK.Trading;
+using Luno.SDK.Account;
+using Luno.SDK.Market;
+using Luno.SDK.Application;
 using Luno.SDK.Application.Trading;
 
 namespace Luno.SDK.Tests.Unit.Trading;
@@ -11,12 +14,27 @@ public class LunoTradingClientTests
 {
     private readonly Mock<ILunoTradingClient> _tradingClientMock;
     private readonly Mock<ILunoClient> _lunoClientMock;
+    private readonly ILunoCommandDispatcher _dispatcher;
 
     public LunoTradingClientTests()
     {
         _tradingClientMock = new Mock<ILunoTradingClient>();
+        
+        // 1. Setup the real dispatcher factory with mocks as its low-level dependencies
+        var factory = new DefaultCommandHandlerFactory(
+            _tradingClientMock.Object,
+            new Mock<ILunoAccountClient>().Object,
+            new Mock<ILunoMarketClient>().Object);
+
+        // 2. Instantiate a real dispatcher (to test the extension -> dispatcher -> handler flow)
+        _dispatcher = new LunoCommandDispatcher(factory.CreateHandler);
+
+        // 3. Wire the dispatcher into the mocked sub-client
+        _tradingClientMock.Setup(x => x.Commands).Returns(_dispatcher);
+
         _lunoClientMock = new Mock<ILunoClient>();
         _lunoClientMock.Setup(c => c.Trading).Returns(_tradingClientMock.Object);
+        _lunoClientMock.Setup(c => c.Commands).Returns(_dispatcher);
     }
 
     [Fact(DisplayName = "Given a request with PostOnly = true and TimeInForce = IOC, When posting limit order, Then throw LunoValidationException.")]
@@ -37,7 +55,7 @@ public class LunoTradingClientTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await _lunoClientMock.Object.PostLimitOrderAsync(command));
+            await _lunoClientMock.Object.Trading.PostLimitOrderAsync(command));
 
         Assert.Contains("PostOnly cannot be used", ex.Message);
     }
@@ -58,7 +76,7 @@ public class LunoTradingClientTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await _lunoClientMock.Object.PostLimitOrderAsync(command));
+            await _lunoClientMock.Object.Trading.PostLimitOrderAsync(command));
 
         Assert.Contains("Explicit Account Mandate violated", ex.Message);
     }
@@ -123,17 +141,17 @@ public class LunoTradingClientTests
         // Arrange
         var orderId = "BX123";
 
-        _tradingClientMock.Setup(x => x.StopOrderAsync(orderId, It.IsAny<CancellationToken>()))
+        _tradingClientMock.Setup(x => x.FetchStopOrderAsync(orderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _lunoClientMock.Object.StopOrderAsync(orderId);
+        var result = await _lunoClientMock.Object.Trading.StopOrderAsync(orderId);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(orderId, result.OrderId);
         Assert.True(result.Success);
-        _tradingClientMock.Verify(x => x.StopOrderAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+        _tradingClientMock.Verify(x => x.FetchStopOrderAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -147,21 +165,21 @@ public class LunoTradingClientTests
 
         var pendingOrder = new Order { OrderId = assignedOrderId, ClientOrderId = clientOrderId, Status = OrderStatus.Pending };
 
-        _tradingClientMock.Setup(x => x.GetOrderAsync(null, clientOrderId, It.IsAny<CancellationToken>()))
+        _tradingClientMock.Setup(x => x.FetchOrderAsync(null, clientOrderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pendingOrder);
 
-        _tradingClientMock.Setup(x => x.StopOrderAsync(assignedOrderId, It.IsAny<CancellationToken>()))
+        _tradingClientMock.Setup(x => x.FetchStopOrderAsync(assignedOrderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _lunoClientMock.Object.StopOrderAsync(command);
+        var result = await _lunoClientMock.Object.Trading.StopOrderAsync(command);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(assignedOrderId, result.OrderId);
         
         // Ensure both the lookup and the stop were called
-        _tradingClientMock.Verify(x => x.GetOrderAsync(null, clientOrderId, It.IsAny<CancellationToken>()), Times.Once);
-        _tradingClientMock.Verify(x => x.StopOrderAsync(assignedOrderId, It.IsAny<CancellationToken>()), Times.Once);
+        _tradingClientMock.Verify(x => x.FetchOrderAsync(null, clientOrderId, It.IsAny<CancellationToken>()), Times.Once);
+        _tradingClientMock.Verify(x => x.FetchStopOrderAsync(assignedOrderId, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

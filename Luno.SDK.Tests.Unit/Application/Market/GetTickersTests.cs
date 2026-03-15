@@ -4,6 +4,7 @@ using Microsoft.Kiota.Http.HttpClientLibrary;
 using Moq;
 using Moq.Protected;
 using Luno.SDK.Application.Market;
+using Luno.SDK.Infrastructure.Generated;
 using Xunit;
 
 namespace Luno.SDK.Tests.Unit.Application.Market;
@@ -14,7 +15,8 @@ public class GetTickersTests
     {
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.luno.com") };
         var adapter = new HttpClientRequestAdapter(new AnonymousAuthenticationProvider(), httpClient: httpClient);
-        return new LunoMarketClient(adapter);
+        var apiClient = new LunoApiClient(adapter);
+        return new LunoMarketClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
     }
 
     [Fact(DisplayName = "Given market client returns tickers, When handling query, Then stream mapped ticker responses.")]

@@ -78,7 +78,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var response = await client.PostLimitOrderAsync(command);
+        var response = await client.Trading.PostLimitOrderAsync(command);
 
         // Assert
         Assert.NotNull(response.OrderId);
@@ -108,7 +108,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.StopOrderByClientOrderIdAsync(clientId);
+        var result = await client.Trading.StopOrderByClientOrderIdAsync(clientId);
 
         // Assert
         Assert.NotNull(result.OrderId);
@@ -138,7 +138,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoForbiddenException>(async () =>
-            await client.PostLimitOrderAsync(command));
+            await client.Trading.PostLimitOrderAsync(command));
 
         Assert.Equal(403, ex.StatusCode);
     }
@@ -161,7 +161,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var result = await client.PostLimitOrderAsync(command);
+        var result = await client.Trading.PostLimitOrderAsync(command);
 
         // Assert
         Assert.Equal(expectedOrderId, result.OrderId);
@@ -190,7 +190,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var result = await client.PostLimitOrderAsync(command);
+        var result = await client.Trading.PostLimitOrderAsync(command);
 
         // Assert
         Assert.Equal(expectedOrderId, result.OrderId);
@@ -210,7 +210,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.StopOrderAsync(new StopOrderCommand { OrderId = orderId });
+        var result = await client.Trading.StopOrderAsync(new StopOrderCommand { OrderId = orderId });
 
         // Assert
         Assert.Equal(orderId, result.OrderId);
@@ -245,7 +245,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId });
+        var result = await client.Trading.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId });
 
         // Assert
         Assert.Equal(orderId, result.OrderId);
@@ -264,7 +264,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await client.StopOrderAsync(new StopOrderCommand()));
+            await client.Trading.StopOrderAsync(new StopOrderCommand()));
 
         Assert.Contains("Either OrderId or ClientOrderId must be provided", ex.Message);
     }
@@ -288,7 +288,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await client.PostLimitOrderAsync(command));
+            await client.Trading.PostLimitOrderAsync(command));
 
         Assert.Contains("both StopPrice and StopDirection must be provided", ex.Message);
     }
@@ -320,7 +320,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoResourceNotFoundException>(async () => await client.PostLimitOrderAsync(command));
+        await Assert.ThrowsAsync<LunoResourceNotFoundException>(async () => await client.Trading.PostLimitOrderAsync(command));
     }
 
     [Fact(DisplayName = "Given Idempotency Reconcilation, When parameters mismatch, Then throw LunoIdempotencyException.")]
@@ -358,7 +358,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.Trading.PostLimitOrderAsync(command));
         Assert.Contains("Price", ex.Message);
     }
 
@@ -397,7 +397,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.PostLimitOrderAsync(command));
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.Trading.PostLimitOrderAsync(command));
         Assert.Contains("Side", ex.Message);
     }
 
@@ -427,7 +427,7 @@ public class LunoTradingClientTests : IDisposable
         
         // Expose public method to call the interface lookup (via Trading.GetOrderAsync is not directly exposed as Command, so we cast to test infra)
         var infraClient = (ILunoTradingClient)client.Trading;
-        var result = await infraClient.GetOrderAsync(orderId: orderId);
+        var result = await infraClient.FetchOrderAsync(orderId: orderId);
 
         Assert.Equal(expectedStatus, result.Status);
     }
@@ -453,7 +453,7 @@ public class LunoTradingClientTests : IDisposable
 
         var client = CreateClient();
         var infraClient = (ILunoTradingClient)client.Trading;
-        var result = await infraClient.GetOrderAsync(orderId: orderId);
+        var result = await infraClient.FetchOrderAsync(orderId: orderId);
 
         // Kiota returns null for unrecognized enum strings; our null arm maps to Awaiting
         Assert.Equal(OrderStatus.Awaiting, result.Status);
