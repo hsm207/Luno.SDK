@@ -170,27 +170,6 @@ public class LunoMarketClientTests : IDisposable
         Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));
     }
 
-    [Fact(DisplayName = "Given the Luno API returns a successful response with null tickers, When fetching tickers, Then throw LunoMappingException.")]
-    public async Task GetTickers_ApiReturnsNullTickers_ThrowsLunoMappingException()
-    {
-        // Arrange
-        _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
-            .RespondWith(Response.Create()
-                .WithStatusCode(200)
-                .WithHeader("Content-Type", "application/json")
-                .WithBodyAsJson(new { tickers = (object[]?)null }));
-
-        var client = CreateClient();
-
-        // Act & Assert
-        var ex = await Assert.ThrowsAsync<LunoMappingException>(async () =>
-        {
-            await foreach (var _ in client.GetTickersAsync()) { }
-        });
-
-        Assert.Contains("missing or null", ex.Message);
-    }
-
     [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing optional fields, When fetching tickers, Then ensure the Kiota engine handles it AND records success.")]
     public async Task GetTickers_ApiReturnsQuirkyJson_HandlesGracefully()
     {

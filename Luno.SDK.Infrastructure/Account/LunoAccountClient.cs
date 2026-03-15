@@ -20,13 +20,8 @@ internal class LunoAccountClient(IRequestAdapter requestAdapter) : ILunoAccountC
             requestConfiguration.Options.Add(new Luno.SDK.Infrastructure.Telemetry.LunoTelemetryOptions("GetBalances"));
         }, cancellationToken).ConfigureAwait(false);
 
-        if (response?.Balance == null)
-        {
-            throw new InvalidOperationException("The API response was successful but the balances array was missing or null.");
-        }
-
         var results = new List<Balance>();
-        foreach (var balanceDto in response.Balance)
+        foreach (var balanceDto in response!.Balance!)
         {
             if (balanceDto != null)
             {

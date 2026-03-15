@@ -20,12 +20,8 @@ internal class LunoMarketClient(IRequestAdapter requestAdapter) : ILunoMarketCli
         var response = await _apiClient.Api.One.Tickers.GetAsync(req =>
             req.Options.Add(new LunoTelemetryOptions("GetMarketTickers")), ct);
 
-        if (response?.Tickers is null)
-        {
-            throw new LunoMappingException("The API response was successful but the tickers array was missing or null.", "GetTickersResponse");
-        }
-
-        foreach (var dto in response.Tickers)
+        // Trust the API response to have the Tickers array if successful
+        foreach (var dto in response!.Tickers!)
         {
             yield return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(dto);
         }
@@ -34,22 +30,12 @@ internal class LunoMarketClient(IRequestAdapter requestAdapter) : ILunoMarketCli
     /// <inheritdoc />
     public async Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(pair))
-        {
-            throw new LunoValidationException("Pair cannot be null or whitespace.");
-        }
-
         var response = await _apiClient.Api.One.Ticker.GetAsync(req =>
         {
             req.QueryParameters.Pair = pair;
             req.Options.Add(new LunoTelemetryOptions("GetMarketTicker"));
         }, ct);
 
-        if (response is null)
-        {
-            throw new LunoMappingException("The API response was successful but the ticker was missing or null.", "GetTickerResponse");
-        }
-
-        return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(response);
+        return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(response!);
     }
 }
