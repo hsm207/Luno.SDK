@@ -1,3 +1,4 @@
+using Luno.SDK.Market;
 using Luno.SDK.Application.Market;
 
 namespace Luno.SDK;
@@ -10,30 +11,28 @@ public static class LunoMarketExtensions
     /// <summary>
     /// Asynchronously fetches a stream of market tickers for all available pairs.
     /// </summary>
-    /// <param name="client">The <see cref="ILunoClient"/> instance to use for the request.</param>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="TickerResponse"/> representing the market state.</returns>
     public static IAsyncEnumerable<TickerResponse> GetTickersAsync(
-        this ILunoClient client,
+        this ILunoMarketClient client,
         CancellationToken ct = default)
     {
-        var handler = new GetTickersHandler(client.Market);
-        return handler.HandleAsync(new GetTickersQuery(), ct);
+        return client.Commands.DispatchAsync<GetTickersQuery, IAsyncEnumerable<TickerResponse>>(new GetTickersQuery(), ct);
     }
 
     /// <summary>
     /// Asynchronously fetches a market ticker for a specific pair.
     /// </summary>
-    /// <param name="client">The <see cref="ILunoClient"/> instance to use for the request.</param>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
     /// <param name="pair">The market pair to fetch (e.g., XBTZAR).</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a <see cref="TickerResponse"/> representing the market state.</returns>
     public static Task<TickerResponse> GetTickerAsync(
-        this ILunoClient client,
+        this ILunoMarketClient client,
         string pair,
         CancellationToken ct = default)
     {
-        var handler = new GetTickerHandler(client.Market);
-        return handler.HandleAsync(new GetTickerQuery(pair), ct);
+        return client.Commands.DispatchAsync<GetTickerQuery, Task<TickerResponse>>(new GetTickerQuery(pair), ct);
     }
 }
