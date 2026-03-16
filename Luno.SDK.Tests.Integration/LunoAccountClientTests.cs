@@ -119,4 +119,30 @@ public class LunoAccountClientTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<LunoAuthenticationException>(() => client.Accounts.GetBalancesAsync());
     }
+
+    [Fact(DisplayName = "Given asset filters, When getting balances, Then send request with correct query string")]
+    public async Task GetBalancesAsync_WithAssetsFilter_SendsCorrectQueryString()
+    {
+        // Arrange
+        _server.Given(Request.Create()
+            .WithPath("/api/1/balance")
+            .UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { balance = Array.Empty<object>() }));
+
+        var client = CreateClient("user", "pass");
+
+        // Act
+        await client.Accounts.GetBalancesAsync(new[] { "XBT", "ETH" });
+
+        // Assert
+        var logs = _server.LogEntries;
+        var request = logs.First().RequestMessage;
+        
+        Assert.Contains("assets=", request.Url);
+        Assert.Contains("XBT", request.Url);
+        Assert.Contains("ETH", request.Url);
+    }
 }
