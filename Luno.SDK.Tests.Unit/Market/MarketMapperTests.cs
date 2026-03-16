@@ -57,7 +57,7 @@ public class MarketMapperTests
     public void MapToEntity_TimestampIsNull_ThrowsLunoMappingException()
     {
         // Arrange
-        var dto = new GeneratedTicker { Pair = "XBTZAR", Timestamp = null };
+        var dto = new GeneratedTicker { Pair = "XBTZAR", Status = GeneratedStatus.ACTIVE, Timestamp = null };
 
         // Act & Assert
         var ex = Assert.Throws<LunoMappingException>(() => MarketMapper.MapToEntity(dto));
@@ -80,15 +80,12 @@ public class MarketMapperTests
         Assert.Equal(expected, result);
     }
 
-    [Fact(DisplayName = "Given null ticker status, When mapping status, Then return MarketStatus.Unknown.")]
+    [Fact(DisplayName = "Given null ticker status, When mapping status, Then throw LunoMappingException.")]
     [Trait("Category", "Unit")]
-    public void MapStatus_Null_ReturnsUnknown()
+    public void MapStatus_Null_ThrowsLunoMappingException()
     {
-        // Act
-        var result = MarketMapper.MapStatus((Luno.SDK.Infrastructure.Generated.Models.Ticker_status?)null);
-
-        // Assert
-        Assert.Equal(MarketStatus.Unknown, result);
+        // Act & Assert
+        Assert.Throws<LunoMappingException>(() => MarketMapper.MapStatus((Luno.SDK.Infrastructure.Generated.Models.Ticker_status?)null));
     }
 
     [Fact(DisplayName = "Given valid GetTickerResponse DTO, When mapping, Then return populated domain entity.")]
@@ -138,7 +135,7 @@ public class MarketMapperTests
     public void MapToEntity_GetTickerResponseTimestampIsNull_ThrowsLunoMappingException()
     {
         // Arrange
-        var dto = new GeneratedGetTickerResponse { Pair = "XBTZAR", Timestamp = null };
+        var dto = new GeneratedGetTickerResponse { Pair = "XBTZAR", Status = GeneratedGetTickerStatus.ACTIVE, Timestamp = null };
 
         // Act & Assert
         var ex = Assert.Throws<LunoMappingException>(() => MarketMapper.MapToEntity(dto));
@@ -161,15 +158,12 @@ public class MarketMapperTests
         Assert.Equal(expected, result);
     }
 
-    [Fact(DisplayName = "Given null GetTickerResponse status, When mapping status, Then return MarketStatus.Unknown.")]
+    [Fact(DisplayName = "Given null GetTickerResponse status, When mapping status, Then throw LunoMappingException.")]
     [Trait("Category", "Unit")]
-    public void MapStatus_GetTickerResponseNull_ReturnsUnknown()
+    public void MapStatus_GetTickerResponseNull_ThrowsLunoMappingException()
     {
-        // Act
-        var result = MarketMapper.MapStatus((Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status?)null);
-
-        // Assert
-        Assert.Equal(MarketStatus.Unknown, result);
+        // Act & Assert
+        Assert.Throws<LunoMappingException>(() => MarketMapper.MapStatus((Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status?)null));
     }
 
     [Fact(DisplayName = "Given a force-casted invalid Ticker_status, When mapping status, Then throw LunoMappingException.")]

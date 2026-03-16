@@ -170,8 +170,8 @@ public class LunoMarketClientTests : IDisposable
         Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));
     }
 
-    [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing optional fields, When fetching tickers, Then ensure the Kiota engine handles it AND records success.")]
-    public async Task GetTickers_ApiReturnsQuirkyJson_HandlesGracefully()
+    [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing mandatory fields, When fetching tickers, Then ensure the mapping fails immediately.")]
+    public async Task GetTickers_ApiReturnsQuirkyJson_FailsFast()
     {
         // Arrange
         _server.Given(Request.Create().WithPath("/api/1/tickers").UsingGet())
@@ -185,17 +185,16 @@ public class LunoMarketClientTests : IDisposable
 
         var client = CreateClient();
 
-        // Act
-        var results = new List<Luno.SDK.Application.Market.TickerResponse>();
-        await foreach (var ticker in client.Market.GetTickersAsync())
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoMappingException>(async () =>
         {
-            results.Add(ticker);
-        }
-
-        // Assert
-        Assert.Single(results);
-        Assert.Equal("XBTZAR", results[0].Pair);
-        Assert.False(results[0].IsActive);
+            await foreach (var ticker in client.Market.GetTickersAsync())
+            {
+                // Should throw on first iteration
+            }
+        });
+        
+        Assert.Contains("null", ex.Message);
     }
 
     [Fact(DisplayName = "Given a successful API request for a single pair, When fetching ticker, Then verify real telemetry and proper mapping.")]
@@ -278,12 +277,10 @@ public class LunoMarketClientTests : IDisposable
         Assert.Equal("Error", capturedActivity.GetTagItem("luno.status"));
     }
 
-    [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing optional fields for a single ticker, When fetching ticker, Then map successfully and gracefully handle missing properties.")]
-    [Trait("Category", "Integration")]
-    public async Task GetTickerAsync_QuirkyJson_HandlesGracefully()
+    [Fact(DisplayName = "Given the Luno API returns quirky JSON with missing mandatory fields for a single ticker, When fetching ticker, Then ensure the mapping fails immediately.")]
+    public async Task GetTickerAsync_QuirkyJson_FailsFast()
     {
         // Arrange
-        var operationName = "GetMarketTicker";
         _server.Given(Request.Create().WithPath("/api/1/ticker").WithParam("pair", "XBTZAR").UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -296,24 +293,7 @@ public class LunoMarketClientTests : IDisposable
 
         var client = CreateClient();
 
-        Activity? capturedActivity = null;
-        using var activityStoppedEvent = new ManualResetEventSlim();
-        using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
-
-        // Act
-        var result = await client.Market.GetTickerAsync("XBTZAR");
-
-        // Wait for the telemetry activity to physically stop
-        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("XBTZAR", result.Pair);
-        Assert.False(result.IsActive); // Missing status maps to Unknown, IsActive = false
-        Assert.Equal(0m, result.Price); // Missing price parses as 0
-
-        Assert.NotNull(capturedActivity);
-        Assert.Equal(operationName, capturedActivity.OperationName);
-        Assert.Equal("Success", capturedActivity.GetTagItem("luno.status"));
+        // Act & Assert
+        await Assert.ThrowsAsync<LunoMappingException>(() => client.Market.GetTickerAsync("XBTZAR"));
     }
 }

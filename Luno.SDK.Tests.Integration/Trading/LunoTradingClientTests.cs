@@ -62,6 +62,7 @@ public class LunoTradingClientTests : IDisposable
                     limit_price = "250000",
                     limit_volume = "0.001",
                     side = "BUY",
+                    status = "PENDING",
                     pair = "XBTMYR"
                 }));
 
@@ -96,7 +97,7 @@ public class LunoTradingClientTests : IDisposable
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
-                .WithBodyAsJson(new { order_id = expectedOrderId, client_order_id = clientId }));
+                .WithBodyAsJson(new { order_id = expectedOrderId, client_order_id = clientId, status = "PENDING", side = "BUY", pair = "XBTMYR", limit_price = "100", limit_volume = "1" }));
 
         // 2. Stop order
         _server.Given(Request.Create().WithPath("/api/1/stoporder").UsingPost().WithParam("order_id", expectedOrderId))
@@ -348,6 +349,7 @@ public class LunoTradingClientTests : IDisposable
                     limit_price = "999999", // Vastly different price
                     limit_volume = "0.001",
                     side = "BUY",
+                    status = "PENDING",
                     pair = "XBTMYR"
                 }));
 
@@ -387,6 +389,7 @@ public class LunoTradingClientTests : IDisposable
                     limit_price = "250000",
                     limit_volume = "0.001",
                     side = "SELL", // Mismatch!
+                    status = "PENDING",
                     pair = "XBTMYR"
                 }));
 
@@ -432,8 +435,8 @@ public class LunoTradingClientTests : IDisposable
         Assert.Equal(expectedStatus, result.Status);
     }
 
-    [Fact(DisplayName = "Given an unrecognized order status string, When looking up order, Then Kiota deserializes as null and maps to Awaiting.")]
-    public async Task GetOrderAsync_UnrecognizedStatus_FallsBackToAwaiting()
+    [Fact(DisplayName = "Given an unrecognized order status string, When looking up order, Then Kiota deserializes as null and throws LunoMappingException.")]
+    public async Task GetOrderAsync_UnrecognizedStatus_ThrowsLunoMappingException()
     {
         var orderId = "BX123_UNMAPPED";
 
@@ -453,9 +456,34 @@ public class LunoTradingClientTests : IDisposable
 
         var client = CreateClient();
         var infraClient = (ILunoTradingClient)client.Trading;
-        var result = await infraClient.FetchOrderAsync(orderId: orderId);
 
-        // Kiota returns null for unrecognized enum strings; our null arm maps to Awaiting
-        Assert.Equal(OrderStatus.Awaiting, result.Status);
+        // Act & Assert
+        await Assert.ThrowsAsync<LunoMappingException>(() => infraClient.FetchOrderAsync(orderId: orderId));
+    }
+    [Fact(DisplayName = "Given an order with no side, When looking up order, Then throws LunoMappingException.")]
+    public async Task GetOrderAsync_NullSide_ThrowsLunoMappingException()
+    {
+        var orderId = "BX123_NULL_SIDE";
+
+        _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("id", orderId).UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    order_id = orderId,
+                    status = "COMPLETE",
+                    side = (string?)null, // Missing or null side
+                    pair = "XBTZAR",
+                    limit_price = "1000",
+                    limit_volume = "1"
+                }));
+
+        var client = CreateClient();
+        var infraClient = (ILunoTradingClient)client.Trading;
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoMappingException>(() => infraClient.FetchOrderAsync(orderId: orderId));
+        Assert.Contains("side", ex.Message);
     }
 }

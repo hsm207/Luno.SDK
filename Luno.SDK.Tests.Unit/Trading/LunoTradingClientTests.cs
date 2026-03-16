@@ -20,21 +20,21 @@ public class LunoTradingClientTests
     {
         _tradingClientMock = new Mock<ILunoTradingClient>();
         
-        // 1. Setup the real dispatcher factory with mocks as its low-level dependencies
-        var factory = new DefaultCommandHandlerFactory(
-            _tradingClientMock.Object,
-            new Mock<ILunoAccountClient>().Object,
-            new Mock<ILunoMarketClient>().Object);
+        // 1. Setup a mocked resolver that returns our mock dependencies
+        var resolver = new Mock<Func<Type, object?>>();
+        resolver.Setup(x => x(typeof(ICommandHandler<PostLimitOrderCommand, Task<OrderResponse>>)))
+                .Returns(new PostLimitOrderHandler(_tradingClientMock.Object));
+        resolver.Setup(x => x(typeof(ICommandHandler<StopOrderCommand, Task<OrderResponse>>)))
+                .Returns(new StopOrderHandler(_tradingClientMock.Object));
 
-        // 2. Instantiate a real dispatcher (to test the extension -> dispatcher -> handler flow)
-        _dispatcher = new LunoCommandDispatcher(factory.CreateHandler);
+        // 2. Instantiate a real dispatcher
+        _dispatcher = new LunoCommandDispatcher(resolver.Object);
 
         // 3. Wire the dispatcher into the mocked sub-client
         _tradingClientMock.Setup(x => x.Commands).Returns(_dispatcher);
 
         _lunoClientMock = new Mock<ILunoClient>();
         _lunoClientMock.Setup(c => c.Trading).Returns(_tradingClientMock.Object);
-        _lunoClientMock.Setup(c => c.Commands).Returns(_dispatcher);
     }
 
     [Fact(DisplayName = "Given a request with PostOnly = true and TimeInForce = IOC, When posting limit order, Then throw LunoValidationException.")]
@@ -134,6 +134,7 @@ public class LunoTradingClientTests
         var ex = Assert.Throws<LunoValidationException>(() => parameters.Validate());
         Assert.Contains("Invalid StopDirection", ex.Message);
     }
+
 
     [Fact]
     public async Task StopOrderAsync_WithOrderId_ReturnsOrderResponse()

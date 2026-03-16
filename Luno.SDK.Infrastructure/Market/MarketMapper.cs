@@ -59,8 +59,7 @@ internal static class MarketMapper
         GeneratedStatus.POSTONLY => MarketStatus.PostOnly,
         GeneratedStatus.DISABLED => MarketStatus.Disabled,
         GeneratedStatus.UNKNOWN  => MarketStatus.Unknown,
-        null                     => MarketStatus.Unknown,
-        _ => throw new LunoMappingException($"Unmapped market status '{status}'.", nameof(GeneratedStatus)),
+        _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedStatus)),
     };
 
     /// <summary>
@@ -72,7 +71,6 @@ internal static class MarketMapper
         GeneratedGetTickerStatus.POSTONLY  => MarketStatus.PostOnly,
         GeneratedGetTickerStatus.DISABLED  => MarketStatus.Disabled,
         GeneratedGetTickerStatus.UNKNOWN   => MarketStatus.Unknown,
-        null                               => MarketStatus.Unknown,
-        _ => throw new LunoMappingException($"Unmapped market status '{status}'.", nameof(GeneratedGetTickerStatus)),
+        _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedGetTickerStatus)),
     };
 }

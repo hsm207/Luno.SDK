@@ -11,9 +11,8 @@ using Luno.SDK.Infrastructure.Telemetry;
 namespace Luno.SDK.Infrastructure.Trading;
 
 /// <summary>
+/// Provides a concrete implementation of the trading clients using the generated Kiota client.
 /// </summary>
-/// <param name="api">The generated Kiota API client.</param>
-/// <param name="commands">The command dispatcher for the application layer.</param>
 internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoTradingClient
 {
     private readonly LunoApiClient _apiClient = api;
@@ -60,7 +59,7 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             req.Options.Add(new LunoTelemetryOptions("StopOrder"));
         }, ct);
 
-        return response?.Success ?? false;
+        return response!.Success!.Value;
     }
 
     public async Task<Order> FetchOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default)
@@ -93,17 +92,16 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             Generated.Models.GetOrder2Response_status.AWAITING  => OrderStatus.Awaiting,
             Generated.Models.GetOrder2Response_status.PENDING   => OrderStatus.Pending,
             Generated.Models.GetOrder2Response_status.COMPLETE  => OrderStatus.Complete,
-            null                                                 => OrderStatus.Awaiting,
-            _ => throw new LunoMappingException($"Unmapped order status '{status}'.", nameof(Generated.Models.GetOrder2Response_status)),
+            _ => throw new LunoMappingException($"Unmapped or null order status '{status}'.", nameof(Generated.Models.GetOrder2Response_status)),
         };
 
 
-    private static OrderType? MapSide(Generated.Models.GetOrder2Response_side? side) =>
+    private static OrderType MapSide(Generated.Models.GetOrder2Response_side? side) =>
         side switch
         {
             Generated.Models.GetOrder2Response_side.BUY  => OrderType.Bid,
             Generated.Models.GetOrder2Response_side.SELL => OrderType.Ask,
-            _                                            => null,
+            _ => throw new LunoMappingException($"Unmapped or null order side '{side}'.", nameof(Generated.Models.GetOrder2Response_side)),
         };
 
     private static decimal? TryParseDecimal(string? raw) =>
