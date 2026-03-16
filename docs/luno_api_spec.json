@@ -395,7 +395,7 @@
             "name": "assets",
             "in": "query",
             "style": "form",
-            "explode": false,
+            "explode": true,
             "schema": {
               "type": "array",
               "items": {
