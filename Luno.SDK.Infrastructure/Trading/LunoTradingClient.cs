@@ -75,13 +75,44 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         // Parsing is Infrastructure's concern; business logic (comparison) belongs to the caller.
         return new Order
         {
-            OrderId      = response!.OrderId!,
-            ClientOrderId = response.ClientOrderId,
-            Status       = MapStatus(response.Status),
-            LimitPrice   = TryParseDecimal(response.LimitPrice),
-            LimitVolume  = TryParseDecimal(response.LimitVolume),
-            Side         = MapSide(response.Side),
+            OrderId           = ParseStringMandatory(response!.OrderId, "order_id"),
+            ClientOrderId     = response.ClientOrderId,
+            Status            = MapStatus(response.Status),
+            LimitPrice        = ParseDecimalMandatory(response.LimitPrice, "limit_price"),
+            LimitVolume       = ParseDecimalMandatory(response.LimitVolume, "limit_volume"),
+            Side              = MapSide(response.Side),
+            Pair              = ParseStringMandatory(response.Pair, "pair"),
+            CreationTimestamp = ParseLongMandatory(response.CreationTimestamp, "creation_timestamp"),
         };
+    }
+
+    public async Task<System.Collections.Generic.IReadOnlyList<Order>> FetchListOrdersAsync(
+        OrderStatus? state = null,
+        string? pair = null,
+        long? createdBefore = null,
+        long? limit = null,
+        CancellationToken ct = default)
+    {
+        var response = await _apiClient.Api.One.Listorders.GetAsync(req =>
+        {
+            if (state.HasValue) req.QueryParameters.StateAsGetStateQueryParameterType = MapListOrdersState(state.Value);
+            if (pair != null) req.QueryParameters.Pair = pair;
+            if (createdBefore.HasValue) req.QueryParameters.CreatedBefore = (int)createdBefore.Value;
+            
+            req.Options.Add(new LunoTelemetryOptions("ListOrders"));
+        }, ct);
+
+        return response?.Orders?.Select(apiOrder => new Order
+        {
+            OrderId           = ParseStringMandatory(apiOrder.OrderId, "order_id"),
+            ClientOrderId     = null, // List returns no client order ID
+            Status            = MapOrderStatus(apiOrder.State),
+            LimitPrice        = ParseDecimalMandatory(apiOrder.LimitPrice, "limit_price"),
+            LimitVolume       = ParseDecimalMandatory(apiOrder.LimitVolume, "limit_volume"),
+            Side              = MapOrderType(apiOrder.Type),
+            Pair              = ParseStringMandatory(apiOrder.Pair, "pair"),
+            CreationTimestamp = ParseLongMandatory(apiOrder.CreationTimestamp, "creation_timestamp"),
+        }).ToList() ?? new System.Collections.Generic.List<Order>();
     }
 
     // ── Private mappers ─────────────────────────────────────────────────────────
@@ -95,7 +126,6 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             _ => throw new LunoMappingException($"Unmapped or null order status '{status}'.", nameof(Generated.Models.GetOrder2Response_status)),
         };
 
-
     private static OrderType MapSide(Generated.Models.GetOrder2Response_side? side) =>
         side switch
         {
@@ -104,8 +134,43 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             _ => throw new LunoMappingException($"Unmapped or null order side '{side}'.", nameof(Generated.Models.GetOrder2Response_side)),
         };
 
+    private static OrderStatus MapOrderStatus(Generated.Models.Order_state? state) =>
+        state switch
+        {
+            Generated.Models.Order_state.PENDING  => OrderStatus.Pending,
+            Generated.Models.Order_state.COMPLETE => OrderStatus.Complete,
+            _ => throw new LunoMappingException($"Unmapped or null list order state '{state}'.", nameof(Generated.Models.Order_state))
+        };
+
+    private static OrderType MapOrderType(Generated.Models.Order_type? type) =>
+        type switch
+        {
+            Generated.Models.Order_type.BUY  => OrderType.Bid,
+            Generated.Models.Order_type.SELL => OrderType.Ask,
+            Generated.Models.Order_type.BID  => OrderType.Bid,
+            Generated.Models.Order_type.ASK  => OrderType.Ask,
+            _ => throw new LunoMappingException($"Unmapped or null order type '{type}'.", nameof(Generated.Models.Order_type))
+        };
+
+    private static Generated.Api.One.Listorders.GetStateQueryParameterType MapListOrdersState(OrderStatus state) =>
+        state switch
+        {
+            OrderStatus.Pending => Generated.Api.One.Listorders.GetStateQueryParameterType.PENDING,
+            OrderStatus.Complete => Generated.Api.One.Listorders.GetStateQueryParameterType.COMPLETE,
+            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(state), "Invalid list orders state.")),
+        };
+
     private static decimal? TryParseDecimal(string? raw) =>
         raw != null && decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : null;
+
+    private static decimal ParseDecimalMandatory(string? raw, string fieldName) =>
+        TryParseDecimal(raw) ?? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing or invalid in API response.");
+
+    private static string ParseStringMandatory(string? raw, string fieldName) =>
+        string.IsNullOrWhiteSpace(raw) ? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing or empty in API response.") : raw;
+
+    private static long ParseLongMandatory(long? raw, string fieldName) =>
+        raw ?? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing in API response.");
 
     private static PostTypeQueryParameterType MapType(OrderType type) =>
         type switch

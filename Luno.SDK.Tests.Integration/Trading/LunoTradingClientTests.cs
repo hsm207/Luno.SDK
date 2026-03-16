@@ -63,7 +63,8 @@ public class LunoTradingClientTests : IDisposable
                     limit_volume = "0.001",
                     side = "BUY",
                     status = "PENDING",
-                    pair = "XBTMYR"
+                    pair = "XBTMYR",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
@@ -97,7 +98,7 @@ public class LunoTradingClientTests : IDisposable
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
-                .WithBodyAsJson(new { order_id = expectedOrderId, client_order_id = clientId, status = "PENDING", side = "BUY", pair = "XBTMYR", limit_price = "100", limit_volume = "1" }));
+                .WithBodyAsJson(new { order_id = expectedOrderId, client_order_id = clientId, status = "PENDING", side = "BUY", pair = "XBTMYR", limit_price = "100", limit_volume = "1", creation_timestamp = 1600000000000L }));
 
         // 2. Stop order
         _server.Given(Request.Create().WithPath("/api/1/stoporder").UsingPost().WithParam("order_id", expectedOrderId))
@@ -240,7 +241,8 @@ public class LunoTradingClientTests : IDisposable
                     side = "BUY",
                     pair = "XBTZAR",
                     limit_price = "1000",
-                    limit_volume = "1"
+                    limit_volume = "1",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
@@ -350,7 +352,8 @@ public class LunoTradingClientTests : IDisposable
                     limit_volume = "0.001",
                     side = "BUY",
                     status = "PENDING",
-                    pair = "XBTMYR"
+                    pair = "XBTMYR",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
@@ -390,7 +393,8 @@ public class LunoTradingClientTests : IDisposable
                     limit_volume = "0.001",
                     side = "SELL", // Mismatch!
                     status = "PENDING",
-                    pair = "XBTMYR"
+                    pair = "XBTMYR",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
@@ -423,7 +427,8 @@ public class LunoTradingClientTests : IDisposable
                     side = "BUY",
                     pair = "XBTZAR",
                     limit_price = "1000",
-                    limit_volume = "1"
+                    limit_volume = "1",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
@@ -451,7 +456,8 @@ public class LunoTradingClientTests : IDisposable
                     side = "BUY",
                     pair = "XBTZAR",
                     limit_price = "1000",
-                    limit_volume = "1"
+                    limit_volume = "1",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
@@ -476,7 +482,8 @@ public class LunoTradingClientTests : IDisposable
                     side = (string?)null, // Missing or null side
                     pair = "XBTZAR",
                     limit_price = "1000",
-                    limit_volume = "1"
+                    limit_volume = "1",
+                    creation_timestamp = 1600000000000L
                 }));
 
         var client = CreateClient();
