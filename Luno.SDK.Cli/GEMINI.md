@@ -15,6 +15,7 @@ count=$(ls Luno.SDK.Cli/Concepts/Concept*.cs | wc -l); for ((i=1; i<=count; i++)
 2.  **Concept 02**: Dependency Injection integration (`AddLunoClient`) and Service Provider resolution.
 3.  **Concept 03**: `GetBalancesAsync` (Private API, Authentication Provider, User Secrets integration, and Complex Response Mapping).
 4.  **Concept 04**: `GetTickerAsync` (Targeted Public API and Single-Entity Mapping).
+5.  **Concept 05**: `TickerWrapping` (Pipeline Behaviors, Middleware Pattern, and DI Interception).
 
 ### 🔑 Prerequisites
 - Ensure API credentials (Key ID and Secret) are configured in **User Secrets** for the `Luno.SDK.Cli` project to allow Concept 03 to run non-interactively.

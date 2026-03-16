@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Luno.SDK;
 using Luno.SDK.Application;
 using Luno.SDK.Application.Market;
@@ -9,66 +10,66 @@ using Luno.SDK.Market;
 namespace Luno.SDK.Cli.Concepts;
 
 /// <summary>
-/// Provides a demonstration of how end-users can wrap SDK command handlers with custom decorators.
-/// This illustrates the power of the Command Dispatcher pattern for cross-cutting concerns.
+/// Provides a demonstration of wrapping SDK functionality with custom pipeline behaviors.
 /// </summary>
 public static class Concept05_TickerWrapping
 {
     public static async Task RunAsync()
     {
-        Console.WriteLine("--- Demonstration: User-Defined Handler Decorators ---");
+        Console.WriteLine("--- Demonstration: Pipeline Behaviors (Middleware) ---");
 
-        // 1. Initialize the client with a custom Command Handler Decorator
-        var options = new LunoClientOptions
+        // 1. Setup DI with a custom behavior
+        var services = new ServiceCollection();
+        services.AddLunoClient();
+        
+        // Register our logging behavior for the ticker query
+        services.AddTransient<IPipelineBehavior<GetTickerQuery, Task<TickerResponse>>, TickerLoggingBehavior>();
+
+        var sp = services.BuildServiceProvider();
+        var luno = sp.GetRequiredService<ILunoClient>();
+
+        Console.WriteLine("📡 Fetching ticker price with 'TickerLoggingBehavior' active...");
+
+        try
         {
-            // The decorator is a function that receives a handler and can return a wrapped version
-            CommandHandlerDecorator = handler =>
-            {
-                // We only want to wrap the GetTickerQuery handler in this example
-                if (handler is ICommandHandler<GetTickerQuery, Task<TickerResponse>> tickerHandler)
-                {
-                    return new TickerLoggingDecorator(tickerHandler);
-                }
+            var ticker = await luno.Market.GetTickerAsync("XBTZAR");
+            Console.WriteLine($"[RESULT] {ticker.Pair}: {ticker.Price:N2}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] {ex.Message}");
+        }
 
-                return handler; // Return as-is for everything else
-            }
-        };
-
-        var luno = new LunoClient(options);
-
-        // 2. Call the endpoint as usual
-        // The SDK will automatically apply our decorator inside the dispatcher!
-        Console.WriteLine("📡 Fetching ticker for XBTZAR...");
-        var ticker = await luno.Market.GetTickerAsync("XBTZAR");
-
-        Console.WriteLine($"✅ Result: {ticker.Pair} Price: {ticker.Price}");
         Console.WriteLine("--- Demonstration Complete ---");
     }
 
     /// <summary>
-    /// A simple decorator that logs the start and end of a GetTicker operation.
-    /// In a real app, this could be a Polly retry policy or a custom telemetry sink!
+    /// A custom pipeline behavior that logs the execution of a ticker request.
+    /// This follows the modern 'Middleware' pattern.
     /// </summary>
-    private class TickerLoggingDecorator(ICommandHandler<GetTickerQuery, Task<TickerResponse>> inner) 
-        : ICommandHandler<GetTickerQuery, Task<TickerResponse>>
+    private class TickerLoggingBehavior : IPipelineBehavior<GetTickerQuery, Task<TickerResponse>>
     {
-        public async Task<TickerResponse> HandleAsync(GetTickerQuery request, CancellationToken ct = default)
+        public async Task<TickerResponse> Handle(
+            GetTickerQuery request, 
+            RequestHandlerDelegate<Task<TickerResponse>> next, 
+            CancellationToken ct)
         {
-            var start = DateTime.UtcNow;
-            Console.WriteLine($"[LOG] Starting request for {request.Pair} at {start:HH:mm:ss.fff}");
-            
-            try 
+            var startTime = DateTime.UtcNow;
+            Console.WriteLine($"[PIPELINE] >>> Starting request for {request.Pair} at {startTime:HH:mm:ss.fff}");
+
+            try
             {
-                var result = await inner.HandleAsync(request, ct);
+                // Call the next step in the pipeline (could be another behavior or the actual handler)
+                var response = await next();
                 
-                var duration = DateTime.UtcNow - start;
-                Console.WriteLine($"[LOG] Request for {request.Pair} completed in {duration.TotalMilliseconds:N0}ms");
+                var duration = DateTime.UtcNow - startTime;
+                Console.WriteLine($"[PIPELINE] <<< Finished request in {duration.TotalMilliseconds}ms");
                 
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[LOG] Request for {request.Pair} FAILED: {ex.Message}");
+                Console.WriteLine($"[PIPELINE] !!! Request failed: {ex.Message}");
                 throw;
             }
         }
