@@ -12,10 +12,11 @@ public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher command
     public ILunoCommandDispatcher Commands { get; } = commands;
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<Balance>> FetchBalancesAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<Balance>> FetchBalancesAsync(string[]? assets = null, CancellationToken ct = default)
     {
         var response = await api.Api.One.Balance.GetAsync(requestConfiguration =>
         {
+            requestConfiguration.QueryParameters.Assets = assets;
             requestConfiguration.Options.Add(new Luno.SDK.Infrastructure.Telemetry.LunoTelemetryOptions("GetBalances"));
         }, ct).ConfigureAwait(false);
 

@@ -13,9 +13,10 @@ public interface ILunoAccountOperations
     /// <summary>
     /// Asynchronously fetches a list of account balances.
     /// </summary>
+    /// <param name="assets">Only return balances for wallets with these currencies (optional).</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>A <see cref="Task"/> containing a read-only list of <see cref="Balance"/>.</returns>
-    Task<IReadOnlyList<Balance>> FetchBalancesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<Balance>> FetchBalancesAsync(string[]? assets = null, CancellationToken ct = default);
 }
 
 /// <summary>
