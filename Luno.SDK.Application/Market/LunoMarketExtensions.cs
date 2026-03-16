@@ -18,7 +18,22 @@ public static class LunoMarketExtensions
         this ILunoMarketClient client,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetTickersQuery, IAsyncEnumerable<TickerResponse>>(new GetTickersQuery(), ct);
+        return client.GetTickersAsync(pairs: null, ct: ct);
+    }
+
+    /// <summary>
+    /// Asynchronously fetches a stream of market tickers for the specified pairs.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
+    /// <param name="pairs">The market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="TickerResponse"/> representing the market state.</returns>
+    public static IAsyncEnumerable<TickerResponse> GetTickersAsync(
+        this ILunoMarketClient client,
+        IEnumerable<string>? pairs,
+        CancellationToken ct = default)
+    {
+        return client.Commands.DispatchAsync<GetTickersQuery, IAsyncEnumerable<TickerResponse>>(new GetTickersQuery(pairs?.ToArray()), ct);
     }
 
     /// <summary>

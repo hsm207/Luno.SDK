@@ -129,15 +129,15 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
     /// </summary>
     private static void EnsureParametersMatch(Order existing, LimitOrderParameters expected)
     {
-        if (existing.LimitPrice.HasValue && existing.LimitPrice != expected.Price)
+        if (existing.LimitPrice != expected.Price)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Price={existing.LimitPrice} but request has Price={expected.Price}.");
 
-        if (existing.LimitVolume.HasValue && existing.LimitVolume != expected.Volume)
+        if (existing.LimitVolume != expected.Volume)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Volume={existing.LimitVolume} but request has Volume={expected.Volume}.");
 
-        if (existing.Side.HasValue && existing.Side != expected.Type)
+        if (existing.Side != expected.Type)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Side={existing.Side} but request has Side={expected.Type}.");
     }

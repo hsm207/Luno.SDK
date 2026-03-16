@@ -18,10 +18,14 @@ public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands
 
     /// <inheritdoc />
     public async IAsyncEnumerable<Ticker> FetchTickersAsync(
+        string[]? pairs = null,
         [EnumeratorCancellation] CancellationToken ct = default) // Changed return type to Ticker, and added using for EnumeratorCancellation
     {
         var response = await _apiClient.Api.One.Tickers.GetAsync(req =>
-            req.Options.Add(new LunoTelemetryOptions("GetMarketTickers")), ct);
+        {
+            req.QueryParameters.Pair = pairs;
+            req.Options.Add(new LunoTelemetryOptions("GetMarketTickers"));
+        }, ct);
         
         foreach (var dto in response!.Tickers!)
         {

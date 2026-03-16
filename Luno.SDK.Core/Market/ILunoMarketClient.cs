@@ -11,11 +11,12 @@ namespace Luno.SDK.Market;
 public interface ILunoMarketOperations
 {
     /// <summary>
-    /// Asynchronously fetches a stream of market tickers for all available pairs.
+    /// Asynchronously fetches a stream of market tickers.
     /// </summary>
+    /// <param name="pairs">Optional market pairs to filter for.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="Ticker"/>.</returns>
-    IAsyncEnumerable<Ticker> FetchTickersAsync(CancellationToken ct = default);
+    IAsyncEnumerable<Ticker> FetchTickersAsync(string[]? pairs = null, CancellationToken ct = default);
     
     /// <summary>
     /// Asynchronously fetches a market ticker for a specific pair.

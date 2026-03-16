@@ -143,6 +143,69 @@ public class LunoMarketClientTests : IDisposable
         Assert.True(hasSuccessMeasurement);
     }
 
+    [Fact(DisplayName = "Given multiple pairs, When fetching tickers, Then verify that the outgoing query string is 'exploded' (pair=A&pair=B).")]
+    public async Task GetTickersAsync_WithPairsFilter_SendsExplodedQueryString()
+    {
+        // Arrange
+        var pairs = new[] { "XBTMYR", "ETHMYR" };
+        
+        // We broadly match the path to avoid 404s if param order/format varies slightly,
+        // then verify the exact boundary handshake in the Assert phase.
+        _server.Given(Request.Create()
+                .WithPath("/api/1/tickers")
+                .UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    tickers = new[]
+                    {
+                        new
+                        {
+                            pair = "XBTMYR",
+                            timestamp = 1772555388322,
+                            bid = "1000000",
+                            ask = "1000100",
+                            last_trade = "1000050",
+                            rolling_24_hour_volume = "500",
+                            status = "ACTIVE"
+                        },
+                        new
+                        {
+                            pair = "ETHMYR",
+                            timestamp = 1772555388322,
+                            bid = "50000",
+                            ask = "50100",
+                            last_trade = "50050",
+                            rolling_24_hour_volume = "1000",
+                            status = "ACTIVE"
+                        }
+                    }
+                }));
+
+        var client = CreateClient();
+
+        // Act
+        var results = new List<Luno.SDK.Application.Market.TickerResponse>();
+        await foreach (var ticker in client.Market.GetTickersAsync(pairs))
+        {
+            results.Add(ticker);
+        }
+
+        // Assert
+        Assert.NotEmpty(results);
+        
+        // High-fidelity verification of the outgoing request
+        var logs = _server.LogEntries;
+        Assert.NotEmpty(logs);
+        var request = logs.First().RequestMessage;
+        
+        // Verify exploded pair parameters
+        Assert.Contains("pair=XBTMYR", request.Url);
+        Assert.Contains("pair=ETHMYR", request.Url);
+    }
+
     [Fact(DisplayName = "Given the Luno API returns a 500 error, When fetching tickers, Then bubble up the correct LunoApiException AND emit an error trace signal.")]
     public async Task GetTickers_ApiFails_BubblesExceptionAndEmitsErrorTrace()
     {

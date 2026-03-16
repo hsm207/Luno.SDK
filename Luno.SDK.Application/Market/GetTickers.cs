@@ -6,7 +6,8 @@ namespace Luno.SDK.Application.Market;
 /// <summary>
 /// Returns the latest ticker indicators from all active Luno exchanges.
 /// </summary>
-public record GetTickersQuery;
+/// <param name="Pairs">Optional market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
+public record GetTickersQuery(string[]? Pairs = null);
 
 /// <summary>
 /// Orchestrates the retrieval of market tickers.
@@ -24,7 +25,7 @@ public class GetTickersHandler(ILunoMarketOperations market) : ICommandHandler<G
         GetTickersQuery query,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
-        await foreach (var ticker in market.FetchTickersAsync(ct).WithCancellation(ct))
+        await foreach (var ticker in market.FetchTickersAsync(query.Pairs, ct).WithCancellation(ct))
         {
             yield return ticker.ToResponse();
         }

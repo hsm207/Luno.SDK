@@ -24,6 +24,16 @@ public interface ILunoTradingOperations
     /// Asynchronously retrieves detailed information about an order.
     /// </summary>
     Task<Order> FetchOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Asynchronously retrieves a list of orders.
+    /// </summary>
+    Task<IReadOnlyList<Order>> FetchListOrdersAsync(
+        OrderStatus? state = null,
+        string? pair = null,
+        long? createdBefore = null,
+        long? limit = null,
+        CancellationToken ct = default);
 }
 
 /// <summary>
