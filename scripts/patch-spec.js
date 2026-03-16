@@ -33,6 +33,57 @@ if (balancePath && balancePath.get && balancePath.get.parameters) {
     }
 }
 
+// 3. Fix the 'tickers' endpoint 'pair' parameter serialization
+// Same as balance, description mandates multiple params (pair=XBTZAR&pair=ETHZAR)
+// which requires 'explode: true'.
+const tickersPath = spec.paths['/api/1/tickers'];
+if (tickersPath && tickersPath.get && tickersPath.get.parameters) {
+    const pairParam = tickersPath.get.parameters.find(p => p.name === 'pair');
+    if (pairParam) {
+        pairParam.explode = true;
+        console.log("Successfully patched 'pair' parameter to 'explode: true'.");
+    }
+}
+
+// 4. Patch /api/1/listorders created_before to support 64-bit integers (Unix ms)
+const listOrdersPath = spec.paths['/api/1/listorders'];
+if (listOrdersPath && listOrdersPath.get && listOrdersPath.get.parameters) {
+  const createdBeforeParam = listOrdersPath.get.parameters.find(p => p.name === 'created_before');
+  if (createdBeforeParam && createdBeforeParam.schema) {
+    createdBeforeParam.schema.format = 'int64';
+    console.log("Successfully patched 'listorders.created_before' parameter to 'int64'.");
+  }
+}
+
+// 5. Patch Order component timestamps
+const orderSchema = spec.components.schemas['Order'];
+if (orderSchema && orderSchema.properties) {
+  ['completed_timestamp', 'creation_timestamp', 'expiration_timestamp'].forEach(prop => {
+    if (orderSchema.properties[prop]) {
+      orderSchema.properties[prop].format = 'int64';
+      console.log(`Successfully patched 'Order.${prop}' to 'int64'.`);
+    }
+  });
+}
+
+// 6. Patch Ticker component timestamp
+const tickerSchema = spec.components.schemas['Ticker'];
+if (tickerSchema && tickerSchema.properties && tickerSchema.properties['timestamp']) {
+  tickerSchema.properties['timestamp'].format = 'int64';
+  console.log("Successfully patched 'Ticker.timestamp' to 'int64'.");
+}
+
+// 7. Patch GetOrder2Response component timestamps
+const getOrder2ResponseSchema = spec.components.schemas['GetOrder2Response'];
+if (getOrder2ResponseSchema && getOrder2ResponseSchema.properties) {
+  ['completed_timestamp', 'creation_timestamp', 'expiration_timestamp'].forEach(prop => {
+    if (getOrder2ResponseSchema.properties[prop]) {
+      getOrder2ResponseSchema.properties[prop].format = 'int64';
+      console.log(`Successfully patched 'GetOrder2Response.${prop}' to 'int64'.`);
+    }
+  });
+}
+
 console.log(`Writing intermediate patched specification: ${outputPath}`);
 fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 

@@ -22,7 +22,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Tickers
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public TickersRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/tickers{?pair}", pathParameters)
+        public TickersRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/tickers{?pair*}", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Tickers
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public TickersRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/tickers{?pair}", rawUrl)
+        public TickersRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/tickers{?pair*}", rawUrl)
         {
         }
         /// <summary>
