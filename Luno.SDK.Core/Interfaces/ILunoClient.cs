@@ -26,11 +26,6 @@ public interface ILunoClient
     ILunoTradingClient Trading { get; }
 
     /// <summary>
-    /// Gets the command dispatcher used to orchestrate application-layer logic.
-    /// </summary>
-    ILunoCommandDispatcher Commands { get; }
-
-    /// <summary>
     /// Gets the observability provider for the SDK, including traces and metrics.
     /// </summary>
     ILunoTelemetry Telemetry { get; }

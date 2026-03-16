@@ -4,11 +4,8 @@ using Luno.SDK.Infrastructure.Generated;
 namespace Luno.SDK.Infrastructure.Account;
 
 /// <summary>
-/// Provides a concrete implementation of the <see cref="ILunoAccountClient"/> interface
-/// using the generated Kiota client.
+/// Provides a concrete implementation of the account clients using the generated Kiota client.
 /// </summary>
-/// <param name="api">The generated Kiota API client.</param>
-/// <param name="commands">The command dispatcher for the application layer.</param>
 public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoAccountClient
 {
     /// <inheritdoc />
@@ -22,7 +19,6 @@ public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher command
             requestConfiguration.Options.Add(new Luno.SDK.Infrastructure.Telemetry.LunoTelemetryOptions("GetBalances"));
         }, ct).ConfigureAwait(false);
 
-        return response?.Balance?.Where(b => b != null).Select(b => b!.ToDomain()).ToList().AsReadOnly()
-            ?? throw new LunoMappingException("API returned a null balances collection.", "BalanceResponse");
+        return response!.Balance!.Select(b => b!.ToDomain()).ToList().AsReadOnly();
     }
 }

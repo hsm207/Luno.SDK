@@ -5,15 +5,11 @@ using System.Threading.Tasks;
 namespace Luno.SDK.Market;
 
 /// <summary>
-/// Defines the contract for Luno Market data operations.
+/// Defines the low-level data-fetching operations for Luno Market.
+/// This interface is used by handlers to avoid a circular dependency on the command dispatcher.
 /// </summary>
-public interface ILunoMarketClient
+public interface ILunoMarketOperations
 {
-    /// <summary>
-    /// Gets the command dispatcher used to orchestrate market application-layer logic.
-    /// </summary>
-    ILunoCommandDispatcher Commands { get; }
-
     /// <summary>
     /// Asynchronously fetches a stream of market tickers for all available pairs.
     /// </summary>
@@ -28,4 +24,15 @@ public interface ILunoMarketClient
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>A <see cref="Task"/> returning the <see cref="Ticker"/>.</returns>
     Task<Ticker> FetchTickerAsync(string pair, CancellationToken ct = default);
+}
+
+/// <summary>
+/// Defines the full contract for Luno Market data operations, including command dispatching.
+/// </summary>
+public interface ILunoMarketClient : ILunoMarketOperations
+{
+    /// <summary>
+    /// Gets the command dispatcher used to orchestrate market application-layer logic.
+    /// </summary>
+    ILunoCommandDispatcher Commands { get; }
 }

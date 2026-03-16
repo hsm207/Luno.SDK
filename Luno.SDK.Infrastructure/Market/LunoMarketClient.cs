@@ -7,10 +7,8 @@ using System.Runtime.CompilerServices;
 namespace Luno.SDK;
 
 /// <summary>
-/// Provides a concrete implementation of the <see cref="ILunoMarketClient"/> interface using the Kiota-generated API client.
+/// Provides a concrete implementation of the market clients using the Kiota-generated API client.
 /// </summary>
-/// <param name="api">The generated Kiota API client.</param>
-/// <param name="commands">The command dispatcher for the application layer.</param>
 public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoMarketClient
 {
     private readonly LunoApiClient _apiClient = api; // Changed to use the injected api
@@ -24,11 +22,8 @@ public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands
     {
         var response = await _apiClient.Api.One.Tickers.GetAsync(req =>
             req.Options.Add(new LunoTelemetryOptions("GetMarketTickers")), ct);
-
-        var tickers = response?.Tickers
-            ?? throw new LunoMappingException("API returned a null tickers collection.", "TickersResponse");
-
-        foreach (var dto in tickers)
+        
+        foreach (var dto in response!.Tickers!)
         {
             yield return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(dto);
         }
@@ -43,9 +38,6 @@ public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands
             req.Options.Add(new LunoTelemetryOptions("GetMarketTicker"));
         }, ct);
 
-        if (response == null)
-            throw new LunoMappingException("API returned a null ticker response.", "GetTickerResponse");
-
-        return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(response);
+        return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(response!);
     }
 }
