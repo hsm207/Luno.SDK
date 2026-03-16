@@ -156,7 +156,39 @@ var tickers = response?.Tickers
 
 ---
 
-## Summary — The Nine Diagnostics to Run on Every Infrastructure Method
+## Violation 9 — Infrastructure Integrity and the "Guessing" Anti-Pattern
+
+### What Was Wrong
+In a misguided attempt at resilience, the infrastructure mappers were "guessing" the domain state when the API response was ambiguous:
+- Mapping `null` or unrecognized strings to `OrderStatus.Awaiting` because "it's probably that."
+- Returnining `null` for unmapped order sides instead of throwing, allowing `null` to leak into the Application layer.
+- Quietly defaulting missing balance fields to `0`.
+
+### The Rule
+> **Infrastructure must never "guess" or "default" missing mandatory data.**
+> A mapping failure is a hard failure. If the API returns data that violates our domain invariants (e.g., an order without a status), the infrastructure bridge must collapse immediately by throwing a `LunoMappingException`.
+> Guessing a default state (like `Awaiting`) is a **data integrity violation** that can lead to catastrophic downstream failures (e.g., trying to cancel an order that is actually already closed).
+
+### The "Fail-Fast" Mandate
+1. **No Silent Defaults**: If an enum value is unrecognized, throw.
+2. **No Null Leaks**: If a mandatory field is `null`, throw.
+3. **No Guessing**: A "safe" default is never safe if it's not strictly true.
+
+### Correct Form
+```csharp
+// FAIL-FAST MAPPING
+status switch
+{
+    GeneratedStatus.PENDING => OrderStatus.Awaiting,
+    GeneratedStatus.COMPLETE => OrderStatus.Filled,
+    // ...
+    _ => throw new LunoMappingException($"Unmapped status: {status}", nameof(GetOrder2Response))
+};
+```
+
+---
+
+## Summary — The Ten Diagnostics to Run on Every Infrastructure Method
 
 | Principle | Violation | Description |
 |---|---|---|
@@ -167,6 +199,13 @@ var tickers = response?.Tickers
 | [LSP: Documentation and Exceptions](file:///home/user/Documents/GitHub/Luno.SDK/docs/lessons/srp_boundary_and_reconciliation.md#lsp-documentation--exception-normalization) | LSP | Use `/// <exception>` to define contracts. Never leak framework exceptions. |
 | [ISP: Client Segregation & Extension Shadowing](file:///home/user/Documents/GitHub/Luno.SDK/docs/lessons/srp_boundary_and_reconciliation.md#isp-client-segregation--naming-shadowing) | ISP | Keep interfaces small. Extension methods can shadow interface methods; use `Fetch`/`Get` distinction to resolve. |
 | [DIP: Command Dispatcher & Composition Root](file:///home/user/Documents/GitHub/Luno.SDK/docs/lessons/srp_boundary_and_reconciliation.md#dip-command-dispatcher--composition-root) | DIP | Decouple orchestration from public API. Use a Command Dispatcher to centralize cross-cutting concerns without forcing DI. |
+| [Infrastructure Integrity & Fail-Fast](file:///home/user/Documents/GitHub/Luno.SDK/docs/lessons/srp_boundary_and_reconciliation.md#violation-9--infrastructure-integrity-and-the-guessing-anti-pattern) | SRP | Infrastructure must never guess defaults or silent failures. Throw on ambiguous or missing mandatory API data. |
+| [File-Level SRP & Focused Abstractions](file:///home/user/Documents/GitHub/Luno.SDK/docs/lessons/srp_boundary_and_reconciliation.md#violation-10--file-level-srp-and-the-overloaded-abstraction-file) | SRP | Avoid catch-all 'Abstractions' files. Each core interface/feature deserves its own home for better navigability and isolation. |
+
+---
+
+> [!NOTE]
+> **What's Next?** The architecture further evolved in Phase 17+ with Tiered Interfaces and Pipeline Behaviors. See [Modern DI and Pipeline Patterns](file:///home/user/Documents/GitHub/Luno.SDK/docs/lessons/modern_di_and_pipeline_patterns.md) for the next level of architectural maturity.
 
 ## Violation 7 — Interface Segregation (ISP) and the "Baggage" of Extension Methods
 
@@ -220,3 +259,29 @@ We had `ILunoMarketClient.GetTickersAsync()` returning raw entities (Core), and 
 Adopt a "Fetch/Get" layer separation:
 - **Core Gateways** use the verb `Fetch*` (e.g., `FetchTickersAsync`).
 - **Application Extensions** use the verb `Get*` (e.g., `GetTickersAsync`).
+
+---
+
+## Violation 10 — File-Level SRP and the Overloaded "Abstraction" File
+
+### What Was Wrong
+We had a catch-all file named `ApplicationAbstractions.cs` containing:
+- `ILunoCommandDispatcher` (Resolution concern)
+- `IPipelineBehavior` (Interception concern)
+- `ICommandHandler` (Execution concern)
+- Several delegates and secondary interfaces.
+
+While they are all "abstractions," they serve fundamentally different stakeholders and features. Grouping them together violates SRP at the file/component level, leading to "baggage" where a developer only interested in behaviors is forced to load and reason about the dispatcher.
+
+### The Rule
+> **File-Level SRP: One file, one primary concern.**
+> Avoid "General," "Common," or "Abstractions" files that act as junk drawers for interfaces. 
+> Each core interface that defines a distinct architectural feature (Dispatching vs. Interception) deserves its own dedicated file. 
+
+### Correct Form
+Split into focused, single-purpose files:
+- `ILunoCommandDispatcher.cs`
+- `IPipelineBehavior.cs`
+- `ICommandHandler.cs`
+
+This improves IntelliSense relevance, project navigability, and prevents the "moral decay" of an architecture that starts allowing unrelated code into a generic container. 🛡️✨
