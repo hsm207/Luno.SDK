@@ -12,13 +12,15 @@ const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 // Kiota inconsistently maps "format: timestamp" to int or long.
 // We force int64 to ensure 13-digit millisecond timestamps never overflow.
 const ticker = spec.components.schemas.Ticker;
-if (ticker) {
+if (ticker && ticker.properties.timestamp) {
     ticker.properties.timestamp.format = 'int64';
+    console.log("Successfully patched 'Ticker.timestamp' to 'int64'.");
 }
 
 const getTickerResponse = spec.components.schemas.GetTickerResponse;
-if (getTickerResponse) {
+if (getTickerResponse && getTickerResponse.properties.timestamp) {
     getTickerResponse.properties.timestamp.format = 'int64';
+    console.log("Successfully patched 'GetTickerResponse.timestamp' to 'int64'.");
 }
 
 // 2. Fix the account balance 'assets' parameter serialization
@@ -64,13 +66,6 @@ if (orderSchema && orderSchema.properties) {
       console.log(`Successfully patched 'Order.${prop}' to 'int64'.`);
     }
   });
-}
-
-// 6. Patch Ticker component timestamp
-const tickerSchema = spec.components.schemas['Ticker'];
-if (tickerSchema && tickerSchema.properties && tickerSchema.properties['timestamp']) {
-  tickerSchema.properties['timestamp'].format = 'int64';
-  console.log("Successfully patched 'Ticker.timestamp' to 'int64'.");
 }
 
 // 7. Patch GetOrder2Response component timestamps
