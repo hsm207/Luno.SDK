@@ -24,7 +24,7 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         {
             // Mandatory fields
             req.QueryParameters.Pair = request.Pair;
-            req.QueryParameters.TypeAsPostTypeQueryParameterType = MapType(request.Type);
+            req.QueryParameters.TypeAsPostTypeQueryParameterType = MapPostSide(request.Side);
             req.QueryParameters.Volume = request.Volume.ToString(CultureInfo.InvariantCulture);
             req.QueryParameters.Price = request.Price.ToString(CultureInfo.InvariantCulture);
 
@@ -71,19 +71,7 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             req.Options.Add(new LunoTelemetryOptions("GetOrder"));
         }, ct);
 
-        // Infrastructure's only job here: map Kiota response fields → domain model.
-        // Parsing is Infrastructure's concern; business logic (comparison) belongs to the caller.
-        return new Order
-        {
-            OrderId           = ParseStringMandatory(response!.OrderId, "order_id"),
-            ClientOrderId     = response.ClientOrderId,
-            Status            = MapStatus(response.Status),
-            LimitPrice        = ParseDecimalMandatory(response.LimitPrice, "limit_price"),
-            LimitVolume       = ParseDecimalMandatory(response.LimitVolume, "limit_volume"),
-            Side              = MapSide(response.Side),
-            Pair              = ParseStringMandatory(response.Pair, "pair"),
-            CreationTimestamp = ParseLongMandatory(response.CreationTimestamp, "creation_timestamp"),
-        };
+        return MapGetOrderResponse(response!);
     }
 
     public async Task<System.Collections.Generic.IReadOnlyList<Order>> FetchListOrdersAsync(
@@ -93,29 +81,141 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         long? limit = null,
         CancellationToken ct = default)
     {
-        var response = await _apiClient.Api.One.Listorders.GetAsync(req =>
+        var response = await _apiClient.Api.Exchange.Two.Listorders.GetAsync(req =>
         {
-            if (state.HasValue) req.QueryParameters.StateAsGetStateQueryParameterType = MapListOrdersState(state.Value);
+            if (state.HasValue) req.QueryParameters.Closed = state.Value == OrderStatus.Complete;
             if (pair != null) req.QueryParameters.Pair = pair;
             if (createdBefore.HasValue) req.QueryParameters.CreatedBefore = (int)createdBefore.Value;
-            
+            if (limit.HasValue) req.QueryParameters.Limit = (int)limit.Value;
+
             req.Options.Add(new LunoTelemetryOptions("ListOrders"));
         }, ct);
 
-        return response?.Orders?.Select(apiOrder => new Order
-        {
-            OrderId           = ParseStringMandatory(apiOrder.OrderId, "order_id"),
-            ClientOrderId     = null, // List returns no client order ID
-            Status            = MapOrderStatus(apiOrder.State),
-            LimitPrice        = ParseDecimalMandatory(apiOrder.LimitPrice, "limit_price"),
-            LimitVolume       = ParseDecimalMandatory(apiOrder.LimitVolume, "limit_volume"),
-            Side              = MapOrderType(apiOrder.Type),
-            Pair              = ParseStringMandatory(apiOrder.Pair, "pair"),
-            CreationTimestamp = ParseLongMandatory(apiOrder.CreationTimestamp, "creation_timestamp"),
-        }).ToList() ?? new System.Collections.Generic.List<Order>();
+        return response?.Orders?.Select(apiOrder => MapOrderV2(apiOrder)).ToList()
+            ?? new System.Collections.Generic.List<Order>();
     }
 
-    // ── Private mappers ─────────────────────────────────────────────────────────
+    // ── Response → Domain mapping ────────────────────────────────────────────────
+
+    private static Order MapGetOrderResponse(Generated.Models.GetOrder2Response r)
+    {
+        var orderId           = ParseStringMandatory(r.OrderId, "order_id");
+        var side              = MapSide(r.Side);
+        var status            = MapStatus(r.Status);
+        var pair              = ParseStringMandatory(r.Pair, "pair");
+        var creationTimestamp  = ParseLongMandatory(r.CreationTimestamp, "creation_timestamp");
+        var baseAccountId     = (long?)r.BaseAccountId;
+        var counterAccountId  = (long?)r.CounterAccountId;
+        var clientOrderId     = r.ClientOrderId;
+        var completedTimestamp = r.CompletedTimestamp;
+        var expirationTimestamp = r.ExpirationTimestamp;
+        var filledBase        = TryParseDecimal(r.Base);
+        var filledCounter     = TryParseDecimal(r.Counter);
+        var feeBase           = TryParseDecimal(r.FeeBase);
+        var feeCounter        = TryParseDecimal(r.FeeCounter);
+
+        var type = MapOrderType(r.Type);
+
+        return type switch
+        {
+            OrderType.Limit => new LimitOrder(
+                orderId, side, status, pair, creationTimestamp,
+                baseAccountId, counterAccountId,
+                limitPrice: ParseDecimalMandatory(r.LimitPrice, "limit_price"),
+                limitVolume: ParseDecimalMandatory(r.LimitVolume, "limit_volume"),
+                timeInForce: MapTimeInForceString(r.TimeInForce),
+                clientOrderId: clientOrderId,
+                completedTimestamp: completedTimestamp,
+                expirationTimestamp: expirationTimestamp,
+                filledBase: filledBase, filledCounter: filledCounter,
+                feeBase: feeBase, feeCounter: feeCounter),
+
+            OrderType.Market => new MarketOrder(
+                orderId, side, status, pair, creationTimestamp,
+                baseAccountId, counterAccountId,
+                clientOrderId: clientOrderId,
+                completedTimestamp: completedTimestamp,
+                expirationTimestamp: expirationTimestamp,
+                filledBase: filledBase, filledCounter: filledCounter,
+                feeBase: feeBase, feeCounter: feeCounter),
+
+            OrderType.StopLimit => new StopLimitOrder(
+                orderId, side, status, pair, creationTimestamp,
+                baseAccountId, counterAccountId,
+                stopPrice: ParseDecimalMandatory(r.StopPrice, "stop_price"),
+                stopDirection: MapStopDirectionResponse(r.StopDirection),
+                limitPrice: ParseDecimalMandatory(r.LimitPrice, "limit_price"),
+                limitVolume: ParseDecimalMandatory(r.LimitVolume, "limit_volume"),
+                clientOrderId: clientOrderId,
+                completedTimestamp: completedTimestamp,
+                expirationTimestamp: expirationTimestamp,
+                filledBase: filledBase, filledCounter: filledCounter,
+                feeBase: feeBase, feeCounter: feeCounter),
+
+            _ => throw new LunoMappingException($"Unmapped order type '{type}'.", nameof(Generated.Models.GetOrder2Response_type)),
+        };
+    }
+
+    private static Order MapOrderV2(Generated.Models.OrderV2 r)
+    {
+        var orderId            = ParseStringMandatory(r.OrderId, "order_id");
+        var side               = MapSideV2(r.Side);
+        var status             = MapStatusV2(r.Status);
+        var pair               = ParseStringMandatory(r.Pair, "pair");
+        var creationTimestamp   = (long?)r.CreationTimestamp ?? throw new LunoMappingException("Mandatory field 'creation_timestamp' is missing in API response.");
+        var baseAccountId      = (long?)r.BaseAccountId;
+        var counterAccountId   = (long?)r.CounterAccountId;
+        var clientOrderId      = r.ClientOrderId;
+        var completedTimestamp  = (long?)r.CompletedTimestamp;
+        var expirationTimestamp = (long?)r.ExpirationTimestamp;
+        var filledBase         = TryParseDecimal(r.Base);
+        var filledCounter      = TryParseDecimal(r.Counter);
+        var feeBase            = TryParseDecimal(r.FeeBase);
+        var feeCounter         = TryParseDecimal(r.FeeCounter);
+
+        var type = MapOrderTypeV2(r.Type);
+
+        return type switch
+        {
+            OrderType.Limit => new LimitOrder(
+                orderId, side, status, pair, creationTimestamp,
+                baseAccountId, counterAccountId,
+                limitPrice: ParseDecimalMandatory(r.LimitPrice, "limit_price"),
+                limitVolume: ParseDecimalMandatory(r.LimitVolume, "limit_volume"),
+                timeInForce: MapTimeInForceString(r.TimeInForce),
+                clientOrderId: clientOrderId,
+                completedTimestamp: completedTimestamp,
+                expirationTimestamp: expirationTimestamp,
+                filledBase: filledBase, filledCounter: filledCounter,
+                feeBase: feeBase, feeCounter: feeCounter),
+
+            OrderType.Market => new MarketOrder(
+                orderId, side, status, pair, creationTimestamp,
+                baseAccountId, counterAccountId,
+                clientOrderId: clientOrderId,
+                completedTimestamp: completedTimestamp,
+                expirationTimestamp: expirationTimestamp,
+                filledBase: filledBase, filledCounter: filledCounter,
+                feeBase: feeBase, feeCounter: feeCounter),
+
+            OrderType.StopLimit => new StopLimitOrder(
+                orderId, side, status, pair, creationTimestamp,
+                baseAccountId, counterAccountId,
+                stopPrice: ParseDecimalMandatory(r.StopPrice, "stop_price"),
+                stopDirection: MapStopDirectionV2(r.StopDirection),
+                limitPrice: ParseDecimalMandatory(r.LimitPrice, "limit_price"),
+                limitVolume: ParseDecimalMandatory(r.LimitVolume, "limit_volume"),
+                clientOrderId: clientOrderId,
+                completedTimestamp: completedTimestamp,
+                expirationTimestamp: expirationTimestamp,
+                filledBase: filledBase, filledCounter: filledCounter,
+                feeBase: feeBase, feeCounter: feeCounter),
+
+            _ => throw new LunoMappingException($"Unmapped order type '{type}'.", nameof(Generated.Models.OrderV2_type)),
+        };
+    }
+
+    // ── Private mappers (GetOrder V3) ────────────────────────────────────────────
 
     private static OrderStatus MapStatus(Generated.Models.GetOrder2Response_status? status) =>
         status switch
@@ -126,58 +226,87 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             _ => throw new LunoMappingException($"Unmapped or null order status '{status}'.", nameof(Generated.Models.GetOrder2Response_status)),
         };
 
-    private static OrderType MapSide(Generated.Models.GetOrder2Response_side? side) =>
+    private static OrderSide MapSide(Generated.Models.GetOrder2Response_side? side) =>
         side switch
         {
-            Generated.Models.GetOrder2Response_side.BUY  => OrderType.Bid,
-            Generated.Models.GetOrder2Response_side.SELL => OrderType.Ask,
+            Generated.Models.GetOrder2Response_side.BUY  => OrderSide.Buy,
+            Generated.Models.GetOrder2Response_side.SELL => OrderSide.Sell,
             _ => throw new LunoMappingException($"Unmapped or null order side '{side}'.", nameof(Generated.Models.GetOrder2Response_side)),
         };
 
-    private static OrderStatus MapOrderStatus(Generated.Models.Order_state? state) =>
-        state switch
-        {
-            Generated.Models.Order_state.PENDING  => OrderStatus.Pending,
-            Generated.Models.Order_state.COMPLETE => OrderStatus.Complete,
-            _ => throw new LunoMappingException($"Unmapped or null list order state '{state}'.", nameof(Generated.Models.Order_state))
-        };
-
-    private static OrderType MapOrderType(Generated.Models.Order_type? type) =>
+    private static OrderType MapOrderType(Generated.Models.GetOrder2Response_type? type) =>
         type switch
         {
-            Generated.Models.Order_type.BUY  => OrderType.Bid,
-            Generated.Models.Order_type.SELL => OrderType.Ask,
-            Generated.Models.Order_type.BID  => OrderType.Bid,
-            Generated.Models.Order_type.ASK  => OrderType.Ask,
-            _ => throw new LunoMappingException($"Unmapped or null order type '{type}'.", nameof(Generated.Models.Order_type))
+            Generated.Models.GetOrder2Response_type.LIMIT     => OrderType.Limit,
+            Generated.Models.GetOrder2Response_type.MARKET    => OrderType.Market,
+            Generated.Models.GetOrder2Response_type.STOP_LIMIT => OrderType.StopLimit,
+            _ => throw new LunoMappingException($"Unmapped or null order type '{type}'.", nameof(Generated.Models.GetOrder2Response_type)),
         };
 
-    private static Generated.Api.One.Listorders.GetStateQueryParameterType MapListOrdersState(OrderStatus state) =>
-        state switch
+    private static StopDirection MapStopDirectionResponse(Generated.Models.GetOrder2Response_stop_direction? dir) =>
+        dir switch
         {
-            OrderStatus.Pending => Generated.Api.One.Listorders.GetStateQueryParameterType.PENDING,
-            OrderStatus.Complete => Generated.Api.One.Listorders.GetStateQueryParameterType.COMPLETE,
-            _ => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(state), "Invalid list orders state.")),
+            Generated.Models.GetOrder2Response_stop_direction.ABOVE => StopDirection.Above,
+            Generated.Models.GetOrder2Response_stop_direction.BELOW => StopDirection.Below,
+            _ => throw new LunoMappingException($"Unmapped or null stop direction '{dir}'.", nameof(Generated.Models.GetOrder2Response_stop_direction)),
         };
 
-    private static decimal? TryParseDecimal(string? raw) =>
-        raw != null && decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : null;
+    // ── Private mappers (ListOrders V2) ──────────────────────────────────────────
 
-    private static decimal ParseDecimalMandatory(string? raw, string fieldName) =>
-        TryParseDecimal(raw) ?? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing or invalid in API response.");
+    private static OrderStatus MapStatusV2(Generated.Models.OrderV2_status? status) =>
+        status switch
+        {
+            Generated.Models.OrderV2_status.AWAITING  => OrderStatus.Awaiting,
+            Generated.Models.OrderV2_status.PENDING   => OrderStatus.Pending,
+            Generated.Models.OrderV2_status.COMPLETE  => OrderStatus.Complete,
+            _ => throw new LunoMappingException($"Unmapped or null order status '{status}'.", nameof(Generated.Models.OrderV2_status)),
+        };
 
-    private static string ParseStringMandatory(string? raw, string fieldName) =>
-        string.IsNullOrWhiteSpace(raw) ? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing or empty in API response.") : raw;
+    private static OrderSide MapSideV2(Generated.Models.OrderV2_side? side) =>
+        side switch
+        {
+            Generated.Models.OrderV2_side.BUY  => OrderSide.Buy,
+            Generated.Models.OrderV2_side.SELL => OrderSide.Sell,
+            _ => throw new LunoMappingException($"Unmapped or null order side '{side}'.", nameof(Generated.Models.OrderV2_side)),
+        };
 
-    private static long ParseLongMandatory(long? raw, string fieldName) =>
-        raw ?? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing in API response.");
-
-    private static PostTypeQueryParameterType MapType(OrderType type) =>
+    private static OrderType MapOrderTypeV2(Generated.Models.OrderV2_type? type) =>
         type switch
         {
-            OrderType.Bid => PostTypeQueryParameterType.BID,
-            OrderType.Ask => PostTypeQueryParameterType.ASK,
-            _             => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(type), "Invalid order type.")),
+            Generated.Models.OrderV2_type.LIMIT     => OrderType.Limit,
+            Generated.Models.OrderV2_type.MARKET    => OrderType.Market,
+            Generated.Models.OrderV2_type.STOP_LIMIT => OrderType.StopLimit,
+            _ => throw new LunoMappingException($"Unmapped or null order type '{type}'.", nameof(Generated.Models.OrderV2_type)),
+        };
+
+    private static StopDirection MapStopDirectionV2(Generated.Models.OrderV2_stop_direction? dir) =>
+        dir switch
+        {
+            Generated.Models.OrderV2_stop_direction.ABOVE => StopDirection.Above,
+            Generated.Models.OrderV2_stop_direction.BELOW => StopDirection.Below,
+            _ => throw new LunoMappingException($"Unmapped or null stop direction '{dir}'.", nameof(Generated.Models.OrderV2_stop_direction)),
+        };
+
+    // ── Shared mappers ───────────────────────────────────────────────────────────
+
+    private static TimeInForce MapTimeInForceString(string? tif) =>
+        tif?.ToUpperInvariant() switch
+        {
+            "GTC" => TimeInForce.GTC,
+            "IOC" => TimeInForce.IOC,
+            "FOK" => TimeInForce.FOK,
+            null  => TimeInForce.GTC, // Default for orders that don't specify (e.g. older orders)
+            _     => throw new LunoMappingException($"Unmapped time in force '{tif}'."),
+        };
+
+    // ── Post mappers (Domain → Kiota) ────────────────────────────────────────────
+
+    private static PostTypeQueryParameterType MapPostSide(OrderSide side) =>
+        side switch
+        {
+            OrderSide.Buy  => PostTypeQueryParameterType.BID,
+            OrderSide.Sell => PostTypeQueryParameterType.ASK,
+            _              => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(side), "Invalid order side.")),
         };
 
     private static PostStop_directionQueryParameterType MapStopDirection(StopDirection direction) =>
@@ -197,4 +326,18 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             TimeInForce.FOK => PostTime_in_forceQueryParameterType.FOK,
             _               => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(tif), "Invalid time in force.")),
         };
+
+    // ── Parse helpers ────────────────────────────────────────────────────────────
+
+    private static decimal? TryParseDecimal(string? raw) =>
+        raw != null && decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : null;
+
+    private static decimal ParseDecimalMandatory(string? raw, string fieldName) =>
+        TryParseDecimal(raw) ?? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing or invalid in API response.");
+
+    private static string ParseStringMandatory(string? raw, string fieldName) =>
+        string.IsNullOrWhiteSpace(raw) ? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing or empty in API response.") : raw;
+
+    private static long ParseLongMandatory(long? raw, string fieldName) =>
+        raw ?? throw new LunoMappingException($"Mandatory field '{fieldName}' is missing in API response.");
 }
