@@ -22,8 +22,11 @@ public record OrderDetailsResponse
     /// <summary>Gets or sets the currency pair.</summary>
     public required string Pair { get; init; }
 
-    /// <summary>Gets or sets the order type (Bid or Ask).</summary>
-    public OrderType Type { get; init; }
+    /// <summary>Gets or sets the order side (Buy or Sell).</summary>
+    public OrderSide Side { get; init; }
+
+    /// <summary>Gets or sets the order type (Limit, Market, StopLimit).</summary>
+    public OrderType OrderType { get; init; }
 
     /// <summary>Gets or sets the original volume.</summary>
     public decimal LimitVolume { get; init; }

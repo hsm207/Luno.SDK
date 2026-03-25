@@ -51,6 +51,20 @@ internal static class TradingMappingExtensions
 {
     public static OrderDetailsResponse ToResponse(this Order order)
     {
+        decimal limitPrice = 0;
+        decimal limitVolume = 0;
+
+        if (order is LimitOrder limit)
+        {
+            limitPrice = limit.LimitPrice;
+            limitVolume = limit.LimitVolume;
+        }
+        else if (order is StopLimitOrder stopLimit)
+        {
+            limitPrice = stopLimit.LimitPrice;
+            limitVolume = stopLimit.LimitVolume;
+        }
+
         return new OrderDetailsResponse
         {
             OrderId = order.OrderId,
@@ -60,9 +74,10 @@ internal static class TradingMappingExtensions
                 : null,
             State = order.Status,
             Pair = order.Pair,
-            Type = order.Side,
-            LimitVolume = order.LimitVolume,
-            LimitPrice = order.LimitPrice,
+            Side = order.Side,
+            OrderType = order.Type,
+            LimitVolume = limitVolume,
+            LimitPrice = limitPrice,
             FilledBase = order.FilledBase ?? 0,
             FilledCounter = order.FilledCounter ?? 0,
             FeeBase = order.FeeBase ?? 0,

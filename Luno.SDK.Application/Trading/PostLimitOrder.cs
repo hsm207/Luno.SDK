@@ -12,8 +12,8 @@ public record PostLimitOrderCommand
     /// <summary>Gets or sets the currency pair (e.g., XBTZAR).</summary>
     public required string Pair { get; init; }
 
-    /// <summary>Gets or sets the order type (Bid or Ask).</summary>
-    public required OrderType Type { get; init; }
+    /// <summary>Gets or sets the order side (Buy or Sell).</summary>
+    public required OrderSide Side { get; init; }
 
     /// <summary>Gets or sets the volume to buy or sell.</summary>
     public required decimal Volume { get; init; }
@@ -66,7 +66,7 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
         var parameters = new LimitOrderParameters
         {
             Pair             = command.Pair,
-            Type             = command.Type,
+            Side             = command.Side,
             Volume           = command.Volume,
             Price            = command.Price,
             BaseAccountId    = command.BaseAccountId,
@@ -85,7 +85,7 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
         var request = new LimitOrderRequest
         {
             Pair             = parameters.Pair,
-            Type             = parameters.Type,
+            Side             = parameters.Side,
             Volume           = parameters.Volume,
             Price            = parameters.Price,
             BaseAccountId    = parameters.BaseAccountId,
@@ -115,6 +115,11 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
 
     private async Task<OrderResponse> ReconcileDuplicateAsync(LimitOrderParameters expected, CancellationToken ct)
     {
+        // ARCHITECTURAL DECISION: The SOLID audit identified the downcast in EnsureParametersMatch 
+        // as an LSP violation. However, we intentionally retain this 'tension' in the Application 
+        // layer to preserve the purity of surrounding layers:
+        // 1. ILunoTradingOperations remains a 'dumb' 1:1 wrapper of the Kiota client (no 'fake' typed queries).
+        // 2. The Order Domain Entity remains agnostic of Application-layer parameter DTOs.
         var existing = await tradingClient.FetchOrderAsync(clientOrderId: expected.ClientOrderId, ct: ct)
                                           .ConfigureAwait(false);
 
@@ -129,16 +134,21 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
     /// </summary>
     private static void EnsureParametersMatch(Order existing, LimitOrderParameters expected)
     {
-        if (existing.LimitPrice != expected.Price)
+        if (existing.Side != expected.Side)
             throw new LunoIdempotencyException(
-                $"Idempotency conflict: existing order has Price={existing.LimitPrice} but request has Price={expected.Price}.");
+                $"Idempotency conflict: existing order has Side={existing.Side} but request has Side={expected.Side}.");
 
-        if (existing.LimitVolume != expected.Volume)
+        // The Fix: Explicitly check that the existing order is a LimitOrder.
+        if (existing is not LimitOrder limitOrder)
             throw new LunoIdempotencyException(
-                $"Idempotency conflict: existing order has Volume={existing.LimitVolume} but request has Volume={expected.Volume}.");
+                $"Idempotency conflict: existing order has Type={existing.Type} but request has Type={OrderType.Limit}.");
 
-        if (existing.Side != expected.Type)
+        if (limitOrder.LimitPrice != expected.Price)
             throw new LunoIdempotencyException(
-                $"Idempotency conflict: existing order has Side={existing.Side} but request has Side={expected.Type}.");
+                $"Idempotency conflict: existing order has Price={limitOrder.LimitPrice} but request has Price={expected.Price}.");
+
+        if (limitOrder.LimitVolume != expected.Volume)
+            throw new LunoIdempotencyException(
+                $"Idempotency conflict: existing order has Volume={limitOrder.LimitVolume} but request has Volume={expected.Volume}.");
     }
 }
