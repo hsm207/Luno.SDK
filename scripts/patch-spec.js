@@ -84,6 +84,18 @@ if (getOrder2ResponseSchema && getOrder2ResponseSchema.properties) {
   });
 }
 
+// 8. Patch OrderV2 component timestamps
+// Verification: The fresh spec has 'int64' for Account IDs, but 'timestamp' for these!
+const orderV2Schema = spec.components.schemas['OrderV2'];
+if (orderV2Schema && orderV2Schema.properties) {
+  ['completed_timestamp', 'creation_timestamp', 'expiration_timestamp'].forEach(prop => {
+    if (orderV2Schema.properties[prop]) {
+      orderV2Schema.properties[prop].format = 'int64';
+      console.log(`Successfully patched 'OrderV2.${prop}' to 'int64'.`);
+    }
+  });
+}
+
 console.log(`Writing intermediate patched specification: ${outputPath}`);
 fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 
