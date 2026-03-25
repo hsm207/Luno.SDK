@@ -1,17 +1,23 @@
 namespace Luno.SDK.Trading;
 
 /// <summary>
-/// Specifies the type of limit order (Bid or Ask).
+/// Specifies the behavioral type of an order on the Luno exchange.
+/// Aligned with Luno V2 API ontology (LIMIT/MARKET/STOP_LIMIT).
 /// </summary>
 public enum OrderType
 {
     /// <summary>
-    /// A bid (buy) limit order.
+    /// A limit order with a specified price and volume.
     /// </summary>
-    Bid,
+    Limit,
 
     /// <summary>
-    /// An ask (sell) limit order.
+    /// A market order executed at the best available price.
     /// </summary>
-    Ask
+    Market,
+
+    /// <summary>
+    /// A stop-limit order triggered when a stop price condition is met.
+    /// </summary>
+    StopLimit
 }
