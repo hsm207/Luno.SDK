@@ -10,8 +10,8 @@ public record LimitOrderRequest
     /// <summary>The currency pair to trade (e.g. XBTZAR).</summary>
     public required string Pair { get; init; }
 
-    /// <summary>The order type (Bid or Ask).</summary>
-    public required OrderType Type { get; init; }
+    /// <summary>The order side (Buy or Sell).</summary>
+    public required OrderSide Side { get; init; }
 
     /// <summary>Amount of cryptocurrency to buy or sell.</summary>
     public required decimal Volume { get; init; }

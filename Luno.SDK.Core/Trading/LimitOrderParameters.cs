@@ -13,9 +13,9 @@ public record LimitOrderParameters
     public required string Pair { get; init; }
 
     /// <summary>
-    /// Gets or sets the order type (Bid or Ask).
+    /// Gets or sets the order side (Buy or Sell).
     /// </summary>
-    public required OrderType Type { get; init; }
+    public required OrderSide Side { get; init; }
 
     /// <summary>
     /// Gets or sets the volume to buy or sell.
@@ -78,9 +78,9 @@ public record LimitOrderParameters
     /// <exception cref="LunoValidationException">Thrown if rules are violated.</exception>
     public void Validate()
     {
-        if (!Enum.IsDefined(typeof(OrderType), Type))
+        if (!Enum.IsDefined(typeof(OrderSide), Side))
         {
-            throw new LunoValidationException($"Invalid OrderType: {Type}");
+            throw new LunoValidationException($"Invalid OrderSide: {Side}");
         }
 
         if (!Enum.IsDefined(typeof(TimeInForce), TimeInForce))
