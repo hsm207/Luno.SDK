@@ -19,7 +19,8 @@ public class PostLimitOrderHandlerTests
         string? clientOrderId = "cli-001",
         decimal price = 1000m,
         decimal volume = 1m,
-        OrderSide side = OrderSide.Buy) =>
+        OrderSide side = OrderSide.Buy,
+        TimeInForce tif = TimeInForce.GTC) =>
         new()
         {
             Pair             = "XBTZAR",
@@ -29,6 +30,7 @@ public class PostLimitOrderHandlerTests
             BaseAccountId    = 1,
             CounterAccountId = 2,
             ClientOrderId    = clientOrderId,
+            TimeInForce      = tif
         };
 
     private static LimitOrder BuildExistingOrder(
@@ -36,7 +38,8 @@ public class PostLimitOrderHandlerTests
         string? clientOrderId = "cli-001",
         decimal limitPrice = 1000m,
         decimal limitVolume = 1m,
-        OrderSide side = OrderSide.Buy) =>
+        OrderSide side = OrderSide.Buy,
+        TimeInForce timeInForce = TimeInForce.GTC) =>
         new(
             orderId: orderId,
             side: side,
@@ -47,6 +50,7 @@ public class PostLimitOrderHandlerTests
             counterAccountId: 2,
             limitPrice: limitPrice,
             limitVolume: limitVolume,
+            timeInForce: timeInForce,
             clientOrderId: clientOrderId);
 
     private static MarketOrder BuildExistingMarketOrder(
@@ -70,8 +74,9 @@ public class PostLimitOrderHandlerTests
     {
         var tradingClientMock = new Mock<ILunoTradingClient>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand();
-        var existingOrder = BuildExistingOrder();
+        // Explicitly test with a non-default TimeInForce to verify full parameter matching
+        var command = BuildValidCommand(tif: TimeInForce.FOK);
+        var existingOrder = BuildExistingOrder(timeInForce: TimeInForce.FOK);
 
         tradingClientMock
             .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
@@ -150,6 +155,28 @@ public class PostLimitOrderHandlerTests
 
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
         Assert.Contains("Volume", ex.Message);
+    }
+
+    // ── TimeInForce mismatch ─────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "Given a 409 with a TimeInForce mismatch, When reconciling, Then throw LunoIdempotencyException")]
+    public async Task HandleAsync_Idempotency_TimeInForceMismatch_ThrowsLunoIdempotencyException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand(tif: TimeInForce.FOK);
+        var existingOrder = BuildExistingOrder(timeInForce: TimeInForce.GTC);
+
+        tradingClientMock
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new LunoIdempotencyException("409"));
+
+        tradingClientMock
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingOrder);
+
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
+        Assert.Contains("TimeInForce", ex.Message);
     }
 
     // ── Side mismatch ────────────────────────────────────────────────────────────

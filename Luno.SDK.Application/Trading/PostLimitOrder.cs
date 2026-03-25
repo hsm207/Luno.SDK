@@ -150,5 +150,9 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
         if (limitOrder.LimitVolume != expected.Volume)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Volume={limitOrder.LimitVolume} but request has Volume={expected.Volume}.");
+
+        if (limitOrder.TimeInForce != expected.TimeInForce)
+            throw new LunoIdempotencyException(
+                $"Idempotency conflict: existing order has TimeInForce={limitOrder.TimeInForce} but request has TimeInForce={expected.TimeInForce}.");
     }
 }
