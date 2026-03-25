@@ -59,9 +59,11 @@ public class LunoTradingClientTests : IDisposable
                 {
                     order_id = expectedOrderId,
                     client_order_id = clientId,
+                    base_account_id = 1,
                     limit_price = "250000",
                     limit_volume = "0.001",
                     side = "BUY",
+                    type = "LIMIT",
                     status = "PENDING",
                     pair = "XBTMYR",
                     creation_timestamp = 1600000000000L
@@ -71,7 +73,7 @@ public class LunoTradingClientTests : IDisposable
         var command = new PostLimitOrderCommand
         {
             Pair = "XBTMYR",
-            Type = OrderType.Bid, // Expected "BUY"
+            Side = OrderSide.Buy,
             Volume = 0.001m,
             Price = 250000m,
             BaseAccountId = 1,
@@ -98,7 +100,7 @@ public class LunoTradingClientTests : IDisposable
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
-                .WithBodyAsJson(new { order_id = expectedOrderId, client_order_id = clientId, status = "PENDING", side = "BUY", pair = "XBTMYR", limit_price = "100", limit_volume = "1", creation_timestamp = 1600000000000L }));
+                .WithBodyAsJson(new { order_id = expectedOrderId, client_order_id = clientId, base_account_id = 1, status = "PENDING", side = "BUY", type = "LIMIT", pair = "XBTMYR", limit_price = "100", limit_volume = "1", creation_timestamp = 1600000000000L }));
 
         // 2. Stop order
         _server.Given(Request.Create().WithPath("/api/1/stoporder").UsingPost().WithParam("order_id", expectedOrderId))
@@ -130,7 +132,7 @@ public class LunoTradingClientTests : IDisposable
         var command = new PostLimitOrderCommand
         {
             Pair = "XBTMYR",
-            Type = OrderType.Bid,
+            Side = OrderSide.Buy,
             Volume = 0.001m,
             Price = 250000m,
             BaseAccountId = 1,
@@ -159,7 +161,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = TimeInForce.GTC
+            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = TimeInForce.GTC
         };
 
         // Act
@@ -170,12 +172,12 @@ public class LunoTradingClientTests : IDisposable
     }
 
     [Theory(DisplayName = "Given valid parameters with varying enums, When posting limit order, Then returns successfully.")]
-    [InlineData(OrderType.Ask, TimeInForce.IOC, null)]
-    [InlineData(OrderType.Bid, TimeInForce.FOK, null)]
-    [InlineData(OrderType.Bid, TimeInForce.GTC, StopDirection.Above)]
-    [InlineData(OrderType.Bid, TimeInForce.GTC, StopDirection.Below)]
-    [InlineData(OrderType.Ask, TimeInForce.GTC, StopDirection.RelativeLastTrade)]
-    public async Task PostLimitOrderAsync_EnumVariations_ReturnsOrderReference(OrderType type, TimeInForce tif, StopDirection? stopDir)
+    [InlineData(OrderSide.Sell, TimeInForce.IOC, null)]
+    [InlineData(OrderSide.Buy, TimeInForce.FOK, null)]
+    [InlineData(OrderSide.Buy, TimeInForce.GTC, StopDirection.Above)]
+    [InlineData(OrderSide.Buy, TimeInForce.GTC, StopDirection.Below)]
+    [InlineData(OrderSide.Sell, TimeInForce.GTC, StopDirection.RelativeLastTrade)]
+    public async Task PostLimitOrderAsync_EnumVariations_ReturnsOrderReference(OrderSide side, TimeInForce tif, StopDirection? stopDir)
     {
         // Arrange
         var expectedOrderId = "BX123_ENUMS";
@@ -188,7 +190,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Type = type, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = tif, StopPrice = stopDir.HasValue ? 100m : null, StopDirection = stopDir
+            Pair = "XBTMYR", Side = side, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = tif, StopPrice = stopDir.HasValue ? 100m : null, StopDirection = stopDir
         };
 
         // Act
@@ -238,7 +240,9 @@ public class LunoTradingClientTests : IDisposable
                     order_id = orderId, 
                     status = "COMPLETE", 
                     client_order_id = clientOrderId,
+                    base_account_id = 1,
                     side = "BUY",
+                    type = "LIMIT",
                     pair = "XBTZAR",
                     limit_price = "1000",
                     limit_volume = "1",
@@ -280,7 +284,7 @@ public class LunoTradingClientTests : IDisposable
         var command = new PostLimitOrderCommand
         {
             Pair = "XBTZAR",
-            Type = OrderType.Bid,
+            Side = OrderSide.Buy,
             Volume = 1m,
             Price = 1000m,
             BaseAccountId = 1,
@@ -319,7 +323,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 1m, Price = 10m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 1m, Price = 10m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
         };
 
         // Act & Assert
@@ -348,9 +352,11 @@ public class LunoTradingClientTests : IDisposable
                 {
                     order_id = "BX123",
                     client_order_id = clientId,
+                    base_account_id = 1,
                     limit_price = "999999", // Vastly different price
                     limit_volume = "0.001",
                     side = "BUY",
+                    type = "LIMIT",
                     status = "PENDING",
                     pair = "XBTMYR",
                     creation_timestamp = 1600000000000L
@@ -359,7 +365,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
         };
 
         // Act & Assert
@@ -389,9 +395,11 @@ public class LunoTradingClientTests : IDisposable
                 {
                     order_id = "BX123",
                     client_order_id = clientId,
+                    base_account_id = 1,
                     limit_price = "250000",
                     limit_volume = "0.001",
                     side = "SELL", // Mismatch!
+                    type = "LIMIT",
                     status = "PENDING",
                     pair = "XBTMYR",
                     creation_timestamp = 1600000000000L
@@ -400,7 +408,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Type = OrderType.Bid, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
         };
 
         // Act & Assert
@@ -424,7 +432,9 @@ public class LunoTradingClientTests : IDisposable
                 { 
                     order_id = orderId, 
                     status = apiStatus, 
+                    base_account_id = 1,
                     side = "BUY",
+                    type = "LIMIT",
                     pair = "XBTZAR",
                     limit_price = "1000",
                     limit_volume = "1",
@@ -453,7 +463,9 @@ public class LunoTradingClientTests : IDisposable
                 {
                     order_id = orderId,
                     status = "UNKNOWN_NONSENSE", // Kiota deserializes unrecognized enum strings as null
+                    base_account_id = 1,
                     side = "BUY",
+                    type = "LIMIT",
                     pair = "XBTZAR",
                     limit_price = "1000",
                     limit_volume = "1",
@@ -479,7 +491,9 @@ public class LunoTradingClientTests : IDisposable
                 {
                     order_id = orderId,
                     status = "COMPLETE",
+                    base_account_id = 1,
                     side = (string?)null, // Missing or null side
+                    type = "LIMIT",
                     pair = "XBTZAR",
                     limit_price = "1000",
                     limit_volume = "1",

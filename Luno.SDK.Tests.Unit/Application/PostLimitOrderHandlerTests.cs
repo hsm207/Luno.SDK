@@ -19,11 +19,11 @@ public class PostLimitOrderHandlerTests
         string? clientOrderId = "cli-001",
         decimal price = 1000m,
         decimal volume = 1m,
-        OrderType type = OrderType.Bid) =>
+        OrderSide side = OrderSide.Buy) =>
         new()
         {
             Pair             = "XBTZAR",
-            Type             = type,
+            Side             = side,
             Volume           = volume,
             Price            = price,
             BaseAccountId    = 1,
@@ -31,21 +31,37 @@ public class PostLimitOrderHandlerTests
             ClientOrderId    = clientOrderId,
         };
 
-    private static Order BuildExistingOrder(
+    private static LimitOrder BuildExistingOrder(
         string orderId = "BX-EXISTING",
         string? clientOrderId = "cli-001",
-        decimal? limitPrice = 1000m,
-        decimal? limitVolume = 1m,
-        OrderType? side = OrderType.Bid) =>
-        new()
-        {
-            OrderId       = orderId,
-            ClientOrderId = clientOrderId,
-            Status        = OrderStatus.Awaiting,
-            LimitPrice    = limitPrice,
-            LimitVolume   = limitVolume,
-            Side          = side,
-        };
+        decimal limitPrice = 1000m,
+        decimal limitVolume = 1m,
+        OrderSide side = OrderSide.Buy) =>
+        new(
+            orderId: orderId,
+            side: side,
+            status: OrderStatus.Awaiting,
+            pair: "XBTZAR",
+            creationTimestamp: 1700000000000,
+            baseAccountId: 1,
+            counterAccountId: 2,
+            limitPrice: limitPrice,
+            limitVolume: limitVolume,
+            clientOrderId: clientOrderId);
+
+    private static MarketOrder BuildExistingMarketOrder(
+        string orderId = "BX-MARKET",
+        string? clientOrderId = "cli-001",
+        OrderSide side = OrderSide.Buy) =>
+        new(
+            orderId: orderId,
+            side: side,
+            status: OrderStatus.Awaiting,
+            pair: "XBTZAR",
+            creationTimestamp: 1700000000000,
+            baseAccountId: 1,
+            counterAccountId: 2,
+            clientOrderId: clientOrderId);
 
     // ── Happy path reconciliation ────────────────────────────────────────────────
 
@@ -68,6 +84,28 @@ public class PostLimitOrderHandlerTests
         var result = await handler.HandleAsync(command);
 
         Assert.Equal("BX-EXISTING", result.OrderId);
+    }
+
+    // ── Type mismatch ────────────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "Given a 409 where existing order is a MarketOrder, When reconciling, Then throw LunoIdempotencyException")]
+    public async Task HandleAsync_Idempotency_TypeMismatch_ThrowsLunoIdempotencyException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand();
+        var existingOrder = BuildExistingMarketOrder(); // MarketOrder instead of LimitOrder
+
+        tradingClientMock
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new LunoIdempotencyException("409"));
+
+        tradingClientMock
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingOrder);
+
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
+        Assert.Contains("Type", ex.Message);
     }
 
     // ── Price mismatch ───────────────────────────────────────────────────────────
@@ -121,8 +159,8 @@ public class PostLimitOrderHandlerTests
     {
         var tradingClientMock = new Mock<ILunoTradingClient>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand(type: OrderType.Bid);
-        var existingOrder = BuildExistingOrder(side: OrderType.Ask);   // mismatch!
+        var command = BuildValidCommand(side: OrderSide.Buy);
+        var existingOrder = BuildExistingOrder(side: OrderSide.Sell);   // mismatch!
 
         tradingClientMock
             .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
@@ -157,16 +195,21 @@ public class PostLimitOrderHandlerTests
             Times.Never);
     }
 
-    // ── Null fields from API (sparse order) ─────────────────────────────────────
+    // ── Sparse fields from API (existing order with silly required values) ───────
 
-    [Fact(DisplayName = "Given a 409 where existing order has null price/volume/side, When reconciling, Then return existing OrderId (no comparison performed)")]
+    [Fact(DisplayName = "Given a 409 where existing order has different silly values, When reconciling, Then return existing OrderId (side matches)")]
     public async Task HandleAsync_Idempotency_SparseExistingOrder_ReturnsExistingOrderId()
     {
         var tradingClientMock = new Mock<ILunoTradingClient>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
-        // Simulate an order returned without optional fields (e.g. older API response)
-        var existingOrder = BuildExistingOrder(limitPrice: null, limitVolume: null, side: null);
+        // Simulate an order returned with matching side and matching limit fields.
+        // The "silly" values here prove the reconciliation logic works
+        // even with non-standard but valid field values.
+        var existingOrder = BuildExistingOrder(
+            limitPrice: 1000m,
+            limitVolume: 1m,
+            side: OrderSide.Buy);
 
         tradingClientMock
             .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))

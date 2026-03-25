@@ -19,8 +19,8 @@ public class LunoTradingClientBoundaryTests
 {
     private readonly Mock<IRequestAdapter> _requestAdapterMock = new();
 
-    [Fact(DisplayName = "Given an invalid OrderType bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
-    public async Task PostLimitOrderAsync_InvalidOrderType_ThrowsInvalidOperationException()
+    [Fact(DisplayName = "Given an invalid OrderSide bypassing domain, When LunoTradingClient maps side, Then throw InvalidOperationException")]
+    public async Task PostLimitOrderAsync_InvalidOrderSide_ThrowsInvalidOperationException()
     {
         var apiClient = new LunoApiClient(_requestAdapterMock.Object);
         var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
@@ -28,7 +28,7 @@ public class LunoTradingClientBoundaryTests
         var request = new LimitOrderRequest
         {
             Pair             = "XBTZAR",
-            Type             = (OrderType)999,   // bypassing domain validation deliberately
+            Side             = (OrderSide)999,   // bypassing domain validation deliberately
             Volume           = 1m,
             Price            = 1000m,
             BaseAccountId    = 1,
@@ -38,7 +38,7 @@ public class LunoTradingClientBoundaryTests
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
         Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
         Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
-        Assert.Contains("Invalid order type", ex.InnerException!.Message);
+        Assert.Contains("Invalid order side", ex.InnerException!.Message);
     }
 
     [Fact(DisplayName = "Given an invalid TimeInForce bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
@@ -50,7 +50,7 @@ public class LunoTradingClientBoundaryTests
         var request = new LimitOrderRequest
         {
             Pair             = "XBTZAR",
-            Type             = OrderType.Bid,
+            Side             = OrderSide.Buy,
             Volume           = 1m,
             Price            = 1000m,
             BaseAccountId    = 1,
@@ -73,7 +73,7 @@ public class LunoTradingClientBoundaryTests
         var request = new LimitOrderRequest
         {
             Pair             = "XBTZAR",
-            Type             = OrderType.Bid,
+            Side             = OrderSide.Buy,
             Volume           = 1m,
             Price            = 1000m,
             BaseAccountId    = 1,
@@ -88,3 +88,4 @@ public class LunoTradingClientBoundaryTests
         Assert.Contains("Invalid stop direction", ex.InnerException!.Message);
     }
 }
+

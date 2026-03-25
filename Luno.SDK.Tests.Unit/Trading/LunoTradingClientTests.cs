@@ -44,7 +44,7 @@ public class LunoTradingClientTests
         var command = new PostLimitOrderCommand
         {
             Pair = "XBTZAR",
-            Type = OrderType.Bid,
+            Side = OrderSide.Buy,
             Volume = 1m,
             Price = 1000m,
             BaseAccountId = 1,
@@ -67,7 +67,7 @@ public class LunoTradingClientTests
         var command = new PostLimitOrderCommand
         {
             Pair = "XBTZAR",
-            Type = OrderType.Bid,
+            Side = OrderSide.Buy,
             Volume = 1m,
             Price = 1000m,
             BaseAccountId = null, // Missing base account
@@ -81,13 +81,13 @@ public class LunoTradingClientTests
         Assert.Contains("Explicit Account Mandate violated", ex.Message);
     }
 
-    [Fact(DisplayName = "Given an invalid OrderType cast, When validating, Then throw LunoValidationException.")]
-    public void Validate_InvalidOrderType_ThrowsValidationException()
+    [Fact(DisplayName = "Given an invalid OrderSide cast, When validating, Then throw LunoValidationException.")]
+    public void Validate_InvalidOrderSide_ThrowsValidationException()
     {
         var parameters = new LimitOrderParameters
         {
             Pair = "XBTZAR",
-            Type = (OrderType)999, // Invalid cast
+            Side = (OrderSide)999, // Invalid cast
             Volume = 1m,
             Price = 1000m,
             BaseAccountId = 1,
@@ -95,7 +95,7 @@ public class LunoTradingClientTests
         };
 
         var ex = Assert.Throws<LunoValidationException>(() => parameters.Validate());
-        Assert.Contains("Invalid OrderType", ex.Message);
+        Assert.Contains("Invalid OrderSide", ex.Message);
     }
 
     [Fact(DisplayName = "Given an invalid TimeInForce cast, When validating, Then throw LunoValidationException.")]
@@ -104,7 +104,7 @@ public class LunoTradingClientTests
         var parameters = new LimitOrderParameters
         {
             Pair = "XBTZAR",
-            Type = OrderType.Bid,
+            Side = OrderSide.Buy,
             Volume = 1m,
             Price = 1000m,
             BaseAccountId = 1,
@@ -122,7 +122,7 @@ public class LunoTradingClientTests
         var parameters = new LimitOrderParameters
         {
             Pair = "XBTZAR",
-            Type = OrderType.Bid,
+            Side = OrderSide.Buy,
             Volume = 1m,
             Price = 1000m,
             BaseAccountId = 1,
@@ -164,7 +164,17 @@ public class LunoTradingClientTests
 
         var command = new StopOrderCommand { ClientOrderId = clientOrderId };
 
-        var pendingOrder = new Order { OrderId = assignedOrderId, ClientOrderId = clientOrderId, Status = OrderStatus.Pending };
+        var pendingOrder = new LimitOrder(
+            orderId: assignedOrderId,
+            side: OrderSide.Buy,
+            status: OrderStatus.Pending,
+            pair: "XBTZAR",
+            creationTimestamp: 1700000000000,
+            baseAccountId: 1,
+            counterAccountId: 2,
+            limitPrice: 50000m,
+            limitVolume: 0.5m,
+            clientOrderId: clientOrderId);
 
         _tradingClientMock.Setup(x => x.FetchOrderAsync(null, clientOrderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pendingOrder);
