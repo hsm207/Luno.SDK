@@ -56,7 +56,7 @@ public static class Concept06_Orders
             Console.WriteLine($"Successfully retrieved {allOrders.Count} orders.");
             foreach (var order in allOrders.Take(5))
             {
-                Console.WriteLine($"- [{order.State}] {order.OrderId}: {order.Type} {order.LimitVolume} {order.Pair} @ {order.LimitPrice} (Created: {order.CreationTimestamp})");
+                Console.WriteLine($"- [{order.State}] {order.OrderId}: {order.Side} {order.LimitVolume} {order.Pair} @ {order.LimitPrice} (Created: {order.CreationTimestamp})");
             }
 
             // 2. Filtered Fetch (Pending)
@@ -66,7 +66,7 @@ public static class Concept06_Orders
             Console.WriteLine($"Found {pendingOrders.Count} pending orders.");
             foreach (var order in pendingOrders)
             {
-                Console.WriteLine($"- {order.OrderId}: {order.Type} {order.LimitVolume} {order.Pair} @ {order.LimitPrice}");
+                Console.WriteLine($"- {order.OrderId}: {order.Side} {order.LimitVolume} {order.Pair} @ {order.LimitPrice}");
             }
 
             // 3. Filtered Fetch (Pair)
