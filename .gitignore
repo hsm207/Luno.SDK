@@ -12,3 +12,4 @@ docs/luno_api_spec_engine.json
 session.md
 .gemini/GEMINI.md
 *.log
+.playwright-mcp
