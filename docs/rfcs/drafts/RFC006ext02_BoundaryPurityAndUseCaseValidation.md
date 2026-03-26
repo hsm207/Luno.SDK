@@ -98,22 +98,22 @@ By centralizing validation and mapping within the Handler:
 
 ## 6. Behavioral Contracts
 ### 6.1 Use Case Integrity (Happy Path)
-- **Tier:** Unit
+- **Tier:** Integration
 - **Given:** A valid `PostLimitOrderCommand`.
-- **When:** `HandleAsync` is executed.
-- **Then:** Validation passes, mapping occurs, and the `ILunoTradingOperations` is called with a passive `LimitOrderRequest`.
+- **When:** `ILunoTradingClient.PostLimitOrderAsync` is called.
+- **Then:** Validation passes, mapping occurs, and WireMock verifies that the correct `POST /api/1/postorder` request is sent with fields mapped correctly from the command.
 
 ### 6.2 Application Rule Enforcement (Chaos Path)
-- **Tier:** Unit
+- **Tier:** Integration
 - **Given:** A `PostLimitOrderCommand` that violates a domain invariant (e.g., PostOnly with IOC).
-- **When:** `HandleAsync` is executed.
-- **Then:** The Handler throws `LunoValidationException` before the mapping or dispatch phases.
+- **When:** `ILunoTradingClient.PostLimitOrderAsync` is called.
+- **Then:** The SDK throws `LunoValidationException` before any network call is attempted. WireMock verifies that **zero** requests were sent to the exchange.
 
 ### 6.3 Idempotency Reconciliation Anchor (Policy Enforcement)
-- **Tier:** Unit
-- **Given:** A `409 Conflict` from the API where an existing order with the same `ClientOrderId` is found.
-- **When:** `PostLimitOrderHandler.ReconcileDuplicateAsync` is called.
-- **Then:** We compare the existing state from the exchange against the **validated `LimitOrderRequest`**.
+- **Tier:** Integration
+- **Given:** A `409 Conflict` response from WireMock for `POST /api/1/postorder`.
+- **When:** The SDK performs automatic reconciliation via `GET /api/exchange/3/order`.
+- **Then:** The SDK compares the WireMock-returned order against the **validated `LimitOrderRequest`** (managed by `PostLimitOrderHandler.ReconcileDuplicateAsync`).
 - **Verification:** The reconciliation **must** throw `LunoIdempotencyException` if any of the following "Anchor" fields do not match:
     - `Pair`
     - `Side`
@@ -123,6 +123,9 @@ By centralizing validation and mapping within the Handler:
     - `CounterAccountId`
     - `TimeInForce`
 - **Note on Metadata**: Fields such as `Timestamp`, `TTL`, `StopPrice`, `StopDirection`, and `PostOnly` are **Ignored** during reconciliation for standard Limit Orders as they are either one-way metadata or not part of the primary Limit Order contract.
+- **Outcome:** 
+    - If Anchor fields match: Success returned.
+    - If any Anchor field mismatches: Throws `LunoIdempotencyException`.
 
 ## 7. Operational Reality
 - **Blast Radius:** **High (Breaking Change)**. This refactoring removes public types and methods from `Luno.SDK.Core`. 
