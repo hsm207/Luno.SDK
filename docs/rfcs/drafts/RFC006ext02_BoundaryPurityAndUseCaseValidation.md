@@ -77,6 +77,14 @@ Attaching a `Validate()` method to a DTO creates a behavioral dependency. In a C
 ### 4.5 Ubiquitous Language as Core Contracts
 While `LimitOrderRequest` is a boundary-crossing DTO, it is defined in the `Core` layer because it represents the **Ubiquitous Language** of the Luno exchange. The specialized sub-clients (e.g., `ILunoTradingOperations`) are the SDK's primary policy interfaces. For these interfaces to remain independent of the Infrastructure layer (D.I.P.), the objects they accept (`LimitOrderRequest`) must reside in the `Core` layer, serving as the stable vocabulary for the entire system.
 
+### 4.6 Rationale: Use Case Orchestration and Mapping Stability
+The primary responsibility of the **Application Layer** is to translate an external `Command` (representing user intent and orchestration metadata) into a valid `Request` for the Luno API (representing the infrastructure contract).
+
+By centralizing validation and mapping within the Handler:
+1.  **Orchestration Metadata**: Commands can safely carry metadata (e.g., `RetryCount`, `Priority`, or `TelemetryTags`) that the `Request` DTO should never see.
+2.  **Decoupled Evolution**: We are **not tied to a 1:1 mapping**. If the external Command and the internal API Request diverge, the Handler acts as the stable translator. We can introduce private helper methods or specialized mapping classes within the Application layer to manage this complexity without leaking it into the `Core` vocabulary.
+3.  **Policy Enforcement**: Input validation is the final "Gatekeeper" of the Use Case. Moving it to the Handler ensures that the "Rules of Engagement" for a specific API operation are explicit, centralized, and easy to audit.
+
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 1: The Kill List**
     - Delete `LimitOrderParameters.cs`.
