@@ -1,6 +1,8 @@
 using System;
 using Luno.SDK.Account;
 using Luno.SDK.Market;
+using Luno.SDK.Telemetry;
+using Luno.SDK.Trading;
 
 namespace Luno.SDK;
 

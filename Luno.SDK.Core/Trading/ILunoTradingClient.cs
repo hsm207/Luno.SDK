@@ -1,8 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Luno.SDK.Trading;
 
-namespace Luno.SDK;
+namespace Luno.SDK.Trading;
 
 /// <summary>
 /// Defines the low-level data-fetching operations for Luno Trading.

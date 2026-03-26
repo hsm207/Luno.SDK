@@ -7,6 +7,7 @@ using Luno.SDK.Infrastructure.Account;
 using Luno.SDK.Infrastructure.Authentication;
 using Luno.SDK.Infrastructure.ErrorHandling;
 using Luno.SDK.Infrastructure.Telemetry;
+using Luno.SDK.Telemetry;
 using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
 using Luno.SDK.Trading;
