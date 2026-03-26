@@ -24,7 +24,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Base { get; set; }
 #endif
         /// <summary>The base currency account</summary>
-        public int? BaseAccountId { get; set; }
+        public long? BaseAccountId { get; set; }
         /// <summary>Client Order ID has the value that was passed in when the Order was posted.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -44,7 +44,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Counter { get; set; }
 #endif
         /// <summary>The counter currency account</summary>
-        public int? CounterAccountId { get; set; }
+        public long? CounterAccountId { get; set; }
         /// <summary>Time of order creation (Unix milliseconds)</summary>
         public long? CreationTimestamp { get; set; }
         /// <summary>Time of order expiration (Unix milliseconds)This value is set at the time of processing a request from you to cancel the order, otherwise it will be 0.</summary>
@@ -147,11 +147,11 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "base", n => { Base = n.GetStringValue(); } },
-                { "base_account_id", n => { BaseAccountId = n.GetIntValue(); } },
+                { "base_account_id", n => { BaseAccountId = n.GetLongValue(); } },
                 { "client_order_id", n => { ClientOrderId = n.GetStringValue(); } },
                 { "completed_timestamp", n => { CompletedTimestamp = n.GetLongValue(); } },
                 { "counter", n => { Counter = n.GetStringValue(); } },
-                { "counter_account_id", n => { CounterAccountId = n.GetIntValue(); } },
+                { "counter_account_id", n => { CounterAccountId = n.GetLongValue(); } },
                 { "creation_timestamp", n => { CreationTimestamp = n.GetLongValue(); } },
                 { "expiration_timestamp", n => { ExpirationTimestamp = n.GetLongValue(); } },
                 { "fee_base", n => { FeeBase = n.GetStringValue(); } },
@@ -176,11 +176,11 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("base", Base);
-            writer.WriteIntValue("base_account_id", BaseAccountId);
+            writer.WriteLongValue("base_account_id", BaseAccountId);
             writer.WriteStringValue("client_order_id", ClientOrderId);
             writer.WriteLongValue("completed_timestamp", CompletedTimestamp);
             writer.WriteStringValue("counter", Counter);
-            writer.WriteIntValue("counter_account_id", CounterAccountId);
+            writer.WriteLongValue("counter_account_id", CounterAccountId);
             writer.WriteLongValue("creation_timestamp", CreationTimestamp);
             writer.WriteLongValue("expiration_timestamp", ExpirationTimestamp);
             writer.WriteStringValue("fee_base", FeeBase);

@@ -94,13 +94,13 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Transfers
         {
             /// <summary>Unique identifier of the account to list the transfers from.</summary>
             [QueryParameter("account_id")]
-            public int? AccountId { get; set; }
+            public long? AccountId { get; set; }
             /// <summary>Filter to transfers created before this timestamp (Unix milliseconds).The default value (0) will return the latest transfers on the account.</summary>
             [QueryParameter("before")]
-            public int? Before { get; set; }
+            public long? Before { get; set; }
             /// <summary>Limit to this many transfers.</summary>
             [QueryParameter("limit")]
-            public int? Limit { get; set; }
+            public long? Limit { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

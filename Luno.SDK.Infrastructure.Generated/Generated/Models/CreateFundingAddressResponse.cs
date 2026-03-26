@@ -58,7 +58,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Name { get; set; }
 #endif
         /// <summary>The network property</summary>
-        public int? Network { get; set; }
+        public long? Network { get; set; }
         /// <summary>The qr_code_uri property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -122,7 +122,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "asset", n => { Asset = n.GetStringValue(); } },
                 { "assigned_at", n => { AssignedAt = n.GetIntValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
-                { "network", n => { Network = n.GetIntValue(); } },
+                { "network", n => { Network = n.GetLongValue(); } },
                 { "qr_code_uri", n => { QrCodeUri = n.GetStringValue(); } },
                 { "receive_fee", n => { ReceiveFee = n.GetStringValue(); } },
                 { "total_received", n => { TotalReceived = n.GetStringValue(); } },
@@ -142,7 +142,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteStringValue("asset", Asset);
             writer.WriteIntValue("assigned_at", AssignedAt);
             writer.WriteStringValue("name", Name);
-            writer.WriteIntValue("network", Network);
+            writer.WriteLongValue("network", Network);
             writer.WriteStringValue("qr_code_uri", QrCodeUri);
             writer.WriteStringValue("receive_fee", ReceiveFee);
             writer.WriteStringValue("total_received", TotalReceived);

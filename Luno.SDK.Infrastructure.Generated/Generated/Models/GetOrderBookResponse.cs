@@ -32,7 +32,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public List<global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry> Bids { get; set; }
 #endif
         /// <summary>Unix timestamp in milliseconds</summary>
-        public int? Timestamp { get; set; }
+        public long? Timestamp { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::Luno.SDK.Infrastructure.Generated.Models.GetOrderBookResponse"/> and sets the default values.
         /// </summary>
@@ -60,7 +60,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             {
                 { "asks", n => { Asks = n.GetCollectionOfObjectValues<global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry>(global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "bids", n => { Bids = n.GetCollectionOfObjectValues<global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry>(global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "timestamp", n => { Timestamp = n.GetIntValue(); } },
+                { "timestamp", n => { Timestamp = n.GetLongValue(); } },
             };
         }
         /// <summary>
@@ -72,7 +72,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteCollectionOfObjectValues<global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry>("asks", Asks);
             writer.WriteCollectionOfObjectValues<global::Luno.SDK.Infrastructure.Generated.Models.OrderBookEntry>("bids", Bids);
-            writer.WriteIntValue("timestamp", Timestamp);
+            writer.WriteLongValue("timestamp", Timestamp);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

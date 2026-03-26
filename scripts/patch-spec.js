@@ -91,6 +91,18 @@ if (orderV2Schema && orderV2Schema.properties) {
   });
 }
 
+// 9. Patch /api/1/postorder query parameters to support 64-bit integers (Unix ms)
+const postOrderPath = spec.paths['/api/1/postorder'];
+if (postOrderPath && postOrderPath.post && postOrderPath.post.parameters) {
+  ['timestamp', 'ttl'].forEach(paramName => {
+    const param = postOrderPath.post.parameters.find(p => p.name === paramName);
+    if (param && param.schema) {
+      param.schema.format = 'int64';
+      console.log(`Successfully patched 'postorder.${paramName}' parameter to 'int64'.`);
+    }
+  });
+}
+
 console.log(`Writing intermediate patched specification: ${outputPath}`);
 fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 

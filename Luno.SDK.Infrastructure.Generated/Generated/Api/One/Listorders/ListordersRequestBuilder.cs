@@ -90,7 +90,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Listorders
             public long? CreatedBefore { get; set; }
             /// <summary>Limit to this many orders</summary>
             [QueryParameter("limit")]
-            public int? Limit { get; set; }
+            public long? Limit { get; set; }
             /// <summary>Filter to only orders of this currency pair</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

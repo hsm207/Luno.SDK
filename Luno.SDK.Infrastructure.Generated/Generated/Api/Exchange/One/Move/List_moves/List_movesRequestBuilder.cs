@@ -94,10 +94,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Move.List_moves
         {
             /// <summary>Filter to moves requested before this timestamp (Unix milliseconds)</summary>
             [QueryParameter("before")]
-            public int? Before { get; set; }
+            public long? Before { get; set; }
             /// <summary>Limit to this many moves</summary>
             [QueryParameter("limit")]
-            public int? Limit { get; set; }
+            public long? Limit { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

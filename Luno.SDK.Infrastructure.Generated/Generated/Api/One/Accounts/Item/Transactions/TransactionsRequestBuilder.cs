@@ -87,10 +87,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Accounts.Item.Transactions
         {
             /// <summary>Maximum of the row range to return (exclusive)</summary>
             [QueryParameter("max_row")]
-            public int? MaxRow { get; set; }
+            public long? MaxRow { get; set; }
             /// <summary>Minimum of the row range to return (inclusive)</summary>
             [QueryParameter("min_row")]
-            public int? MinRow { get; set; }
+            public long? MinRow { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

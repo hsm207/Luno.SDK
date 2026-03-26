@@ -21,7 +21,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Accounts
         /// <summary>Gets an item from the Luno.SDK.Infrastructure.Generated.api.One.accounts.item collection</summary>
         /// <param name="position">Account ID - the unique identifier for the specific Account.</param>
         /// <returns>A <see cref="global::Luno.SDK.Infrastructure.Generated.Api.One.Accounts.Item.AccountsItemRequestBuilder"/></returns>
-        public global::Luno.SDK.Infrastructure.Generated.Api.One.Accounts.Item.AccountsItemRequestBuilder this[int position]
+        public global::Luno.SDK.Infrastructure.Generated.Api.One.Accounts.Item.AccountsItemRequestBuilder this[long position]
         {
             get
             {

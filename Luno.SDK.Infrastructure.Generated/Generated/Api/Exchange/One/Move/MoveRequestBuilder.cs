@@ -199,10 +199,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Move
 #endif
             /// <summary>The account to credit the funds to.</summary>
             [QueryParameter("credit_account_id")]
-            public int? CreditAccountId { get; set; }
+            public long? CreditAccountId { get; set; }
             /// <summary>The account to debit the funds from.</summary>
             [QueryParameter("debit_account_id")]
-            public int? DebitAccountId { get; set; }
+            public long? DebitAccountId { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

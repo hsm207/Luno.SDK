@@ -57,7 +57,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string BankRecipient { get; set; }
 #endif
         /// <summary>Time of beneficiary creation</summary>
-        public int? CreatedAt { get; set; }
+        public long? CreatedAt { get; set; }
         /// <summary>Unique id referencing beneficiary</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -99,7 +99,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "bank_country", n => { BankCountry = n.GetStringValue(); } },
                 { "bank_name", n => { BankName = n.GetStringValue(); } },
                 { "bank_recipient", n => { BankRecipient = n.GetStringValue(); } },
-                { "created_at", n => { CreatedAt = n.GetIntValue(); } },
+                { "created_at", n => { CreatedAt = n.GetLongValue(); } },
                 { "id", n => { Id = n.GetStringValue(); } },
                 { "supports_fast_withdrawals", n => { SupportsFastWithdrawals = n.GetBoolValue(); } },
             };
@@ -117,7 +117,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteStringValue("bank_country", BankCountry);
             writer.WriteStringValue("bank_name", BankName);
             writer.WriteStringValue("bank_recipient", BankRecipient);
-            writer.WriteIntValue("created_at", CreatedAt);
+            writer.WriteLongValue("created_at", CreatedAt);
             writer.WriteStringValue("id", Id);
             writer.WriteBoolValue("supports_fast_withdrawals", SupportsFastWithdrawals);
             writer.WriteAdditionalData(AdditionalData);

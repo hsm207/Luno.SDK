@@ -21,7 +21,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Beneficiaries
         /// <summary>Gets an item from the Luno.SDK.Infrastructure.Generated.api.One.beneficiaries.item collection</summary>
         /// <param name="position">ID of the Beneficiary to delete.</param>
         /// <returns>A <see cref="global::Luno.SDK.Infrastructure.Generated.Api.One.Beneficiaries.Item.BeneficiariesItemRequestBuilder"/></returns>
-        public global::Luno.SDK.Infrastructure.Generated.Api.One.Beneficiaries.Item.BeneficiariesItemRequestBuilder this[int position]
+        public global::Luno.SDK.Infrastructure.Generated.Api.One.Beneficiaries.Item.BeneficiariesItemRequestBuilder this[long position]
         {
             get
             {

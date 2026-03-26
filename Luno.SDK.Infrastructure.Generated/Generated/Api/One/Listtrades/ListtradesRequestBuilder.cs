@@ -87,16 +87,16 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Listtrades
         {
             /// <summary>Filter to trades from (including) this sequence number.Default behaviour is not to include this filter.</summary>
             [QueryParameter("after_seq")]
-            public int? AfterSeq { get; set; }
+            public long? AfterSeq { get; set; }
             /// <summary>Filter to trades before this timestamp (Unix milliseconds).</summary>
             [QueryParameter("before")]
             public int? Before { get; set; }
             /// <summary>Filter to trades before (excluding) this sequence number.Default behaviour is not to include this filter.</summary>
             [QueryParameter("before_seq")]
-            public int? BeforeSeq { get; set; }
+            public long? BeforeSeq { get; set; }
             /// <summary>Limit to this number of trades (default 100).</summary>
             [QueryParameter("limit")]
-            public int? Limit { get; set; }
+            public long? Limit { get; set; }
             /// <summary>Filter to trades of this currency pair.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
