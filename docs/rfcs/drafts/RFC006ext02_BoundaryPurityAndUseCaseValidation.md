@@ -109,6 +109,21 @@ By centralizing validation and mapping within the Handler:
 - **When:** `HandleAsync` is executed.
 - **Then:** The Handler throws `LunoValidationException` before the mapping or dispatch phases.
 
+### 6.3 Idempotency Reconciliation Anchor (Policy Enforcement)
+- **Tier:** Unit
+- **Given:** A `409 Conflict` from the API where an existing order with the same `ClientOrderId` is found.
+- **When:** `PostLimitOrderHandler.ReconcileDuplicateAsync` is called.
+- **Then:** We compare the existing state from the exchange against the **validated `LimitOrderRequest`**.
+- **Verification:** The reconciliation **must** throw `LunoIdempotencyException` if any of the following "Anchor" fields do not match:
+    - `Pair`
+    - `Side`
+    - `Price` (compared against `LimitPrice` in response)
+    - `Volume` (compared against `LimitVolume` in response)
+    - `BaseAccountId`
+    - `CounterAccountId`
+    - `TimeInForce`
+- **Note on Metadata**: Fields such as `Timestamp`, `TTL`, `StopPrice`, `StopDirection`, and `PostOnly` are **Ignored** during reconciliation for standard Limit Orders as they are either one-way metadata or not part of the primary Limit Order contract.
+
 ## 7. Operational Reality
 - **Blast Radius:** **High (Breaking Change)**. This refactoring removes public types and methods from `Luno.SDK.Core`. 
 - **Observability:** Telemetry remains unchanged as validation exceptions are already captured at the adapter level.
