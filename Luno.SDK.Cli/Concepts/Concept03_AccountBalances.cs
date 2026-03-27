@@ -58,7 +58,6 @@ public static class Concept03_AccountBalances
 
             // 2. Filtered Fetch
             Console.WriteLine("\n--- Step 2: Fetching specific balances (Filtered: XBT, ETH) ---");
-            // Using the new fluent overload! 💅
             var filteredBalances = await client.Accounts.GetBalancesAsync(new[] { "XBT", "ETH" });
 
             Console.WriteLine($"Successfully retrieved {filteredBalances.Count} filtered balances:");
