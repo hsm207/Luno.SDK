@@ -29,15 +29,15 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             req.QueryParameters.Price = request.Price.ToString(CultureInfo.InvariantCulture);
 
             // Account explicitly mandated by application-layer validation
-            req.QueryParameters.BaseAccountId = (int?)request.BaseAccountId;
-            req.QueryParameters.CounterAccountId = (int?)request.CounterAccountId;
+            req.QueryParameters.BaseAccountId = request.BaseAccountId;
+            req.QueryParameters.CounterAccountId = request.CounterAccountId;
 
             // Optional idempotency / behavior fields
             req.QueryParameters.ClientOrderId = request.ClientOrderId;
             req.QueryParameters.PostOnly = request.PostOnly;
             req.QueryParameters.StopPrice = request.StopPrice?.ToString(CultureInfo.InvariantCulture);
-            req.QueryParameters.Timestamp = (int?)request.Timestamp;
-            req.QueryParameters.Ttl = (int?)request.TTL;
+            req.QueryParameters.Timestamp = request.Timestamp;
+            req.QueryParameters.Ttl = request.TTL;
 
             if (request.StopDirection.HasValue)
                 req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(request.StopDirection.Value);
@@ -85,8 +85,8 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         {
             if (state.HasValue) req.QueryParameters.Closed = state.Value == OrderStatus.Complete;
             if (pair != null) req.QueryParameters.Pair = pair;
-            if (createdBefore.HasValue) req.QueryParameters.CreatedBefore = (int)createdBefore.Value;
-            if (limit.HasValue) req.QueryParameters.Limit = (int)limit.Value;
+            if (createdBefore.HasValue) req.QueryParameters.CreatedBefore = createdBefore.Value;
+            if (limit.HasValue) req.QueryParameters.Limit = limit.Value;
 
             req.Options.Add(new LunoTelemetryOptions("ListOrders"));
         }, ct);
