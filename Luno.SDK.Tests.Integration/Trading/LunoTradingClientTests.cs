@@ -60,6 +60,7 @@ public class LunoTradingClientTests : IDisposable
                     order_id = expectedOrderId,
                     client_order_id = clientId,
                     base_account_id = 1,
+                    counter_account_id = 2,
                     limit_price = "250000",
                     limit_volume = "0.001",
                     side = "BUY",
@@ -353,6 +354,7 @@ public class LunoTradingClientTests : IDisposable
                     order_id = "BX123",
                     client_order_id = clientId,
                     base_account_id = 1,
+                    counter_account_id = 2,
                     limit_price = "999999", // Vastly different price
                     limit_volume = "0.001",
                     side = "BUY",
@@ -396,6 +398,7 @@ public class LunoTradingClientTests : IDisposable
                     order_id = "BX123",
                     client_order_id = clientId,
                     base_account_id = 1,
+                    counter_account_id = 2,
                     limit_price = "250000",
                     limit_volume = "0.001",
                     side = "SELL", // Mismatch!

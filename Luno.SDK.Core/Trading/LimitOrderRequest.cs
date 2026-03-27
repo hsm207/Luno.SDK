@@ -2,7 +2,7 @@ namespace Luno.SDK.Trading;
 
 /// <summary>
 /// A behavior-free boundary DTO for crossing the Application → Infrastructure boundary.
-/// Constructed by the Application layer after validating a <see cref="LimitOrderParameters"/> value object.
+/// Constructed by the Application layer after validating the incoming command.
 /// Infrastructure accepts this record and maps it directly on to the Kiota-generated API client — nothing more.
 /// </summary>
 public record LimitOrderRequest
