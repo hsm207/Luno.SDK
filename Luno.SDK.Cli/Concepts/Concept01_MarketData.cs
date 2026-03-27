@@ -31,7 +31,6 @@ public static class Concept01_MarketData
         // 3. Filtered Demo
         var pairs = new[] { "XBTMYR", "ETHMYR" };
         Console.WriteLine($"\n🎯 Fetching FILTERED tickers ({string.Join(", ", pairs)}) from Luno...");
-        // Using the new filtered overload! 💅
         await foreach (var ticker in luno.Market.GetTickersAsync(pairs))
         {
             PrintTicker(ticker);
