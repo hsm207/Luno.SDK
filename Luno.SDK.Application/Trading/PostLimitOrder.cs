@@ -137,7 +137,7 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
 
     private async Task<OrderResponse> ReconcileDuplicateAsync(LimitOrderRequest expected, CancellationToken ct)
     {
-        // ARCHITECTURAL DECISION: The SOLID audit identified the downcast in EnsureParametersMatch 
+        // ARCHITECTURAL DECISION: The audit identified the downcast in EnsureParametersMatch 
         // as an LSP violation. However, we intentionally retain this 'tension' in the Application 
         // layer to preserve the purity of surrounding layers:
         // 1. ILunoTradingOperations remains a 'dumb' 1:1 wrapper of the Kiota client (no 'fake' typed queries).
@@ -164,7 +164,6 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Side={existing.Side} but request has Side={expected.Side}.");
 
-        // The Fix: Explicitly check that the existing order is a LimitOrder.
         if (existing is not LimitOrder limitOrder)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Type={existing.Type} but request has Type={OrderType.Limit}.");
