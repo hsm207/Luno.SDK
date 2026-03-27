@@ -10,8 +10,9 @@ namespace Luno.SDK.Tests.Unit.Application;
 
 /// <summary>
 /// Unit tests for <see cref="PostLimitOrderHandler"/>.
-/// The reconciliation logic is now in the Application layer — these tests exercise it
-/// with only a mock <see cref="ILunoTradingClient"/>, with no WireMock or HTTP involved.
+/// Unique branching logic (e.g. Volume/Pair/Type mismatches during reconciliation)
+/// is preserved here as Tier 1 logic tests.
+/// Happy paths and simple Price/Side mismatches are covered by Tier 2 Integration tests.
 /// </summary>
 public class PostLimitOrderHandlerTests
 {
@@ -39,12 +40,13 @@ public class PostLimitOrderHandlerTests
         decimal limitPrice = 1000m,
         decimal limitVolume = 1m,
         OrderSide side = OrderSide.Buy,
-        TimeInForce timeInForce = TimeInForce.GTC) =>
+        TimeInForce timeInForce = TimeInForce.GTC,
+        string pair = "XBTZAR") =>
         new(
             orderId: orderId,
             side: side,
             status: OrderStatus.Awaiting,
-            pair: "XBTZAR",
+            pair: pair,
             creationTimestamp: 1700000000000,
             baseAccountId: 1,
             counterAccountId: 2,
@@ -67,31 +69,7 @@ public class PostLimitOrderHandlerTests
             counterAccountId: 2,
             clientOrderId: clientOrderId);
 
-    // ── Happy path reconciliation ────────────────────────────────────────────────
-
-    [Fact(DisplayName = "Given a 409 with matching parameters, When reconciling, Then return existing OrderId")]
-    public async Task HandleAsync_Idempotency_MatchingParams_ReturnsExistingOrderId()
-    {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
-        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        // Explicitly test with a non-default TimeInForce to verify full parameter matching
-        var command = BuildValidCommand(tif: TimeInForce.FOK);
-        var existingOrder = BuildExistingOrder(timeInForce: TimeInForce.FOK);
-
-        tradingClientMock
-            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new LunoIdempotencyException("409"));
-
-        tradingClientMock
-            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingOrder);
-
-        var result = await handler.HandleAsync(command);
-
-        Assert.Equal("BX-EXISTING", result.OrderId);
-    }
-
-    // ── Type mismatch ────────────────────────────────────────────────────────────
+    // ── Unique Branching: Type mismatch ──────────────────────────────────────────
 
     [Fact(DisplayName = "Given a 409 where existing order is a MarketOrder, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_TypeMismatch_ThrowsLunoIdempotencyException()
@@ -99,7 +77,7 @@ public class PostLimitOrderHandlerTests
         var tradingClientMock = new Mock<ILunoTradingClient>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
-        var existingOrder = BuildExistingMarketOrder(); // MarketOrder instead of LimitOrder
+        var existingOrder = BuildExistingMarketOrder();
 
         tradingClientMock
             .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
@@ -113,29 +91,7 @@ public class PostLimitOrderHandlerTests
         Assert.Contains("Type", ex.Message);
     }
 
-    // ── Price mismatch ───────────────────────────────────────────────────────────
-
-    [Fact(DisplayName = "Given a 409 with a price mismatch, When reconciling, Then throw LunoIdempotencyException")]
-    public async Task HandleAsync_Idempotency_PriceMismatch_ThrowsLunoIdempotencyException()
-    {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
-        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand(price: 1000m);
-        var existingOrder = BuildExistingOrder(limitPrice: 1500m);
-
-        tradingClientMock
-            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new LunoIdempotencyException("409"));
-
-        tradingClientMock
-            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingOrder);
-
-        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
-        Assert.Contains("Price", ex.Message);
-    }
-
-    // ── Volume mismatch ──────────────────────────────────────────────────────────
+    // ── Unique Branching: Volume mismatch ────────────────────────────────────────
 
     [Fact(DisplayName = "Given a 409 with a volume mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_VolumeMismatch_ThrowsLunoIdempotencyException()
@@ -157,7 +113,7 @@ public class PostLimitOrderHandlerTests
         Assert.Contains("Volume", ex.Message);
     }
 
-    // ── TimeInForce mismatch ─────────────────────────────────────────────────────
+    // ── Unique Branching: TimeInForce mismatch ───────────────────────────────────
 
     [Fact(DisplayName = "Given a 409 with a TimeInForce mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_TimeInForceMismatch_ThrowsLunoIdempotencyException()
@@ -179,15 +135,15 @@ public class PostLimitOrderHandlerTests
         Assert.Contains("TimeInForce", ex.Message);
     }
 
-    // ── Side mismatch ────────────────────────────────────────────────────────────
+    // ── Unique Branching: Pair mismatch ──────────────────────────────────────────
 
-    [Fact(DisplayName = "Given a 409 with a side mismatch, When reconciling, Then throw LunoIdempotencyException")]
-    public async Task HandleAsync_Idempotency_SideMismatch_ThrowsLunoIdempotencyException()
+    [Fact(DisplayName = "Given a 409 with a Pair mismatch, When reconciling, Then throw LunoIdempotencyException")]
+    public async Task HandleAsync_Idempotency_PairMismatch_ThrowsLunoIdempotencyException()
     {
         var tradingClientMock = new Mock<ILunoTradingClient>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand(side: OrderSide.Buy);
-        var existingOrder = BuildExistingOrder(side: OrderSide.Sell);   // mismatch!
+        var command = BuildValidCommand();
+        var existingOrder = BuildExistingOrder(pair: "ETHMYR"); // Explicitly set mismatch pair
 
         tradingClientMock
             .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
@@ -198,45 +154,30 @@ public class PostLimitOrderHandlerTests
             .ReturnsAsync(existingOrder);
 
         var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
-        Assert.Contains("Side", ex.Message);
+        Assert.Contains("Pair", ex.Message);
     }
 
-    // ── No ClientOrderId: 409 propagates ────────────────────────────────────────
+    // ── Unique Branching: BaseAccountId mismatch ────────────────────────────────
 
-    [Fact(DisplayName = "Given a 409 with no ClientOrderId, When posting, Then LunoIdempotencyException propagates unhandled")]
-    public async Task HandleAsync_Idempotency_NoClientOrderId_PropagatesException()
-    {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
-        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand(clientOrderId: null);  // no clientOrderId, nothing to reconcile
-
-        tradingClientMock
-            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new LunoIdempotencyException("409"));
-
-        await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
-
-        // Verify we never attempted a lookup when there's nothing to reconcile against
-        tradingClientMock.Verify(
-            x => x.FetchOrderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    // ── Sparse fields from API (existing order with silly required values) ───────
-
-    [Fact(DisplayName = "Given a 409 where existing order has different silly values, When reconciling, Then return existing OrderId (side matches)")]
-    public async Task HandleAsync_Idempotency_SparseExistingOrder_ReturnsExistingOrderId()
+    [Fact(DisplayName = "Given a 409 with a BaseAccountId mismatch, When reconciling, Then throw LunoIdempotencyException")]
+    public async Task HandleAsync_Idempotency_BaseAccountIdMismatch_ThrowsLunoIdempotencyException()
     {
         var tradingClientMock = new Mock<ILunoTradingClient>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
-        // Simulate an order returned with matching side and matching limit fields.
-        // The "silly" values here prove the reconciliation logic works
-        // even with non-standard but valid field values.
-        var existingOrder = BuildExistingOrder(
+        // Use helper to create a mismatching order
+        var mismatchOrder = new LimitOrder(
+            orderId: "BX-EXISTING",
+            side: OrderSide.Buy,
+            status: OrderStatus.Awaiting,
+            pair: "XBTZAR",
+            creationTimestamp: 1700000000000,
+            baseAccountId: 999, // Mismatch!
+            counterAccountId: 2,
             limitPrice: 1000m,
             limitVolume: 1m,
-            side: OrderSide.Buy);
+            timeInForce: TimeInForce.GTC,
+            clientOrderId: "cli-001");
 
         tradingClientMock
             .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
@@ -244,9 +185,106 @@ public class PostLimitOrderHandlerTests
 
         tradingClientMock
             .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingOrder);
+            .ReturnsAsync(mismatchOrder);
 
-        var result = await handler.HandleAsync(command);
-        Assert.Equal("BX-EXISTING", result.OrderId);
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
+        Assert.Contains("BaseAccountId", ex.Message);
+    }
+
+    // ── Unique Branching: CounterAccountId mismatch ─────────────────────────────
+
+    [Fact(DisplayName = "Given a 409 with a CounterAccountId mismatch, When reconciling, Then throw LunoIdempotencyException")]
+    public async Task HandleAsync_Idempotency_CounterAccountIdMismatch_ThrowsLunoIdempotencyException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand();
+        var mismatchOrder = new LimitOrder(
+            orderId: "BX-EXISTING",
+            side: OrderSide.Buy,
+            status: OrderStatus.Awaiting,
+            pair: "XBTZAR",
+            creationTimestamp: 1700000000000,
+            baseAccountId: 1,
+            counterAccountId: 999, // Mismatch!
+            limitPrice: 1000m,
+            limitVolume: 1m,
+            timeInForce: TimeInForce.GTC,
+            clientOrderId: "cli-001");
+
+        tradingClientMock
+            .Setup(x => x.FetchPostLimitOrderAsync(It.IsAny<LimitOrderRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new LunoIdempotencyException("409"));
+
+        tradingClientMock
+            .Setup(x => x.FetchOrderAsync(null, "cli-001", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mismatchOrder);
+
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(() => handler.HandleAsync(command));
+        Assert.Contains("CounterAccountId", ex.Message);
+    }
+
+    // ── Business Rule Validation ────────────────────────────────────────────────
+
+    [Fact(DisplayName = "Given PostOnly is true and TIF is not GTC, When handling, Then throw LunoValidationException")]
+    public async Task HandleAsync_Validation_PostOnlyWithNonGtc_ThrowsLunoValidationException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand(tif: TimeInForce.IOC) with { PostOnly = true };
+
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
+        Assert.Contains("PostOnly cannot be used with a TimeInForce other than GTC", ex.Message);
+    }
+
+    [Theory(DisplayName = "Given missing or invalid account IDs, When handling, Then throw LunoValidationException")]
+    [InlineData(null, 2L)]
+    [InlineData(1L, null)]
+    [InlineData(null, null)]
+    [InlineData(0L, 2L)]
+    [InlineData(1L, 0L)]
+    public async Task HandleAsync_Validation_ExplicitAccountMandate_ThrowsLunoValidationException(long? baseId, long? counterId)
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand() with { BaseAccountId = baseId, CounterAccountId = counterId };
+
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
+        Assert.Contains("Explicit Account Mandate violated", ex.Message);
+    }
+
+    // ── Enum Validation ─────────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "Given an invalid OrderSide cast, When handling, Then throw LunoValidationException")]
+    public async Task HandleAsync_Validation_InvalidOrderSide_ThrowsLunoValidationException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand() with { Side = (OrderSide)999 };
+
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
+        Assert.Contains("Invalid OrderSide", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given an invalid TimeInForce cast, When handling, Then throw LunoValidationException")]
+    public async Task HandleAsync_Validation_InvalidTimeInForce_ThrowsLunoValidationException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand() with { TimeInForce = (TimeInForce)999 };
+
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
+        Assert.Contains("Invalid TimeInForce", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given an invalid StopDirection cast, When handling, Then throw LunoValidationException")]
+    public async Task HandleAsync_Validation_InvalidStopDirection_ThrowsLunoValidationException()
+    {
+        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
+        var command = BuildValidCommand() with { StopPrice = 1000m, StopDirection = (StopDirection)999 };
+
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
+        Assert.Contains("Invalid StopDirection", ex.Message);
     }
 }
