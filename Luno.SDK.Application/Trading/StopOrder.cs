@@ -38,15 +38,12 @@ public class StopOrderHandler(ILunoTradingOperations tradingClient) : ICommandHa
         StopOrderCommand command,
         CancellationToken ct = default)
     {
+        Validate(command);
+
         string? orderId = command.OrderId;
 
         if (string.IsNullOrWhiteSpace(orderId))
         {
-            if (string.IsNullOrWhiteSpace(command.ClientOrderId))
-            {
-                throw new LunoValidationException("Either OrderId or ClientOrderId must be provided to stop an order.");
-            }
-
             // High-level Policy: Lookup the order to get the exchange-assigned ID if not known.
             var order = await tradingClient.FetchOrderAsync(clientOrderId: command.ClientOrderId, ct: ct).ConfigureAwait(false);
             
@@ -63,5 +60,15 @@ public class StopOrderHandler(ILunoTradingOperations tradingClient) : ICommandHa
         await tradingClient.FetchStopOrderAsync(orderId, ct).ConfigureAwait(false);
 
         return new OrderResponse { OrderId = orderId };
+    }
+
+    private static void Validate(StopOrderCommand command)
+    {
+        if (command == null) throw new LunoValidationException("Command cannot be null.");
+
+        if (string.IsNullOrWhiteSpace(command.OrderId) && string.IsNullOrWhiteSpace(command.ClientOrderId))
+        {
+            throw new LunoValidationException("Either OrderId or ClientOrderId must be provided to stop an order.");
+        }
     }
 }

@@ -33,6 +33,8 @@ public class ListOrdersHandler(ILunoTradingOperations trading) : ICommandHandler
     /// <returns>A list of mapped <see cref="OrderDetailsResponse"/> objects.</returns>
     public async Task<IReadOnlyList<OrderDetailsResponse>> HandleAsync(ListOrdersQuery query, CancellationToken ct = default)
     {
+        Validate(query);
+
         var orders = await trading.FetchListOrdersAsync(
             state: query.State,
             pair: query.Pair,
@@ -41,6 +43,17 @@ public class ListOrdersHandler(ILunoTradingOperations trading) : ICommandHandler
             ct: ct).ConfigureAwait(false);
 
         return orders.Select(o => o.ToResponse()).ToList();
+    }
+
+    /// <summary>
+    /// Validates the query against Application-layer business rules.
+    /// </summary>
+    private static void Validate(ListOrdersQuery query)
+    {
+        if (query.Limit.HasValue && (query.Limit.Value < 1 || query.Limit.Value > 1000))
+        {
+            throw new LunoValidationException($"Limit must be between 1 and 1000 inclusive, but was {query.Limit.Value}.");
+        }
     }
 }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Luno.SDK.Trading;
@@ -62,8 +63,11 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
     /// <returns>A response containing the generated Order ID.</returns>
     public async Task<OrderResponse> HandleAsync(PostLimitOrderCommand command, CancellationToken ct = default)
     {
-        // 1. Build and validate the Domain Value Object (stays in Application; never crosses into Infra).
-        var parameters = new LimitOrderParameters
+        // 1. Validate the command.
+        Validate(command);
+
+        // 2. Map directly to the boundary DTO
+        var request = new LimitOrderRequest
         {
             Pair             = command.Pair,
             Side             = command.Side,
@@ -79,25 +83,6 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
             Timestamp        = command.Timestamp,
             TTL              = command.TTL,
         };
-        parameters.Validate();
-
-        // 2. Map validated domain params to the behavior-free boundary DTO before crossing into Infrastructure.
-        var request = new LimitOrderRequest
-        {
-            Pair             = parameters.Pair,
-            Side             = parameters.Side,
-            Volume           = parameters.Volume,
-            Price            = parameters.Price,
-            BaseAccountId    = parameters.BaseAccountId,
-            CounterAccountId = parameters.CounterAccountId,
-            ClientOrderId    = parameters.ClientOrderId,
-            TimeInForce      = parameters.TimeInForce,
-            PostOnly         = parameters.PostOnly,
-            StopPrice        = parameters.StopPrice,
-            StopDirection    = parameters.StopDirection,
-            Timestamp        = parameters.Timestamp,
-            TTL              = parameters.TTL,
-        };
 
         // 3. Post the order. Let LunoIdempotencyException propagate when no ClientOrderId was given.
         try
@@ -105,15 +90,52 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
             var reference = await tradingClient.FetchPostLimitOrderAsync(request, ct).ConfigureAwait(false);
             return new OrderResponse { OrderId = reference.OrderId };
         }
-        catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(parameters.ClientOrderId))
+        catch (LunoIdempotencyException) when (!string.IsNullOrWhiteSpace(request.ClientOrderId))
         {
-            return await ReconcileDuplicateAsync(parameters, ct).ConfigureAwait(false);
+            return await ReconcileDuplicateAsync(request, ct).ConfigureAwait(false);
         }
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────────
 
-    private async Task<OrderResponse> ReconcileDuplicateAsync(LimitOrderParameters expected, CancellationToken ct)
+    /// <summary>
+    /// Validates the command against Application-layer business rules.
+    /// These rules share the same "reason to change" as the Use Case itself (SRP).
+    /// </summary>
+    private static void Validate(PostLimitOrderCommand command)
+    {
+        if (!Enum.IsDefined(typeof(OrderSide), command.Side))
+        {
+            throw new LunoValidationException($"Invalid OrderSide: {command.Side}");
+        }
+
+        if (!Enum.IsDefined(typeof(TimeInForce), command.TimeInForce))
+        {
+            throw new LunoValidationException($"Invalid TimeInForce: {command.TimeInForce}");
+        }
+
+        if (command.StopDirection.HasValue && !Enum.IsDefined(typeof(StopDirection), command.StopDirection.Value))
+        {
+            throw new LunoValidationException($"Invalid StopDirection: {command.StopDirection.Value}");
+        }
+
+        if (command.PostOnly && command.TimeInForce != TimeInForce.GTC)
+        {
+            throw new LunoValidationException("PostOnly cannot be used with a TimeInForce other than GTC.");
+        }
+
+        if (command.BaseAccountId.GetValueOrDefault() <= 0 || command.CounterAccountId.GetValueOrDefault() <= 0)
+        {
+            throw new LunoValidationException("Explicit Account Mandate violated: Both BaseAccountId and CounterAccountId must be explicitly provided with valid positive IDs to prevent accidental trading on default accounts.");
+        }
+
+        if (command.StopPrice.HasValue != command.StopDirection.HasValue)
+        {
+            throw new LunoValidationException("For Stop-Limit orders, both StopPrice and StopDirection must be provided together.");
+        }
+    }
+
+    private async Task<OrderResponse> ReconcileDuplicateAsync(LimitOrderRequest expected, CancellationToken ct)
     {
         // ARCHITECTURAL DECISION: The SOLID audit identified the downcast in EnsureParametersMatch 
         // as an LSP violation. However, we intentionally retain this 'tension' in the Application 
@@ -132,8 +154,12 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
     /// Validates that a previously-placed order with the same ClientOrderId
     /// matches the current request's parameters. Throws on the first mismatch.
     /// </summary>
-    private static void EnsureParametersMatch(Order existing, LimitOrderParameters expected)
+    private static void EnsureParametersMatch(Order existing, LimitOrderRequest expected)
     {
+        if (existing.Pair != expected.Pair)
+            throw new LunoIdempotencyException(
+                $"Idempotency conflict: existing order has Pair={existing.Pair} but request has Pair={expected.Pair}.");
+
         if (existing.Side != expected.Side)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Side={existing.Side} but request has Side={expected.Side}.");
@@ -150,6 +176,14 @@ public class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : IComm
         if (limitOrder.LimitVolume != expected.Volume)
             throw new LunoIdempotencyException(
                 $"Idempotency conflict: existing order has Volume={limitOrder.LimitVolume} but request has Volume={expected.Volume}.");
+
+        if (existing.BaseAccountId != expected.BaseAccountId)
+            throw new LunoIdempotencyException(
+                $"Idempotency conflict: existing order has BaseAccountId={existing.BaseAccountId} but request has BaseAccountId={expected.BaseAccountId}.");
+
+        if (existing.CounterAccountId != expected.CounterAccountId)
+            throw new LunoIdempotencyException(
+                $"Idempotency conflict: existing order has CounterAccountId={existing.CounterAccountId} but request has CounterAccountId={expected.CounterAccountId}.");
 
         if (limitOrder.TimeInForce != expected.TimeInForce)
             throw new LunoIdempotencyException(

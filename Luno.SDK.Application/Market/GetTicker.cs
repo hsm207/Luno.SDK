@@ -25,7 +25,19 @@ public class GetTickerHandler(ILunoMarketOperations market) : ICommandHandler<Ge
         GetTickerQuery query,
         CancellationToken ct = default)
     {
+        Validate(query);
         var ticker = await market.FetchTickerAsync(query.Pair, ct);
         return ticker.ToResponse();
+    }
+
+    /// <summary>
+    /// Validates the query against Application-layer business rules.
+    /// </summary>
+    private static void Validate(GetTickerQuery query)
+    {
+        if (string.IsNullOrWhiteSpace(query.Pair))
+        {
+            throw new LunoValidationException("Pair must be provided to fetch a ticker.");
+        }
     }
 }

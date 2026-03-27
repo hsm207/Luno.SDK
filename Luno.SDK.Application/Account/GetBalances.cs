@@ -35,8 +35,15 @@ public class GetBalancesHandler(ILunoAccountOperations accountClient) : ICommand
         GetBalancesQuery query,
         CancellationToken ct = default)
     {
+        Validate(query);
+
         var balances = await accountClient.FetchBalancesAsync(query.Assets, ct).ConfigureAwait(false);
 
         return balances.Select(b => b.ToResponse()).ToList().AsReadOnly();
+    }
+
+    private static void Validate(GetBalancesQuery query)
+    {
+        if (query == null) throw new LunoValidationException("Query cannot be null.");
     }
 }
