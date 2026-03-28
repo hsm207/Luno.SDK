@@ -103,6 +103,17 @@ if (postOrderPath && postOrderPath.post && postOrderPath.post.parameters) {
   });
 }
 
+// 10. Fix the '/api/exchange/1/markets' endpoint 'pair' parameter serialization
+// Mandates multiple params (pair=XBTZAR&pair=ETHZAR) which requires 'explode: true'.
+const marketsPath = spec.paths['/api/exchange/1/markets'];
+if (marketsPath && marketsPath.get && marketsPath.get.parameters) {
+    const pairParam = marketsPath.get.parameters.find(p => p.name === 'pair');
+    if (pairParam) {
+        pairParam.explode = true;
+        console.log("Successfully patched 'markets.pair' parameter to 'explode: true'.");
+    }
+}
+
 console.log(`Writing intermediate patched specification: ${outputPath}`);
 fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 
