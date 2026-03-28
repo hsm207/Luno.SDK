@@ -9,7 +9,7 @@ namespace Luno.SDK;
 /// <summary>
 /// Provides a concrete implementation of the market clients using the Kiota-generated API client.
 /// </summary>
-public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoMarketClient
+public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoMarketClient, ILunoMarketOperations
 {
     private readonly LunoApiClient _apiClient = api; // Changed to use the injected api
 
@@ -17,9 +17,9 @@ public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands
     public ILunoCommandDispatcher Commands { get; } = commands; // Added Commands property
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<Ticker> FetchTickersAsync(
-        string[]? pairs = null,
-        [EnumeratorCancellation] CancellationToken ct = default) // Changed return type to Ticker, and added using for EnumeratorCancellation
+    async IAsyncEnumerable<Ticker> ILunoMarketOperations.FetchTickersAsync(
+        string[]? pairs,
+        [EnumeratorCancellation] CancellationToken ct) // Changed return type to Ticker, and added using for EnumeratorCancellation
     {
         var response = await _apiClient.Api.One.Tickers.GetAsync(req =>
         {
@@ -34,7 +34,7 @@ public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands
     }
 
     /// <inheritdoc />
-    public async Task<Ticker> FetchTickerAsync(string pair, CancellationToken ct = default)
+    async Task<Ticker> ILunoMarketOperations.FetchTickerAsync(string pair, CancellationToken ct)
     {
         var response = await _apiClient.Api.One.Ticker.GetAsync(req =>
         {

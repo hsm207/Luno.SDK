@@ -13,12 +13,12 @@ namespace Luno.SDK.Infrastructure.Trading;
 /// <summary>
 /// Provides a concrete implementation of the trading clients using the generated Kiota client.
 /// </summary>
-internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoTradingClient
+internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoTradingClient, ILunoTradingOperations
 {
     private readonly LunoApiClient _apiClient = api;
     public ILunoCommandDispatcher Commands { get; } = commands;
 
-    public async Task<OrderReference> FetchPostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct = default)
+    async Task<OrderReference> ILunoTradingOperations.FetchPostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct)
     {
         var response = await _apiClient.Api.One.Postorder.PostAsync(req =>
         {
@@ -51,7 +51,7 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         return new OrderReference { OrderId = response!.OrderId! };
     }
 
-    public async Task<bool> FetchStopOrderAsync(string orderId, CancellationToken ct = default)
+    async Task<bool> ILunoTradingOperations.FetchStopOrderAsync(string orderId, CancellationToken ct)
     {
         var response = await _apiClient.Api.One.Stoporder.PostAsync(req =>
         {
@@ -62,7 +62,7 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         return response!.Success!.Value;
     }
 
-    public async Task<Order> FetchOrderAsync(string? orderId = null, string? clientOrderId = null, CancellationToken ct = default)
+    async Task<Order> ILunoTradingOperations.FetchOrderAsync(string? orderId, string? clientOrderId, CancellationToken ct)
     {
         var response = await _apiClient.Api.Exchange.Three.Order.GetAsync(req =>
         {
@@ -74,12 +74,12 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
         return MapGetOrderResponse(response!);
     }
 
-    public async Task<System.Collections.Generic.IReadOnlyList<Order>> FetchListOrdersAsync(
-        OrderStatus? state = null,
-        string? pair = null,
-        long? createdBefore = null,
-        long? limit = null,
-        CancellationToken ct = default)
+    async Task<System.Collections.Generic.IReadOnlyList<Order>> ILunoTradingOperations.FetchListOrdersAsync(
+        OrderStatus? state,
+        string? pair,
+        long? createdBefore,
+        long? limit,
+        CancellationToken ct)
     {
         var response = await _apiClient.Api.Exchange.Two.Listorders.GetAsync(req =>
         {
