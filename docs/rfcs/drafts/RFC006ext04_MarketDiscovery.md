@@ -21,16 +21,17 @@
 - **Goals:**
     - Implement `FetchMarketsAsync` in the (internal) `ILunoMarketOperations`.
     - Provide a public `GetMarketsAsync` extension method supporting optional **pairs filtering**.
-    - Return metadata via `IAsyncEnumerable<MarketInfo>` for consistency with the Tickers API and to allow for large market lists.
     - Expose a `MarketInfo` domain record with a **Strict Zero-Null Policy** for all 11 metadata fields.
+    - Ensure **Atomic Verification**: The whole list succeeds, or the whole call fails.
 - **Non-Goals (The Shield):**
     - This RFC does NOT implement caching. Caching is the responsibility of the consumer to avoid stale metadata issues.
     - This RFC does NOT implement the Order Book streamer.
     - This RFC does NOT implement market-specific fee overrides.
+    - This RFC does NOT change the signature of existing trading methods.
 
 ## 4. Proposed Technical Design
 ### 4.1 Architecture & Boundaries
-> *Note: Code is temporary; boundaries are forever.*
+This follows the "Split & Seal" pattern established in RFC 006 Ext 03.
 
 ```mermaid
 graph TD
@@ -43,12 +44,12 @@ graph TD
     subgraph Application [Application Layer]
         Dispatcher[ILunoCommandDispatcher]
         Handler[GetMarketsHandler]
-        %% @contract: ILunoMarketOperations | Responsibility: Raw Metadata Fetching
-        OpsInterface[ILunoMarketOperations]
     end
 
     %% @boundary: Infrastructure-Layer | Isolation: Encapsulated Operations
     subgraph Infrastructure [Infrastructure Layer]
+        %% @contract: ILunoMarketOperations | Responsibility: Raw Metadata Fetching
+        OpsInterface[ILunoMarketOperations]
         ConcreteClient[LunoMarketClient]
     end
 
@@ -72,23 +73,31 @@ graph TD
     - `PriceScale` (int) - **Semantic Downcast** from `long?`.
     - `FeeScale` (int) - **Semantic Downcast** from `long?`.
 
-- **Technical Note on Scaling Types**: The choice of `int` for scale fields aligns with .NET standards (`decimal.Scale`) and the physical limit of the C# `decimal` type (28 places).
-
 - **GetMarketsQuery (Application)**: A query to retrieve all or specific market metadata.
     - `Pairs` (string[]?) - Optional filter to limit results and mitigate "Total Blackout" risk if specific market schemas break.
 
+**Domain Invariants**: 
+1.  **Zero-Null Policy**: All properties use the `required` keyword.
+2.  **Scale Guardrails**: All scale fields (Price, Volume, Fee) MUST be between **0 and 28** (physical limit of the .NET `decimal` type). [1]
+
 **Enforcement Strategy (Fail-Fast)**: 
 1.  **Compiler Enforcement**: All properties use the `required` keyword.
-2.  **Boundary Guardrail**: The Infrastructure layer (Client) performs a "Full-House Validation" during mapping. If any field is `null` or `whitespace`, or if any scale is outside the valid range (0-28), the client MUST throw `LunoDataException` immediately.
+2.  **Boundary Guardrail**: The Infrastructure layer (Client) performs a "Full-House Validation" during mapping. If any Kiota-returned field is `null` or `whitespace`, or if any scale is outside the valid range (0-28), the client MUST throw `LunoDataException` immediately.
 3.  **No Graceful Degradation**: We prioritize **Integrity over Availability**. A single malformed market pair in the response will fail the entire request to prevent the SDK from operating on "Shit Data." 🛡️⚖️
 
-## 5. Execution, Rollout, & The Sunset (The Delivery DNA)
-- **Phase 1: Foundation & Boundary Fortress**
+**Technical Note on Scaling Types**: The choice of `int` for scale fields aligns with .NET standards (`decimal.Scale`).
+
+## 5. Execution, Rollout, & The Sunset
+- **Phase 0: Ruthless Mapping (The Cowardice Fix)**
+  - **Description**: Refactor `MarketMapper.cs` to remove the `0m` fallback in `ParseDecimal`. All decimal parsing for tickers and market metadata MUST throw `LunoMappingException` on failure to prevent "Zero-Value" logic errors in automated trading.
+- **Phase 1: Spec Patching (The Explosion Fix)**
+  - **Description**: Update `scripts/patch-spec.js` to enforce `explode: true` for the `pair` parameter in `/api/exchange/1/markets`.
+- **Phase 2: Foundation & Boundary Fortress**
   - **Description:** Define the `MarketInfo` record and implement the "Split & Seal" infrastructure in `LunoMarketClient`.
-  - **Merge Gate:** Unit tests verify that any null field triggers a `LunoDataException`.
-- **Phase 2: Application Orchestration**
-  - **Description:** Implement `GetMarketsHandler` and the `GetMarketsAsync` public extension (returning `IAsyncEnumerable<MarketInfo>`).
-  - **Merge Gate:** Tier 2 Integration tests verify the end-to-end flow.
+  - **Merge Gate:** Unit tests verify the "Zero-Null" mapping, scale range validation, and `LunoDataException` guardrails.
+- **Phase 3: Application Orchestration**
+  - **Description:** Implement `GetMarketsHandler` and the `GetMarketsAsync` public extension returning `Task<IReadOnlyList<MarketInfo>>`.
+  - **Merge Gate:** Tier 2 Integration tests verify the end-to-end flow from extension to Kiota.
 - **Phase X: The Sunset**
   - **The Kill List:** Remove the temporary `labs/verify_markets_api.cs` script once the feature is verified in the Gallery.
 
@@ -97,24 +106,31 @@ graph TD
 - **Tier:** Integration
 - **Given:** A valid Luno Client and a functioning network.
 - **When:** Calling `client.Market.GetMarketsAsync(new[] { "XBTMYR", "ETHMYR" })`.
-- **Then:** Returns an async stream containing two `MarketInfo` objects for "XBTMYR" and "ETHMYR", both with verified non-zero minimums.
-- **Verification:** **Existing Integration Tests** (WireMock) verify the `/api/exchange/1/markets` GET request and the Application-layer filter logic.🛡️🌊⚖️
+- **Then:** Returns a collection containing two `MarketInfo` objects for "XBTMYR" and "ETHMYR", both with verified non-zero minimums.
+- **Verification:** **Existing Integration Tests** (WireMock) verify the `/api/exchange/1/markets?pair=XBTMYR&pair=ETHMYR` GET request.🛡️🌊⚖️
 
 ### 6.2 Partial Data Rejection (Chaos Path)
 - **Tier:** Unit
 - **Given:** A Kiota DTO where `MinVolume` is null.
 - **When:** The Infrastructure mapper attempts to create a `MarketInfo` record.
-- **Then:** Throws `LunoDataException` immediately.
-- **Verification:** **Mapper Unit Tests** verify the Fail-Fast behavior.
+- **Then:** Throws `LunoDataException`.
+- **Verification:** **Mapper Unit Tests** verify that partial API responses do not pollute the Domain.
+
+### 6.3 Atomic Failure (Validation Invariant)
+- **Tier:** Unit
+- **Given:** A list of 10 markets where the 10th market has an invalid `PriceScale` (e.g., 99).
+- **When:** The Client maps the response.
+- **Then:** Throws `LunoDataException` before the consumer receives any data.
+- **Verification:** **Client Unit Tests** verify the "All-or-Nothing" atomic mapping policy.
 
 ## 7. Operational Reality
 - **Blast Radius:** **Medium**. A schema break by Luno will disable the discovery feature entirely until the SDK is updated.
 - **Observability:** Tracked via standard `LunoTelemetry` with the operation name `GetMarkets`.
-- **Security & Compliance:** Public API. No PII or credentials involved.
+- **Security & Compliance:** Public API. No PII or credentials involved in the request/response.
 
 ## 8. Disaster Recovery & The Panic Button
 - **The "Panic Button":** None needed (additive feature). 
-- **Data Safety:** Purely read-only discovery. No risk to account funds.
+- **Data Safety:** Purely read-only discovery. No risk to account funds or market state.
 
 ## 9. The Pre-Mortem & Trade-offs
 - **Rejected Options:** 
@@ -123,5 +139,9 @@ graph TD
 - **The Pre-Mortem:** If this fails, it's because we chose **Integrity** over **Availability**, and a single bad market pair in Luno's response caused a total blackout of the discovery feature for our users.
 
 ## 10. Definition of Done
-- **Verification Strategy:** Run `labs/verify_markets_api.cs` to print the minimums for `XBTMYR` on the production API.
+- **Verification Strategy:** Run `labs/list_market_rules.cs` to print the minimums for `XBTMYR` on the production API.
 - **TDD Mandate:** 100% test pass on `Luno.SDK.Core`. Total coverage of Behavioral Contracts via their specified Verification Tiers. Zero mocking of internal domain logic.
+
+---
+**Citations:**
+[1] [Decimal.Scale Property - Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.decimal.getbits)
