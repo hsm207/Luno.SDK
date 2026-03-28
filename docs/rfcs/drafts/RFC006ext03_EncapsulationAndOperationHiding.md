@@ -76,14 +76,24 @@ To support strict encapsulation while allowing cross-project orchestration (Appl
 
 This alignment ensures that "internal" means "Internal to the SDK," enforcing the **Staff Only** boundary at the compiler level.
 
+### 4.4 Explicit Interface Implementation (The Concrete Seal)
+To prevent "Concrete Leaks," all concrete client implementations (e.g., `LunoAccountClient`) MUST implement their respective `Operations` interfaces **explicitly**. 
+
+**Rationale**: 
+Even if the `ILunoAccountOperations` interface is internal, a `public` method on a `public` class remains publicly accessible. Using explicit implementation (e.g., `async Task ILunoAccountOperations.FetchBalancesAsync(...)`) ensures that:
+1.  **IntelliSense Hiding**: The method does not appear on the concrete class instance (e.g., `client.Fetch...` will not exist).
+2.  **Cast Gating**: The method is only accessible if the object is explicitly cast to the internal interface.
+3.  **Encapsulation Enforcement**: Since the interface is `internal` and gated by `InternalsVisibleTo`, only authorized SDK projects (Application Handlers) can perform the cast required to call the low-level operations.
+
 ## 5. Execution, Rollout, & The Sunset
-- **Phase 1: Foundation (The Split)**
+- **Phase 1: Foundation (The Split & Seal)**
     - Modify `ILunoAccountClient` to remove `ILunoAccountOperations` inheritance.
-    - Update `LunoAccountClient` to implement `FetchBalancesAsync` explicitly.
+    - Update `LunoAccountClient` to implement `ILunoAccountOperations` **explicitly**, hiding all `Fetch*` methods from the public concrete surface area.
 - **Phase 2: Global Alignment**
-    - Audit `Trading` and `Market` clients for similar inheritance leaks and apply the same split.
+    - Audit `Trading` and `Market` clients for similar inheritance leaks and apply the same "Split & Seal" pattern.
 - **Phase X: The Sunset**
     - Verify that no external-facing documentation or examples reference `Fetch*` methods.
+    - Validate via a throwaway script that concrete clients no longer expose `Fetch*` methods via IntelliSense or direct public access.
 
 ## 6. Behavioral Contracts
 > **Verification Note**: No new automated tests are required for this RFC. The existing Tier 2 suite already covers the Happy Path, and the Chaos Path is verified via static analysis (Compiler Truth).
