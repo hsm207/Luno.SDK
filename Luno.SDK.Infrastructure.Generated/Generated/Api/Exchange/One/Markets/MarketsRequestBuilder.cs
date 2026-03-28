@@ -22,7 +22,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Markets
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public MarketsRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/exchange/1/markets{?pair}", pathParameters)
+        public MarketsRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/exchange/1/markets{?pair*}", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Markets
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public MarketsRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/exchange/1/markets{?pair}", rawUrl)
+        public MarketsRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/exchange/1/markets{?pair*}", rawUrl)
         {
         }
         /// <summary>
