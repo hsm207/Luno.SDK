@@ -63,6 +63,18 @@ graph TD
 ### 4.2 Public Contracts & Schema Mutations
 - **ILunoAccountClient**: Modified to remove inheritance from `ILunoAccountOperations`.
 - **LunoAccountClient**: Updated to implement `ILunoAccountOperations` explicitly.
+- **Internalization**: All `*Operations` interfaces (e.g., `ILunoAccountOperations`) will be marked as `internal` to ensure they are hidden from the NuGet public surface area.
+
+### 4.3 InternalsVisibleTo Alignment (The Visibility Trust)
+To support strict encapsulation while allowing cross-project orchestration (Application Handlers calling Core Operations), the following `InternalsVisibleTo` attributes must be configured:
+
+| Project | Visible To | Rationale |
+| :--- | :--- | :--- |
+| **Luno.SDK.Core** | `Application`, `Infrastructure`, `Tests.*`, `Moq` | Allows Handlers and Clients to access `internal` Operation contracts. Prevents recursion by "blinding" Handlers to the Public Dispatcher. |
+| **Luno.SDK.Application** | `Tests.*`, `Moq` | Allows Unit Tests to verify `internal` mapping extensions and orchestration logic. |
+| **Luno.SDK.Infrastructure**| `Tests.*`, `Moq` | (Existing) Allows verification of raw API translation logic. |
+
+This alignment ensures that "internal" means "Internal to the SDK," enforcing the **Staff Only** boundary at the compiler level.
 
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 1: Foundation (The Split)**
