@@ -62,7 +62,7 @@ graph TD
 ### 4.2 Public Contracts & Schema Mutations
 - **MarketInfo (Core)**: A new domain record representing the "Total Population" invariant. To prevent "Partial Data Timebombs," this record mandates that all 11 fields are populated.
     - `Pair` (string)
-    - `Status` (MarketStatus)
+    - `Status` (MarketStatus) - **Mapping Fidelity**: To preserve the semantic intent of the API, the Domain `MarketStatus` enum will be expanded to include both `Suspended` (volatility halt, post-only allowed) and `Disabled` (full shutdown). The Infrastructure layer will map these 1:1 from their respective endpoints.
     - `BaseCurrency` (string)
     - `CounterCurrency` (string)
     - `MinVolume` (decimal)
@@ -82,7 +82,9 @@ graph TD
 
 **Enforcement Strategy (Fail-Fast)**: 
 1.  **Compiler Enforcement**: All properties use the `required` keyword.
-2.  **Boundary Guardrail**: The Infrastructure layer (Client) performs a "Full-House Validation" during mapping. If any Kiota-returned field is `null` or `whitespace`, or if any scale is outside the valid range (0-28), the client MUST throw `LunoDataException` immediately.
+2.  **Boundary Guardrail**: The Infrastructure layer (Client) performs a "Full-House Validation" during mapping. 
+    - Throw `LunoMappingException` if structural parsing fails (e.g., null strings, invalid decimal formats). 
+    - Throw `LunoDataException` if semantic invariants are violated (e.g., scale > 28, MinVolume <= 0).
 3.  **No Graceful Degradation**: We prioritize **Integrity over Availability**. A single malformed market pair in the response will fail the entire request to prevent the SDK from operating on "Shit Data." 🛡️⚖️
 
 **Technical Note on Scaling Types**: The choice of `int` for scale fields aligns with .NET standards (`decimal.Scale`).
