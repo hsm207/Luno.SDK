@@ -7,7 +7,7 @@ namespace Luno.SDK.Trading;
 /// Defines the low-level data-fetching operations for Luno Trading.
 /// This interface is used by handlers to avoid a circular dependency on the command dispatcher.
 /// </summary>
-public interface ILunoTradingOperations
+internal interface ILunoTradingOperations
 {
     /// <summary>
     /// Asynchronously posts a new limit order to Luno.
@@ -38,7 +38,7 @@ public interface ILunoTradingOperations
 /// <summary>
 /// Defines the full contract for Luno Trading operations, including command dispatching.
 /// </summary>
-public interface ILunoTradingClient : ILunoTradingOperations
+public interface ILunoTradingClient
 {
     /// <summary>
     /// Gets the command dispatcher used to orchestrate trading application-layer logic.

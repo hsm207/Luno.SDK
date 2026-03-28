@@ -8,7 +8,7 @@ namespace Luno.SDK.Account;
 /// Defines the low-level data-fetching operations for Luno Account.
 /// This interface is used by handlers to avoid a circular dependency on the command dispatcher.
 /// </summary>
-public interface ILunoAccountOperations
+internal interface ILunoAccountOperations
 {
     /// <summary>
     /// Asynchronously fetches a list of account balances.
@@ -22,7 +22,7 @@ public interface ILunoAccountOperations
 /// <summary>
 /// Defines the full contract for Luno Account operations, including command dispatching.
 /// </summary>
-public interface ILunoAccountClient : ILunoAccountOperations
+public interface ILunoAccountClient
 {
     /// <summary>
     /// Gets the command dispatcher used to orchestrate account application-layer logic.

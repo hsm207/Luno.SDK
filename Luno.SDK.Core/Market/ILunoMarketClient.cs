@@ -8,7 +8,7 @@ namespace Luno.SDK.Market;
 /// Defines the low-level data-fetching operations for Luno Market.
 /// This interface is used by handlers to avoid a circular dependency on the command dispatcher.
 /// </summary>
-public interface ILunoMarketOperations
+internal interface ILunoMarketOperations
 {
     /// <summary>
     /// Asynchronously fetches a stream of market tickers.
@@ -30,7 +30,7 @@ public interface ILunoMarketOperations
 /// <summary>
 /// Defines the full contract for Luno Market data operations, including command dispatching.
 /// </summary>
-public interface ILunoMarketClient : ILunoMarketOperations
+public interface ILunoMarketClient
 {
     /// <summary>
     /// Gets the command dispatcher used to orchestrate market application-layer logic.
