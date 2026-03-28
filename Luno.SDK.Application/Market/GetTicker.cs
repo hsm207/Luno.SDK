@@ -13,7 +13,7 @@ public record GetTickerQuery(string Pair);
 /// Orchestrates the retrieval of a single market ticker.
 /// </summary>
 /// <param name="market">The specialized market client.</param>
-public class GetTickerHandler(ILunoMarketOperations market) : ICommandHandler<GetTickerQuery, Task<TickerResponse>>
+internal class GetTickerHandler(ILunoMarketOperations market) : ICommandHandler<GetTickerQuery, Task<TickerResponse>>
 {
     /// <summary>
     /// Returns the latest ticker indicators for a specific pair.

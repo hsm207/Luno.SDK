@@ -23,7 +23,7 @@ public class LunoTradingClientBoundaryTests
     public async Task PostLimitOrderAsync_InvalidOrderSide_ThrowsInvalidOperationException()
     {
         var apiClient = new LunoApiClient(_requestAdapterMock.Object);
-        var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
+        var client = (ILunoTradingOperations)new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
 
         var request = new LimitOrderRequest
         {
@@ -45,7 +45,7 @@ public class LunoTradingClientBoundaryTests
     public async Task PostLimitOrderAsync_InvalidTimeInForce_ThrowsInvalidOperationException()
     {
         var apiClient = new LunoApiClient(_requestAdapterMock.Object);
-        var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
+        var client = (ILunoTradingOperations)new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
 
         var request = new LimitOrderRequest
         {
@@ -68,7 +68,7 @@ public class LunoTradingClientBoundaryTests
     public async Task PostLimitOrderAsync_InvalidStopDirection_ThrowsInvalidOperationException()
     {
         var apiClient = new LunoApiClient(_requestAdapterMock.Object);
-        var client = new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
+        var client = (ILunoTradingOperations)new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
 
         var request = new LimitOrderRequest
         {

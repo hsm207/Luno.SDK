@@ -17,19 +17,21 @@ namespace Luno.SDK.Tests.Unit.Trading;
 public class LunoTradingClientTests
 {
     private readonly Mock<ILunoTradingClient> _tradingClientMock;
+    private readonly Mock<ILunoTradingOperations> _tradingOpsMock;
     private readonly Mock<ILunoClient> _lunoClientMock;
     private readonly ILunoCommandDispatcher _dispatcher;
 
     public LunoTradingClientTests()
     {
         _tradingClientMock = new Mock<ILunoTradingClient>();
+        _tradingOpsMock = new Mock<ILunoTradingOperations>();
         
         // Setup a mocked resolver that returns our mock handlers
         var resolver = new Mock<Func<Type, object?>>();
         resolver.Setup(x => x(typeof(ICommandHandler<PostLimitOrderCommand, Task<OrderResponse>>)))
-                .Returns(new PostLimitOrderHandler(_tradingClientMock.Object));
+                .Returns(new PostLimitOrderHandler(_tradingOpsMock.Object));
         resolver.Setup(x => x(typeof(ICommandHandler<StopOrderCommand, Task<OrderResponse>>)))
-                .Returns(new StopOrderHandler(_tradingClientMock.Object));
+                .Returns(new StopOrderHandler(_tradingOpsMock.Object));
 
         // Instantiate a real dispatcher
         _dispatcher = new LunoCommandDispatcher(resolver.Object);

@@ -447,7 +447,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         
         // Expose public method to call the interface lookup (via Trading.GetOrderAsync is not directly exposed as Command, so we cast to test infra)
-        var infraClient = (ILunoTradingClient)client.Trading;
+        var infraClient = (ILunoTradingOperations)client.Trading;
         var result = await infraClient.FetchOrderAsync(orderId: orderId);
 
         Assert.Equal(expectedStatus, result.Status);
@@ -476,7 +476,7 @@ public class LunoTradingClientTests : IDisposable
                 }));
 
         var client = CreateClient();
-        var infraClient = (ILunoTradingClient)client.Trading;
+        var infraClient = (ILunoTradingOperations)client.Trading;
 
         // Act & Assert
         await Assert.ThrowsAsync<LunoMappingException>(() => infraClient.FetchOrderAsync(orderId: orderId));
@@ -504,7 +504,7 @@ public class LunoTradingClientTests : IDisposable
                 }));
 
         var client = CreateClient();
-        var infraClient = (ILunoTradingClient)client.Trading;
+        var infraClient = (ILunoTradingOperations)client.Trading;
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoMappingException>(() => infraClient.FetchOrderAsync(orderId: orderId));

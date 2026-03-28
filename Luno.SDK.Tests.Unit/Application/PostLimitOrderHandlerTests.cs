@@ -74,7 +74,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given a 409 where existing order is a MarketOrder, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_TypeMismatch_ThrowsLunoIdempotencyException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
         var existingOrder = BuildExistingMarketOrder();
@@ -96,7 +96,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given a 409 with a volume mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_VolumeMismatch_ThrowsLunoIdempotencyException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand(volume: 1m);
         var existingOrder = BuildExistingOrder(limitVolume: 5m);
@@ -118,7 +118,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given a 409 with a TimeInForce mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_TimeInForceMismatch_ThrowsLunoIdempotencyException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand(tif: TimeInForce.FOK);
         var existingOrder = BuildExistingOrder(timeInForce: TimeInForce.GTC);
@@ -140,7 +140,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given a 409 with a Pair mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_PairMismatch_ThrowsLunoIdempotencyException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
         var existingOrder = BuildExistingOrder(pair: "ETHMYR"); // Explicitly set mismatch pair
@@ -162,7 +162,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given a 409 with a BaseAccountId mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_BaseAccountIdMismatch_ThrowsLunoIdempotencyException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
         // Use helper to create a mismatching order
@@ -196,7 +196,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given a 409 with a CounterAccountId mismatch, When reconciling, Then throw LunoIdempotencyException")]
     public async Task HandleAsync_Idempotency_CounterAccountIdMismatch_ThrowsLunoIdempotencyException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand();
         var mismatchOrder = new LimitOrder(
@@ -229,7 +229,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given PostOnly is true and TIF is not GTC, When handling, Then throw LunoValidationException")]
     public async Task HandleAsync_Validation_PostOnlyWithNonGtc_ThrowsLunoValidationException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand(tif: TimeInForce.IOC) with { PostOnly = true };
 
@@ -245,7 +245,7 @@ public class PostLimitOrderHandlerTests
     [InlineData(1L, 0L)]
     public async Task HandleAsync_Validation_ExplicitAccountMandate_ThrowsLunoValidationException(long? baseId, long? counterId)
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand() with { BaseAccountId = baseId, CounterAccountId = counterId };
 
@@ -258,7 +258,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given an invalid OrderSide cast, When handling, Then throw LunoValidationException")]
     public async Task HandleAsync_Validation_InvalidOrderSide_ThrowsLunoValidationException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand() with { Side = (OrderSide)999 };
 
@@ -269,7 +269,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given an invalid TimeInForce cast, When handling, Then throw LunoValidationException")]
     public async Task HandleAsync_Validation_InvalidTimeInForce_ThrowsLunoValidationException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand() with { TimeInForce = (TimeInForce)999 };
 
@@ -280,7 +280,7 @@ public class PostLimitOrderHandlerTests
     [Fact(DisplayName = "Given an invalid StopDirection cast, When handling, Then throw LunoValidationException")]
     public async Task HandleAsync_Validation_InvalidStopDirection_ThrowsLunoValidationException()
     {
-        var tradingClientMock = new Mock<ILunoTradingClient>();
+        var tradingClientMock = new Mock<ILunoTradingOperations>();
         var handler = new PostLimitOrderHandler(tradingClientMock.Object);
         var command = BuildValidCommand() with { StopPrice = 1000m, StopDirection = (StopDirection)999 };
 

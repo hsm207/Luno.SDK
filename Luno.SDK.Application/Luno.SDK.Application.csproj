@@ -9,4 +9,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Luno.SDK.Core\Luno.SDK.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Luno.SDK.Tests.Unit" />
+    <InternalsVisibleTo Include="Luno.SDK.Tests.Integration" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
 </Project>
