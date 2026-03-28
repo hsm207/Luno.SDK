@@ -20,7 +20,8 @@
 ## 3. Goals & The Scope Creep Shield
 - **Goals:**
     - Implement `FetchMarketsAsync` in the (internal) `ILunoMarketOperations`.
-    - Provide a public `GetMarketsAsync` extension method in the Application layer.
+    - Provide a public `GetMarketsAsync` extension method supporting optional **pairs filtering**.
+    - Return metadata via `IAsyncEnumerable<MarketInfo>` for consistency with the Tickers API and to allow for large market lists.
     - Expose a `MarketInfo` domain record with a **Strict Zero-Null Policy** for all 11 metadata fields.
 - **Non-Goals (The Shield):**
     - This RFC does NOT implement caching. Caching is the responsibility of the consumer to avoid stale metadata issues.
@@ -73,6 +74,9 @@ graph TD
 
 - **Technical Note on Scaling Types**: The choice of `int` for scale fields aligns with .NET standards (`decimal.Scale`) and the physical limit of the C# `decimal` type (28 places).
 
+- **GetMarketsQuery (Application)**: A query to retrieve all or specific market metadata.
+    - `Pairs` (string[]?) - Optional filter to limit results and mitigate "Total Blackout" risk if specific market schemas break.
+
 **Enforcement Strategy (Fail-Fast)**: 
 1.  **Compiler Enforcement**: All properties use the `required` keyword.
 2.  **Boundary Guardrail**: The Infrastructure layer (Client) performs a "Full-House Validation" during mapping. If any field is `null` or `whitespace`, or if any scale is outside the valid range (0-28), the client MUST throw `LunoDataException` immediately.
@@ -83,7 +87,7 @@ graph TD
   - **Description:** Define the `MarketInfo` record and implement the "Split & Seal" infrastructure in `LunoMarketClient`.
   - **Merge Gate:** Unit tests verify that any null field triggers a `LunoDataException`.
 - **Phase 2: Application Orchestration**
-  - **Description:** Implement `GetMarketsHandler` and the `GetMarketsAsync` public extension.
+  - **Description:** Implement `GetMarketsHandler` and the `GetMarketsAsync` public extension (returning `IAsyncEnumerable<MarketInfo>`).
   - **Merge Gate:** Tier 2 Integration tests verify the end-to-end flow.
 - **Phase X: The Sunset**
   - **The Kill List:** Remove the temporary `labs/verify_markets_api.cs` script once the feature is verified in the Gallery.
@@ -92,9 +96,9 @@ graph TD
 ### 6.1 Discovery Success (Happy Path)
 - **Tier:** Integration
 - **Given:** A valid Luno Client and a functioning network.
-- **When:** Calling `client.Market.GetMarketsAsync()`.
-- **Then:** Returns a collection of `MarketInfo` objects where `Pair == "XBTMYR"` and `MinVolume > 0`.
-- **Verification:** **Existing Integration Tests** (WireMock) verify the `/api/exchange/1/markets` GET request.
+- **When:** Calling `client.Market.GetMarketsAsync(new[] { "XBTMYR", "ETHMYR" })`.
+- **Then:** Returns an async stream containing two `MarketInfo` objects for "XBTMYR" and "ETHMYR", both with verified non-zero minimums.
+- **Verification:** **Existing Integration Tests** (WireMock) verify the `/api/exchange/1/markets` GET request and the Application-layer filter logic.🛡️🌊⚖️
 
 ### 6.2 Partial Data Rejection (Chaos Path)
 - **Tier:** Unit
@@ -119,5 +123,5 @@ graph TD
 - **The Pre-Mortem:** If this fails, it's because we chose **Integrity** over **Availability**, and a single bad market pair in Luno's response caused a total blackout of the discovery feature for our users.
 
 ## 10. Definition of Done
-- **Verification Strategy:** Run `labs/list_market_rules.cs` to print the minimums for `XBTMYR` on the production API.
+- **Verification Strategy:** Run `labs/verify_markets_api.cs` to print the minimums for `XBTMYR` on the production API.
 - **TDD Mandate:** 100% test pass on `Luno.SDK.Core`. Total coverage of Behavioral Contracts via their specified Verification Tiers. Zero mocking of internal domain logic.
