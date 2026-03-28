@@ -62,7 +62,9 @@ graph TD
 ### 4.2 Public Contracts & Schema Mutations
 - **MarketInfo (Core)**: A new domain record representing the "Total Population" invariant. To prevent "Partial Data Timebombs," this record mandates that all 11 fields are populated.
     - `Pair` (string)
-    - `Status` (MarketStatus) - **Mapping Fidelity**: To preserve the semantic intent of the API, the Domain `MarketStatus` enum will be expanded to include both `Suspended` (volatility halt, post-only allowed) and `Disabled` (full shutdown). The Infrastructure layer will map these 1:1 from their respective endpoints.
+    - `Status` (MarketStatus) - **Mapping Fidelity**: The `/api/exchange/1/markets` endpoint uses a different status enum (`SUSPENDED`, `POST_ONLY`) compared to the `/api/1/ticker` endpoint (`DISABLED`, `POSTONLY`). To ensure a unified domain model, the `MarketMapper` will provide overloaded mapping logic to translate both source enums into the unified `MarketStatus` record.
+        - `/ticker`: `DISABLED` -> `Disabled`, `POSTONLY` -> `PostOnly`.
+        - `/markets`: `SUSPENDED` -> `Suspended`, `POST_ONLY` -> `PostOnly`.
     - `BaseCurrency` (string)
     - `CounterCurrency` (string)
     - `MinVolume` (decimal)
@@ -92,15 +94,15 @@ graph TD
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 0: Ruthless Mapping (The Cowardice Fix)**
   - **Description**: Refactor `MarketMapper.cs` to remove the `0m` fallback in `ParseDecimal`. All decimal parsing for tickers and market metadata MUST throw `LunoMappingException` on failure to prevent "Zero-Value" logic errors in automated trading.
-- **Phase 1: Foundation & Boundary Fortress**
+- **Phase 1: Domain & Infrastructure**
   - **Description:** Define the `MarketInfo` record and implement the "Split & Seal" infrastructure in `LunoMarketClient`.
+  - **Status Mapping**: Implement overloaded `MapStatus` logic in `MarketMapper.cs` to unify the discrepant enums from `/ticker` and `/markets`.
   - **Merge Gate:** Unit tests verify the "Zero-Null" mapping, scale range validation, and `LunoDataException` guardrails.
 - **Phase 2: Application Orchestration**
   - **Description:** Implement `GetMarketsHandler` and the `GetMarketsAsync` public extension returning `Task<IReadOnlyList<MarketInfo>>`.
   - **Merge Gate:** Tier 2 Integration tests verify the end-to-end flow from extension to Kiota.
 - **Phase X: The Sunset**
-  - **The Kill List:** Remove the temporary `labs/verify_markets_api.cs` script once the feature is verified in the Gallery.
-  - **Completed**: Phase 1: Spec Patching (The Explosion Fix) is successfully implemented and committed. 🥂✅
+  - **The Kill List**: Remove the temporary `labs/verify_markets_api.cs` script once the feature is verified in the Gallery.
 
 ## 6. Behavioral Contracts
 ### 6.1 Discovery Success (Happy Path)
