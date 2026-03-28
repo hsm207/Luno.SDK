@@ -19,8 +19,8 @@ public static class Concept06_Orders
             .AddUserSecrets<Program>()
             .Build();
 
-        string? keyId = config["Luno:ApiKeyId"];
-        string? keySecret = config["Luno:ApiKeySecret"];
+        string? keyId = config["Luno:ReadOnly:ApiKeyId"];
+        string? keySecret = config["Luno:ReadOnly:ApiKeySecret"];
 
         if (string.IsNullOrWhiteSpace(keyId))
         {
