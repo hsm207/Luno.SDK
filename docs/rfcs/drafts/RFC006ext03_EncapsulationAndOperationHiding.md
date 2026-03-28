@@ -56,8 +56,8 @@ graph TD
     Handler -- "3. Fetch Raw Data" --> OpsInterface
     OpsInterface -. "4. Explicit Implementation" .-> ConcreteClient
     
-    %% @leak: Current State (TO BE DELETED)
-    ClientInterface -- "X. Public Leak" --> OpsInterface
+    %% @leak: Deleted Inheritance (The Leak)
+    ClientInterface -- "X. REMOVED" --> OpsInterface
 ```
 
 ### 4.2 Public Contracts & Schema Mutations
@@ -79,11 +79,30 @@ This alignment ensures that "internal" means "Internal to the SDK," enforcing th
 ### 4.4 Explicit Interface Implementation (The Concrete Seal)
 To prevent "Concrete Leaks," all concrete client implementations (e.g., `LunoAccountClient`) MUST implement their respective `Operations` interfaces **explicitly**. 
 
+#### **Actual: Current State (Implicit Leak)**
+The method is `public` and exposed via the primary interface inheritance.
+```csharp
+public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoAccountClient
+{
+    public async Task<IReadOnlyList<Balance>> FetchBalancesAsync(...) { /* ... */ }
+}
+```
+
+#### **Proposed: Future State (Explicit Seal)**
+The method is tied specifically to the internal interface, hiding it from the public class surface.
+```csharp
+public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher commands) 
+    : ILunoAccountClient, ILunoAccountOperations 
+{
+    async Task<IReadOnlyList<Balance>> ILunoAccountOperations.FetchBalancesAsync(...) { /* ... */ }
+}
+```
+
 **Rationale**: 
-Even if the `ILunoAccountOperations` interface is internal, a `public` method on a `public` class remains publicly accessible. Using explicit implementation (e.g., `async Task ILunoAccountOperations.FetchBalancesAsync(...)`) ensures that:
+Using explicit implementation ensures that:
 1.  **IntelliSense Hiding**: The method does not appear on the concrete class instance (e.g., `client.Fetch...` will not exist).
 2.  **Cast Gating**: The method is only accessible if the object is explicitly cast to the internal interface.
-3.  **Encapsulation Enforcement**: Since the interface is `internal` and gated by `InternalsVisibleTo`, only authorized SDK projects (Application Handlers) can perform the cast required to call the low-level operations.
+3.  **Encapsulation Enforcement**: Since the interface is `internal` and gated by `InternalsVisibleTo`, only authorized SDK projects (Application Handlers) can perform the cast.
 
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 1: Foundation (The Split & Seal)**
