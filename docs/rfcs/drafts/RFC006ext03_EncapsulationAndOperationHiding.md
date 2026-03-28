@@ -74,19 +74,21 @@ graph TD
     - Verify that no external-facing documentation or examples reference `Fetch*` methods.
 
 ## 6. Behavioral Contracts
+> **Verification Note**: No new automated tests are required for this RFC. The existing Tier 2 suite already covers the Happy Path, and the Chaos Path is verified via static analysis (Compiler Truth).
+
 ### 6.1 The Happy Path (Orchestrated Call)
 - **Tier:** Integration
 - **Given:** A valid `ILunoAccountClient` instance.
 - **When:** A user calls `client.Account.GetBalancesAsync()`.
 - **Then:** The call is routed through the `LunoCommandDispatcher` to the `GetBalancesHandler`.
-- **Verification:** WireMock verifies the network call, and OpenTelemetry confirms the handler-level trace.
+- **Verification:** **Existing Integration Tests** (e.g., `LunoAccountClientTests.cs`) verify the network call and handler-level trace.
 
 ### 6.2 The Chaos Path (Bypassing Orchestration)
 - **Tier:** Unit (Compiler Check)
 - **Given:** A standard developer workspace.
 - **When:** A developer attempts to call `client.Account.FetchBalancesAsync()`.
 - **Then:** The code fails to compile.
-- **Verification:** Compiler error confirms the method is no longer part of the public `ILunoAccountClient` contract.
+- **Verification:** **Compiler Check**. This can be verified manually or via a throwaway script attempting to compile an invalid call. The absence of the method from the public interface is the "Machine Truth."
 
 ## 7. Operational Reality
 - **Blast Radius:** **Medium (Breaking Change)**. Any user relying on the raw `Fetch*` methods instead of the fluent extensions will experience breaking compilation errors.
