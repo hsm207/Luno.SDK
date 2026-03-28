@@ -109,19 +109,12 @@ graph TD
 - **Then:** Returns a collection containing two `MarketInfo` objects for "XBTMYR" and "ETHMYR", both with verified non-zero minimums.
 - **Verification:** **Existing Integration Tests** (WireMock) verify the `/api/exchange/1/markets?pair=XBTMYR&pair=ETHMYR` GET request.🛡️🌊⚖️
 
-### 6.2 Partial Data Rejection (Chaos Path)
+### 6.2 Discovery Integrity (Chaos Path)
 - **Tier:** Unit
-- **Given:** A Kiota DTO where `MinVolume` is null.
-- **When:** The Infrastructure mapper attempts to create a `MarketInfo` record.
-- **Then:** Throws `LunoDataException`.
-- **Verification:** **Mapper Unit Tests** verify that partial API responses do not pollute the Domain.
-
-### 6.3 Atomic Failure (Validation Invariant)
-- **Tier:** Unit
-- **Given:** A list of 10 markets where the 10th market has an invalid `PriceScale` (e.g., 99).
+- **Given:** A list of 10 markets where the 10th market has an invalid `PriceScale` (e.g., 99) or a null `MinVolume`.
 - **When:** The Client maps the response.
 - **Then:** Throws `LunoDataException` before the consumer receives any data.
-- **Verification:** **Client Unit Tests** verify the "All-or-Nothing" atomic mapping policy.
+- **Verification:** **Client Unit Tests** verify the "All-or-Nothing" atomic mapping policy, ensuring no "corrupted" data leaks to the consumer.🛡️⚖️
 
 ## 7. Operational Reality
 - **Blast Radius:** **Medium**. A schema break by Luno will disable the discovery feature entirely until the SDK is updated.
