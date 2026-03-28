@@ -42,12 +42,12 @@ graph TD
     subgraph Application [Application Layer]
         Dispatcher[ILunoCommandDispatcher]
         Handler[GetMarketsHandler]
+        %% @contract: ILunoMarketOperations | Responsibility: Raw Metadata Fetching
+        OpsInterface[ILunoMarketOperations]
     end
 
     %% @boundary: Infrastructure-Layer | Isolation: Encapsulated Operations
     subgraph Infrastructure [Infrastructure Layer]
-        %% @contract: ILunoMarketOperations | Responsibility: Raw Metadata Fetching
-        OpsInterface[ILunoMarketOperations]
         ConcreteClient[LunoMarketClient]
     end
 
