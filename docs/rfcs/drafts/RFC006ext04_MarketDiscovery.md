@@ -90,16 +90,15 @@ graph TD
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 0: Ruthless Mapping (The Cowardice Fix)**
   - **Description**: Refactor `MarketMapper.cs` to remove the `0m` fallback in `ParseDecimal`. All decimal parsing for tickers and market metadata MUST throw `LunoMappingException` on failure to prevent "Zero-Value" logic errors in automated trading.
-- **Phase 1: Spec Patching (The Explosion Fix)**
-  - **Description**: Update `scripts/patch-spec.js` to enforce `explode: true` for the `pair` parameter in `/api/exchange/1/markets`.
-- **Phase 2: Foundation & Boundary Fortress**
+- **Phase 1: Foundation & Boundary Fortress**
   - **Description:** Define the `MarketInfo` record and implement the "Split & Seal" infrastructure in `LunoMarketClient`.
   - **Merge Gate:** Unit tests verify the "Zero-Null" mapping, scale range validation, and `LunoDataException` guardrails.
-- **Phase 3: Application Orchestration**
+- **Phase 2: Application Orchestration**
   - **Description:** Implement `GetMarketsHandler` and the `GetMarketsAsync` public extension returning `Task<IReadOnlyList<MarketInfo>>`.
   - **Merge Gate:** Tier 2 Integration tests verify the end-to-end flow from extension to Kiota.
 - **Phase X: The Sunset**
   - **The Kill List:** Remove the temporary `labs/verify_markets_api.cs` script once the feature is verified in the Gallery.
+  - **Completed**: Phase 1: Spec Patching (The Explosion Fix) is successfully implemented and committed. 🥂✅
 
 ## 6. Behavioral Contracts
 ### 6.1 Discovery Success (Happy Path)
