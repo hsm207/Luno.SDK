@@ -144,7 +144,8 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Then:** 
     - The handler selects the **Ask** price (`250000.00`).
     - `Volume` is `100 / 250000 = 0.000400`.
-- **Verification:** Assert `Price == 250000.00` and `Volume == 0.0004`.
+    - `TotalSpend` is exactly `100.00`.
+- **Verification:** Assert `Price == 250000.00`, `Volume == 0.0004`, and `TotalSpend == 100.00`.
 
 ### 6.2 Market-Relative Sell (Bid Selection)
 - **Tier:** Unit (High-Fidelity)
@@ -155,7 +156,8 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Then:** 
     - The handler selects the **Bid** price (`249000.00`).
     - `Volume` is `100 / 249000 = 0.000401606...` -> Rounded to `0.000401` (ToZero).
-- **Verification:** Assert `Price == 249000.00` and `Volume == 0.000401`.
+    - `TotalSpend` is `0.000401 * 249000 = 99.849`.
+- **Verification:** Assert `Price == 249000.00`, `Volume == 0.000401`, and `TotalSpend <= 100.00`.
 
 ### 6.3 Target-Fixed Order (Price Override)
 - **Tier:** Unit (High-Fidelity)
@@ -164,7 +166,8 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Then:** 
     - The handler ignores the Ticker and uses `200000`.
     - `Volume` is `100 / 200000 = 0.000500`.
-- **Verification:** Assert `Price == 200000.00` and `Volume == 0.0005`.
+    - `TotalSpend` is exactly `100.00`.
+- **Verification:** Assert `Price == 200000.00`, `Volume == 0.0005`, and `TotalSpend == 100.00`.
 
 ### 6.4 The "Minimum Volume" Failure
 - **Tier:** Unit
