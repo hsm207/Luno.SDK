@@ -75,11 +75,37 @@ To prevent "Parameter Jumbling," we introduce static factory methods for units:
 
 #### OrderQuote (Core)
 A read-only record representing the result of the calculation.
+
+**Mathematical Invariants (The "Unfuckable" Rules)**:
+To maintain semantic fidelity with the Luno API, the following denominations are enforced:
+1.  **Price** (Quote/Base): The amount of **Quote** currency (e.g., MYR) per 1 unit of **Base** currency (e.g., XBT).
+2.  **Volume** (Base): The amount of **Base** currency (e.g., XBT) to be traded.
+3.  **TotalSpend** (Quote): The total value of the trade in **Quote** currency, calculated as `Volume * Price`.
+
+**Formula**: `Volume (Base) = Spend (Quote) / Price (Quote/Base)`
+
 - `Pair` (string)
 - `Side` (OrderSide)
 - `Volume` (decimal) - Precision-rounded to `VolumeScale`.
 - `Price` (decimal) - Precision-rounded to `PriceScale`.
 - `TotalSpend` (decimal) - `Volume * Price`. Guaranteed <= requested Spend (if Spend was in Quote).
+
+**The "Plug-and-Play" Guarantee**:
+To satisfy the "Less is More" philosophy and protect users from the "Dumbass Design" of the raw API, the `OrderQuote` will provide a `ToCommand()` helper. This helper maps the calculated `Volume` and `Price` directly into a `PostLimitOrderCommand`.
+
+**Helper Signature**:
+```csharp
+public PostLimitOrderCommand ToCommand(
+    long baseAccountId, 
+    long counterAccountId, 
+    string? clientOrderId = null,
+    TimeInForce timeInForce = TimeInForce.GTC,
+    bool postOnly = false,
+    long? timestamp = null,
+    long? ttl = null
+)
+```
+This ensures the request is "Validated-by-Construction" while allowing the developer to provide the necessary orchestration metadata (Accounts, Idempotency) that are outside the scope of mathematical calculation.
 
 #### CalculateOrderSizeQuery (Application)
 - `Pair` (string)
@@ -109,26 +135,38 @@ A read-only record representing the result of the calculation.
 ## 6. Behavioral Contracts (The "Given/When/Then" Specs)
 > **Verification Note**: Per the "Less is More" mandate (Lesson 06), this utility is verified via Tier 1 High-Fidelity Unit tests. Since the underlying endpoints (Ticker, Markets) are already verified in Tier 2 suites, we focus here on the **Orchestration Logic** and **Mathematical Invariants**.
 
-### 6.1 The "Smart Spend" Orchestration (Quote to Base)
+### 6.1 Market-Relative Buy (Ask Selection)
 - **Tier:** Unit (High-Fidelity)
 - **Given:** 
-    - A mocked `ILunoCommandDispatcher` configured to return a real `MarketInfo` (XBTMYR, VolumeScale=6, PriceScale=2).
-    - A real `Ticker` with Ask=`250000.75`.
-- **When:** `CalculateOrderSizeHandler` is called with `Spend.InQuote(100)`.
+    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6).
+    - Real `Ticker` with Ask=`250000.00` and Bid=`249000.00`.
+- **When:** `CalculateOrderSizeHandler` is called with `Side.Buy` and `Spend.InQuote(100)`.
 - **Then:** 
-    - The handler dispatches `GetMarketsQuery` and `GetTickerQuery`.
-    - `Volume` is calculated as `100 / 250000.75 = 0.000399998...` -> Rounded to `0.000399` (ToZero).
-    - `TotalSpend` is confirmed as `99.7503`.
-- **Verification:** Assert the result has `Volume == 0.000399m` and `Price == 250000.75m`. Zero mocking of the rounding or mapping logic.
+    - The handler selects the **Ask** price (`250000.00`).
+    - `Volume` is `100 / 250000 = 0.000400`.
+- **Verification:** Assert `Price == 250000.00` and `Volume == 0.0004`.
 
-### 6.2 The "Unit Safety" (Base to Quote)
+### 6.2 Market-Relative Sell (Bid Selection)
 - **Tier:** Unit (High-Fidelity)
-- **Given:** A mocked dispatcher returning `MarketInfo` (XBTMYR, PriceScale=2).
-- **When:** Handler is called with `Spend.InBase(1.0)` and `AtPrice = Price.InQuote(250000)`.
-- **Then:** `Volume` is exactly `1.0` and `TotalSpend` is exactly `250000.00`.
-- **Verification:** Ensure the "Base" intent correctly bypasses the division logic and uses the provided price for spend calculation.
+- **Given:** 
+    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6).
+    - Real `Ticker` with Ask=`250000.00` and Bid=`249000.00`.
+- **When:** `CalculateOrderSizeHandler` is called with `Side.Sell` and `Spend.InQuote(100)`.
+- **Then:** 
+    - The handler selects the **Bid** price (`249000.00`).
+    - `Volume` is `100 / 249000 = 0.000401606...` -> Rounded to `0.000401` (ToZero).
+- **Verification:** Assert `Price == 249000.00` and `Volume == 0.000401`.
 
-### 6.3 The "Minimum Volume" Failure
+### 6.3 Target-Fixed Order (Price Override)
+- **Tier:** Unit (High-Fidelity)
+- **Given:** `MarketInfo` (XBTMYR, VolumeScale=6).
+- **When:** Handler is called with `Spend.InQuote(100)` and `AtPrice = Price.InQuote(200000)`.
+- **Then:** 
+    - The handler ignores the Ticker and uses `200000`.
+    - `Volume` is `100 / 200000 = 0.000500`.
+- **Verification:** Assert `Price == 200000.00` and `Volume == 0.0005`.
+
+### 6.4 The "Minimum Volume" Failure
 - **Tier:** Unit
 - **Given:** A market with `MinVolume=0.0005`.
 - **When:** Calculation results in `Volume=0.0004`.
