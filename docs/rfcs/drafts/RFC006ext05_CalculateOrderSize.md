@@ -66,12 +66,8 @@ graph TD
 #### Value Objects (Core)
 To prevent "Parameter Jumbling," we introduce static factory methods for units:
 
-- **TradingAmount**:
-    - `Amount.InBase(decimal value)`
-    - `Amount.InQuote(decimal value)`
-- **TradingPrice**:
-    - `Price.InQuote(decimal value)`
-    - `Price.Market()` (Placeholder for future Market Order support, though this RFC focuses on Limit/Quote generation).
+- **TradingAmount**: `Amount.InBase(decimal value)`, `Amount.InQuote(decimal value)`
+- **TradingPrice**: `Price.InQuote(decimal value)`
 
 #### OrderQuote (Core)
 A read-only record representing the result of the calculation.
@@ -88,12 +84,16 @@ To maintain semantic fidelity with the Luno API, the following denominations are
 - `Volume` (decimal) - Precision-rounded to `VolumeScale`.
 - `Price` (decimal) - Precision-rounded to `PriceScale`.
 
-**The "Plug-and-Play" Guarantee**:
-To satisfy the "Less is More" philosophy and protect users from the "Dumbass Design" of the raw API, the `OrderQuote` will provide a `ToCommand()` helper. This helper maps the calculated `Volume` and `Price` directly into a `PostLimitOrderCommand`.
+### 4.3 The Language of the Trader (Ubiquitous Language)
+While the Luno Infrastructure uses the term "Counter Currency," this utility explicitly adopts the professional trader dialect of **"Quote Currency"**. The Application layer serves as the translation boundary, ensuring the SDK speaks the language of its users (Traders) rather than the quirks of the underlying vendor.
 
-**Helper Signature**:
+### 4.4 The "Plug-and-Play" Extension (Dependency Purity)
+To satisfy the "Less is More" philosophy while respecting the **Dependency Rule**, the `ToCommand()` helper is implemented as a **Fluent Extension** in the Application layer. This ensures the Core `OrderQuote` record remains agnostic of the transactional `PostLimitOrderCommand`.
+
+**Extension Signature**:
 ```csharp
-public PostLimitOrderCommand ToCommand(
+public static PostLimitOrderCommand ToCommand(
+    this OrderQuote quote,
     long baseAccountId, 
     long counterAccountId, 
     string? clientOrderId = null,
@@ -103,7 +103,6 @@ public PostLimitOrderCommand ToCommand(
     long? ttl = null
 )
 ```
-This ensures the request is "Validated-by-Construction" while allowing the developer to provide the necessary orchestration metadata (Accounts, Idempotency) that are outside the scope of mathematical calculation.
 
 #### CalculateOrderSizeQuery (Application)
 - `Pair` (string)
@@ -114,21 +113,18 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 1: Core Value Objects**
     - **Description:** Implement `TradingAmount` and `TradingPrice` in `Luno.SDK.Core.Trading`.
-    - **Merge Gate:** Unit tests verify that `InBase` and `InQuote` instances are distinguishable and immutable.
 - **Phase 2: Application Orchestration**
     - **Description:** Implement `CalculateOrderSizeHandler`.
     - **Logic Flow:**
-        1. Fetch `MarketInfo` via `GetMarketsQuery`. Find the specific `Pair`.
-        2. If `AtPrice` is null, fetch `Ticker` via `GetTickerQuery`.
-        3. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
-        4. Calculate `Volume`:
-            - If `Spend` is in Base: `Volume = Spend.Value`.
-            - If `Spend` is in Quote: `Volume = Spend.Value / Price`.
-        5. **The Precision Squeeze**: 
-            - Round `Price` to `MarketInfo.PriceScale`.
-            - Round `Volume` to `MarketInfo.VolumeScale` using `MidpointRounding.ToZero`.
-        6. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume`.
-    - **Merge Gate:** Integration tests with WireMock verifying the "Spend 100 MYR" flow correctly pulls Ticker/MarketInfo.
+        1. Fetch `MarketInfo` via `GetMarketsQuery` using the specific **Pair Filter** (Performance Fix).
+        2. **Status Guard**: Throw `LunoMarketStateException` if status is not `Active` or `PostOnly`.
+        3. If `AtPrice` is null, fetch `Ticker` via `GetTickerQuery`.
+        4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
+        5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice`.
+        6. Calculate `Volume`: `Volume = Spend.Value / Price`.
+        7. **The Precision Squeeze**: Round `Price` and `Volume` to their respective scales using `MidpointRounding.ToZero`.
+        8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume`.
+    - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
 
 ## 6. Behavioral Contracts (The "Given/When/Then" Specs)
 > **Verification Note**: Per the "Less is More" mandate (Lesson 06), this utility is verified via Tier 1 High-Fidelity Unit tests. Since the underlying endpoints (Ticker, Markets) are already verified in Tier 2 suites, we focus here on the **Orchestration Logic** and **Mathematical Invariants**.
@@ -136,7 +132,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 ### 6.1 Market-Relative Buy (Ask Selection)
 - **Tier:** Unit (High-Fidelity)
 - **Given:** 
-    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6).
+    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6, Status=Active).
     - Real `Ticker` with Ask=`250000.00` and Bid=`249000.00`.
 - **When:** `CalculateOrderSizeHandler` is called with `Side.Buy` and `Spend.InQuote(100)`.
 - **Then:** 
@@ -147,7 +143,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 ### 6.2 Market-Relative Sell (Bid Selection)
 - **Tier:** Unit (High-Fidelity)
 - **Given:** 
-    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6).
+    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6, Status=Active).
     - Real `Ticker` with Ask=`250000.00` and Bid=`249000.00`.
 - **When:** `CalculateOrderSizeHandler` is called with `Side.Sell` and `Spend.InQuote(100)`.
 - **Then:** 
@@ -157,7 +153,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 
 ### 6.3 Target-Fixed Order (Price Override)
 - **Tier:** Unit (High-Fidelity)
-- **Given:** `MarketInfo` (XBTMYR, VolumeScale=6).
+- **Given:** `MarketInfo` (XBTMYR, VolumeScale=6, Status=Active, MaxPrice=1000000).
 - **When:** Handler is called with `Spend.InQuote(100)` and `AtPrice = Price.InQuote(200000)`.
 - **Then:** 
     - The handler ignores the Ticker and uses `200000`.
@@ -168,7 +164,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Tier:** Unit
 - **Given:** A market with `MinVolume=0.0005`.
 - **When:** Calculation results in `Volume=0.0004`.
-- **Then:** Throw `LunoBusinessRuleException` (or specific `LunoOrderRejectedException`).
+- **Then:** Throw `LunoOrderRejectedException` (ErrVolumeTooLow).
 - **Verification:** Assert exception message contains "below minimum volume".
 
 ## 7. Operational Reality (The Anti-P1 Guardrails)
@@ -182,10 +178,10 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 
 ## 9. The Pre-Mortem & Trade-offs
 - **Rejected Options:** 
-    - **Option A: Simple Decimal Extension**: `decimal.ToVolume(pair)`. Rejected because it lacks context (Is this decimal BTC or MYR?) and cannot easily fetch Tickers.
-    - **Option B: Floating Point Math**: Rejected. All calculations MUST use `decimal` to maintain exchange-grade precision.
+    - **Caching in Client**: Rejected. The SDK remains stateless. Price dynamics are too volatile for generic caching; consumers must implement their own decorators if needed.
+    - **Stop-Limit Support**: Deferred. Focus remains on standard Limit orders until Luno API consistency for stop-triggers is empirically verified.
 - **The Pre-Mortem:** "The user spent 100 MYR but only got 90 MYR worth of BTC because the Ticker moved between calculation and placement."
-    - **Mitigation:** The `OrderQuote` is a point-in-time calculation. Users should apply a "Slippage Buffer" or use the returned `Price` in a Limit Order to guarantee the execution price.
+    - **Mitigation:** The `OrderQuote` is a point-in-time calculation. Users should use the returned `Price` in a Limit Order to guarantee the execution price.
 
 ## 10. Definition of Done
 - **Verification Strategy:** 100% test coverage on `CalculateOrderSizeHandler`.
