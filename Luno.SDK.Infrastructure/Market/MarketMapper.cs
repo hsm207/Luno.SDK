@@ -5,6 +5,9 @@ using GeneratedTicker = Luno.SDK.Infrastructure.Generated.Models.Ticker;
 using GeneratedStatus = Luno.SDK.Infrastructure.Generated.Models.Ticker_status;
 using GeneratedGetTickerResponse = Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse;
 using GeneratedGetTickerStatus = Luno.SDK.Infrastructure.Generated.Models.GetTickerResponse_status;
+using GeneratedMarketInfo = Luno.SDK.Infrastructure.Generated.Models.MarketInfo;
+using GeneratedMarketInfoStatus = Luno.SDK.Infrastructure.Generated.Models.MarketInfo_trading_status;
+using System.Runtime.CompilerServices;
 
 namespace Luno.SDK.Infrastructure.Market;
 
@@ -41,14 +44,55 @@ internal static class MarketMapper
         DateTimeOffset.FromUnixTimeMilliseconds(GetTimestamp(dto))
     );
 
+    /// <summary>
+    /// Maps a generated market info DTO to a domain entity.
+    /// </summary>
+    /// <exception cref="LunoMappingException">Thrown when mapping fails.</exception>
+    /// <exception cref="LunoDataException">Thrown when data invariants are violated.</exception>
+    public static MarketInfo MapToEntity(GeneratedMarketInfo dto)
+    {
+        var minVolume = ParseDecimal(dto.MinVolume);
+        
+        if (minVolume <= 0)
+        {
+            throw new LunoDataException($"Minimum volume must be greater than zero, got {minVolume}");
+        }
+
+        return new MarketInfo
+        {
+            Pair = dto.MarketId ?? throw new LunoMappingException("API returned a market without a valid market id.", nameof(GeneratedMarketInfo)),
+            Status = MapStatus(dto.TradingStatus),
+            BaseCurrency = dto.BaseCurrency ?? throw new LunoMappingException("API returned a market without a valid base currency.", nameof(GeneratedMarketInfo)),
+            CounterCurrency = dto.CounterCurrency ?? throw new LunoMappingException("API returned a market without a valid counter currency.", nameof(GeneratedMarketInfo)),
+            MinVolume = minVolume,
+            MaxVolume = ParseDecimal(dto.MaxVolume),
+            VolumeScale = DowncastScale(dto.VolumeScale),
+            MinPrice = ParseDecimal(dto.MinPrice),
+            MaxPrice = ParseDecimal(dto.MaxPrice),
+            PriceScale = DowncastScale(dto.PriceScale),
+            FeeScale = DowncastScale(dto.FeeScale)
+        };
+    }
+
+    private static int DowncastScale(long? scale, [CallerArgumentExpression("scale")] string paramName = "")
+    {
+        if (scale is null)
+            throw new LunoMappingException($"Missing scale property.", paramName);
+
+        if (scale < 0 || scale > 28)
+            throw new LunoDataException($"Scale {scale} is outside the allowable range of 0 to 28 for C# decimals.");
+
+        return (int)scale.Value;
+    }
+
     private static long GetTimestamp(GeneratedTicker dto) =>
         dto.Timestamp ?? throw new LunoMappingException("API returned a ticker without a valid timestamp.", nameof(GeneratedTicker));
 
     private static long GetTimestamp(GeneratedGetTickerResponse dto) =>
         dto.Timestamp ?? throw new LunoMappingException("API returned a ticker without a valid timestamp.", nameof(GeneratedGetTickerResponse));
 
-    private static decimal ParseDecimal(string? value) =>
-        decimal.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0m;
+    private static decimal ParseDecimal(string? value, [CallerArgumentExpression("value")] string paramName = "") =>
+        decimal.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : throw new LunoMappingException($"Failed to parse decimal value '{value}'.", paramName);
 
     /// <summary>
     /// Maps the generated ticker status to the domain status enum.
@@ -72,5 +116,17 @@ internal static class MarketMapper
         GeneratedGetTickerStatus.DISABLED  => MarketStatus.Disabled,
         GeneratedGetTickerStatus.UNKNOWN   => MarketStatus.Unknown,
         _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedGetTickerStatus)),
+    };
+
+    /// <summary>
+    /// Maps the generated MarketInfo status to the domain status enum.
+    /// </summary>
+    public static MarketStatus MapStatus(GeneratedMarketInfoStatus? status) => status switch
+    {
+        GeneratedMarketInfoStatus.ACTIVE   => MarketStatus.Active,
+        GeneratedMarketInfoStatus.POST_ONLY => MarketStatus.PostOnly,
+        GeneratedMarketInfoStatus.SUSPENDED => MarketStatus.Suspended,
+        GeneratedMarketInfoStatus.UNKNOWN  => MarketStatus.Unknown,
+        _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedMarketInfoStatus)),
     };
 }
