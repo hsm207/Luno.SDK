@@ -25,7 +25,11 @@
     - Enforce **Domain Invariants** (MinVolume, MaxPrice) before returning an `OrderQuote`.
 - **Non-Goals (The Shield):**
     - This utility does NOT place the order. It only calculates the parameters.
-    - **Fee Management (Net Settlement)**: This utility does NOT calculate Maker/Taker fees. Per the Luno API Specification, fees are deducted from the *proceeds* (the currency being received). Therefore, the "Spend" amount calculated here is the absolute maximum that will be deducted from the user's account, eliminating the risk of "Insufficient Funds" errors due to unexpected fee additions.
+    - **⚠️ EXPLICIT NOTICE: Fee Management (Net Settlement)**: Per the Luno API Specification and standard exchange protocol, **fees are ALWAYS deducted from the proceeds** (the currency being received). 
+        - *Example*: If you "Spend 100 MYR" to buy BTC, you will receive `(100 / Price) - Fees` in BTC. 
+        - *Example*: If you "Spend 0.1 BTC" to sell for MYR, you will receive `(0.1 * Price) - Fees` in MYR.
+        - This utility calculates the **Gross Volume** and **Limit Price**. It does NOT provide a "Net-of-Fees" estimate, as fees are dynamic and determined at the moment of execution by the exchange.
+    - **Limit Orders Only**: This utility is strictly for **Limit Orders**. It does not support Market, Stop, or complex order types. It calculates a "Price or Better" contract.
     - This utility does NOT implement caching for Tickers or MarketInfo (handled by underlying handlers or consumer).
 
 ## 4. Proposed Technical Design
@@ -136,9 +140,11 @@ public static PostLimitOrderCommand ToCommand(
         6. **Calculate Volume**:
             - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
             - If `Spend.Unit == Base`: `Volume = Spend.Value`.
-        7. **The Precision Squeeze (Safety-First Rounding)**:
-            - **Price (Simple Fill-Heuristic)**: Round to `PriceScale`. For `Side.Buy`, we use `MidpointRounding.AwayFromZero` (Ceiling) on the Ticker Ask to slightly over-bid the market and increase fill probability. For `Side.Sell`, we use `MidpointRounding.ToZero` (Floor) on the Bid. 
-            - **Note**: This is a simple heuristic designed to combat "stale tick" rejections. A formal `SlippageTolerance` parameter is deferred until empirical evidence from users demands a more complex model.
+        7. **The Precision Squeeze (Steel-Clad Limit Math)**:
+            - **Limit Price (The 'Better or Equal' Contract)**: Round to `PriceScale`. 
+                - **Side.Buy**: Round **DOWN** (`MidpointRounding.ToZero`) to ensure `CalculatedPrice <= Ticker.Ask`. This ensures we never bid higher than the current market ask, maintaining the "Buy at X or Better" guarantee.
+                - **Side.Sell**: Round **UP** (`MidpointRounding.AwayFromZero`) to ensure `CalculatedPrice >= Ticker.Bid`. This ensures we never sell lower than the current market bid, maintaining the "Sell at X or Better" guarantee.
+            - **Note**: This logic treats the top-of-book (Ask/Bid) as the **limit of our willingness to trade**. By rounding "inward" (cheaper for the user), we maximize price improvement while minimizing the risk of a "stale tick" causing an `ErrInsufficientFunds` rejection on the Quote side.
             - **Volume**: **ALWAYS** use `MidpointRounding.ToZero` (Floor) relative to the calculated `Spend` to guarantee `ExpectedSpend <= Spend`.
         8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume`.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
@@ -147,25 +153,27 @@ public static PostLimitOrderCommand ToCommand(
 ## 6. Behavioral Contracts (The "Given/When/Then" Specs)
 > **Verification Note**: Per the "Less is More" mandate (Lesson 06), this utility is verified via Tier 1 High-Fidelity Unit tests. Since the underlying endpoints (Ticker, Markets) are already verified in Tier 2 suites, we focus here on the **Orchestration Logic** and **Mathematical Invariants**.
 
-### 6.1 Market-Relative Buy (Ask Selection)
+### 6.1 Market-Relative Buy (Better-Price Rounding)
 - **Tier:** Unit (High-Fidelity)
 - **Given:** 
-    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6, Status=Active).
-    - Real `Ticker` with Ask=`250000.00` and Bid=`249000.00`.
+    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6, PriceScale=2, Status=Active).
+    - Real `Ticker` with Ask=`250000.005` (unrounded) and Bid=`249000.00`.
 - **When:** `CalculateOrderSizeHandler` is called with `Side.Buy` and `Spend.InQuote(100)`.
 - **Then:** 
-    - The handler selects the **Ask** price (`250000.00`).
+    - The handler selects the **Ask** and rounds **DOWN** (`MidpointRounding.ToZero`).
+    - `Price` is `250000.00`.
     - `Volume` is `100 / 250000 = 0.000400`.
 - **Verification:** Assert `Price == 250000.00` and `Volume == 0.0004`.
 
-### 6.2 Market-Relative Sell (Bid Selection)
+### 6.2 Market-Relative Sell (Better-Price Rounding)
 - **Tier:** Unit (High-Fidelity)
 - **Given:** 
-    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6, Status=Active).
-    - Real `Ticker` with Ask=`250000.00` and Bid=`249000.00`.
+    - Mocked dispatcher returning `MarketInfo` (XBTMYR, VolumeScale=6, PriceScale=2, Status=Active).
+    - Real `Ticker` with Ask=`250000.00` and Bid=`248999.991` (unrounded).
 - **When:** `CalculateOrderSizeHandler` is called with `Side.Sell` and `Spend.InQuote(100)`.
 - **Then:** 
-    - The handler selects the **Bid** price (`249000.00`).
+    - The handler selects the **Bid** and rounds **UP** (`MidpointRounding.AwayFromZero`).
+    - `Price` is `249000.00`.
     - `Volume` is `100 / 249000 = 0.000401606...` -> Rounded to `0.000401` (ToZero).
 - **Verification:** Assert `Price == 249000.00` and `Volume == 0.000401`.
 
