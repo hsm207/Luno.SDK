@@ -199,6 +199,18 @@ public static PostLimitOrderCommand ToCommand(
 - **Then:** Throw `LunoValidationException` (ErrVolumeTooLow).
 - **Verification:** Assert exception message contains "below minimum volume".
 
+### 6.5 Quote to Command Mapping (ToCommand)
+- **Tier:** Unit
+- **Given:** A calculated `OrderQuote` (Pair="XBTMYR", Volume=0.001, Price=200000.00).
+- **When:** `ToCommand()` is called with `baseAccountId=123`, `counterAccountId=456`, and `postOnly=true`.
+- **Then:** 
+    - The returned `PostLimitOrderCommand` must match all quote parameters.
+    - Optional overrides (e.g., `postOnly`) must be correctly applied.
+- **Verification:** 
+    - Assert `command.Volume == 0.001` and `command.Price == 200000.00`.
+    - Assert `command.BaseAccountId == 123` and `command.CounterAccountId == 456`.
+    - Assert `command.PostOnly == true`.
+
 ## 7. Operational Reality (The Anti-P1 Guardrails)
 - **Blast Radius:** This utility is "Read-Only" (Query). Failure in this component prevents order *placement* but does not corrupt existing orders or account states.
 - **Capacity Breaking Points:** High-frequency usage of this utility will trigger rate limits on the Ticker and Market endpoints. Consumers should use the underlying `GetTicker` and `GetMarkets` handlers directly if they have high-performance caching needs.
