@@ -273,29 +273,61 @@ public class MarketMapperTests
         Assert.Contains("Minimum volume must be greater than zero", ex.Message);
     }
 
-    [Fact(DisplayName = "Given MarketInfo DTO with scale > 28, When mapping, Then throw LunoDataException.")]
+    [Fact(DisplayName = "Given MarketInfo DTO with PriceScale outside production range (-3 to 8), When mapping, Then throw LunoDataException.")]
     [Trait("Category", "Unit")]
-    public void MapToEntity_MarketInfoInvalidScale_ThrowsLunoDataException()
+    public void MapToEntity_MarketInfoInvalidPriceScale_ThrowsLunoDataException()
     {
         // Arrange
         var dto = new GeneratedMarketInfo
         {
-            MarketId = "XBTZAR",
-            BaseCurrency = "XBT",
-            CounterCurrency = "ZAR",
-            MinVolume = "0.00000001",
-            MaxVolume = "100",
-            VolumeScale = 99, // Chaos! Max scale for decimal is 28
-            MinPrice = "1",
-            MaxPrice = "1000000",
-            PriceScale = 0,
-            FeeScale = 8,
-            TradingStatus = GeneratedMarketInfoStatus.ACTIVE
+            MarketId = "XBTZAR", BaseCurrency = "XBT", CounterCurrency = "ZAR",
+            MinVolume = "1", MaxVolume = "100", VolumeScale = 4,
+            MinPrice = "1", MaxPrice = "1000000", FeeScale = 8,
+            TradingStatus = GeneratedMarketInfoStatus.ACTIVE,
+            PriceScale = 99 // Chaos!
         };
 
         // Act & Assert
         var ex = Assert.Throws<LunoDataException>(() => MarketMapper.MapToEntity(dto));
-        Assert.Contains("is outside the allowable range of 0 to 28", ex.Message);
+        Assert.Contains("Scale 99 for 'dto.PriceScale' is outside the empirically verified production range of -3 to 8", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given MarketInfo DTO with VolumeScale outside production range (0 to 6), When mapping, Then throw LunoDataException.")]
+    [Trait("Category", "Unit")]
+    public void MapToEntity_MarketInfoInvalidVolumeScale_ThrowsLunoDataException()
+    {
+        // Arrange
+        var dto = new GeneratedMarketInfo
+        {
+            MarketId = "XBTZAR", BaseCurrency = "XBT", CounterCurrency = "ZAR",
+            MinVolume = "1", MaxVolume = "100", PriceScale = 2,
+            MinPrice = "1", MaxPrice = "1000000", FeeScale = 8,
+            TradingStatus = GeneratedMarketInfoStatus.ACTIVE,
+            VolumeScale = -1 // Chaos! Volume should not be negative
+        };
+
+        // Act & Assert
+        var ex = Assert.Throws<LunoDataException>(() => MarketMapper.MapToEntity(dto));
+        Assert.Contains("Scale -1 for 'dto.VolumeScale' is outside the empirically verified production range of 0 to 6", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given MarketInfo DTO with FeeScale not matching production truth (exactly 8), When mapping, Then throw LunoDataException.")]
+    [Trait("Category", "Unit")]
+    public void MapToEntity_MarketInfoInvalidFeeScale_ThrowsLunoDataException()
+    {
+        // Arrange
+        var dto = new GeneratedMarketInfo
+        {
+            MarketId = "XBTZAR", BaseCurrency = "XBT", CounterCurrency = "ZAR",
+            MinVolume = "1", MaxVolume = "100", PriceScale = 2, VolumeScale = 4,
+            MinPrice = "1", MaxPrice = "1000000",
+            TradingStatus = GeneratedMarketInfoStatus.ACTIVE,
+            FeeScale = 7 // Chaos! Luno uses 8 for everything.
+        };
+
+        // Act & Assert
+        var ex = Assert.Throws<LunoDataException>(() => MarketMapper.MapToEntity(dto));
+        Assert.Contains("Scale 7 for 'dto.FeeScale' is outside the empirically verified production range of 8 to 8", ex.Message);
     }
 
     [Fact(DisplayName = "Given valid MarketInfo DTO, When mapping, Then return populated domain entity.")]
