@@ -255,9 +255,60 @@ public class LunoMarketClientTests : IDisposable
             {
                 // Should throw on first iteration
             }
-        });
-        
-        Assert.Contains("null", ex.Message);
+            });
+
+            Assert.Contains("Failed to parse decimal value", ex.Message);
+    }
+
+    [Fact(DisplayName = "Given multiple pairs, When fetching markets, Then verify exploded query strings AND high-fidelity mapping.")]
+    public async Task GetMarketsAsync_Success_ReturnsMappedMarketsAndSendsExplodedQuery()
+    {
+        // Arrange
+        var operationName = "GetMarkets";
+        var pairs = new[] { "XBTMYR", "ETHMYR" };
+
+        _server.Given(Request.Create().WithPath("/api/exchange/1/markets").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    markets = new[]
+                    {
+                        new { market_id = "XBTMYR", trading_status = "ACTIVE", base_currency = "XBT", counter_currency = "MYR", min_volume = "0.1", max_volume = "100", volume_scale = 1, min_price = "1", max_price = "100", price_scale = 1, fee_scale = 8 },
+                        new { market_id = "ETHMYR", trading_status = "ACTIVE", base_currency = "ETH", counter_currency = "MYR", min_volume = "0.1", max_volume = "100", volume_scale = 1, min_price = "1", max_price = "100", price_scale = 1, fee_scale = 8 }
+                    }
+                }));
+
+        var client = CreateClient();
+
+        Activity? capturedActivity = null;
+        using var activityStoppedEvent = new ManualResetEventSlim();
+        using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
+
+        // Act
+        var results = await client.Market.GetMarketsAsync(pairs);
+
+        // Wait for telemetry
+        activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
+
+        // Assert - 1. Mapping Fidelity
+        Assert.Equal(2, results.Count);
+        var m = results[0];
+        Assert.Equal("XBTMYR", m.Pair);
+        Assert.Equal(Luno.SDK.Market.MarketStatus.Active, m.Status);
+        Assert.Equal(0.1m, m.MinVolume);
+        Assert.Equal(8, m.FeeScale);
+
+        // Assert - 2. Network Handshake (Exploded Query)
+        var request = _server.LogEntries.First().RequestMessage;
+        Assert.Contains("pair=XBTMYR", request.Url);
+        Assert.Contains("pair=ETHMYR", request.Url);
+
+        // Assert - 3. Telemetry
+        Assert.NotNull(capturedActivity);
+        Assert.Equal(operationName, capturedActivity.OperationName);
+        Assert.Equal("Success", capturedActivity.GetTagItem("luno.status"));
     }
 
     [Fact(DisplayName = "Given a successful API request for a single pair, When fetching ticker, Then verify real telemetry and proper mapping.")]

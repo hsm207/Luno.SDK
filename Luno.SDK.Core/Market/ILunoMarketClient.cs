@@ -25,6 +25,14 @@ internal interface ILunoMarketOperations
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>A <see cref="Task"/> returning the <see cref="Ticker"/>.</returns>
     Task<Ticker> FetchTickerAsync(string pair, CancellationToken ct = default);
+
+    /// <summary>
+    /// Asynchronously fetches a list of markets.
+    /// </summary>
+    /// <param name="pairs">Optional market pairs to filter for.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A <see cref="Task"/> returning a list of <see cref="MarketInfo"/>.</returns>
+    Task<IReadOnlyList<MarketInfo>> FetchMarketsAsync(string[]? pairs = null, CancellationToken ct = default);
 }
 
 /// <summary>

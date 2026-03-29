@@ -50,4 +50,32 @@ public static class LunoMarketExtensions
     {
         return client.Commands.DispatchAsync<GetTickerQuery, Task<TickerResponse>>(new GetTickerQuery(pair), ct);
     }
+
+    /// <summary>
+    /// Asynchronously fetches a list of markets for all available pairs.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a list of <see cref="MarketInfo"/>.</returns>
+    public static Task<IReadOnlyList<MarketInfo>> GetMarketsAsync(
+        this ILunoMarketClient client,
+        CancellationToken ct = default)
+    {
+        return client.GetMarketsAsync(pairs: null, ct: ct);
+    }
+
+    /// <summary>
+    /// Asynchronously fetches a list of markets for the specified pairs.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
+    /// <param name="pairs">The market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a list of <see cref="MarketInfo"/>.</returns>
+    public static Task<IReadOnlyList<MarketInfo>> GetMarketsAsync(
+        this ILunoMarketClient client,
+        IEnumerable<string>? pairs,
+        CancellationToken ct = default)
+    {
+        return client.Commands.DispatchAsync<GetMarketsQuery, Task<IReadOnlyList<MarketInfo>>>(new GetMarketsQuery(pairs?.ToArray()), ct);
+    }
 }

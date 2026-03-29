@@ -3,6 +3,7 @@ using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Telemetry;
 using Luno.SDK.Infrastructure.Generated;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace Luno.SDK;
 
@@ -43,5 +44,20 @@ public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands
         }, ct);
 
         return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(response!);
+    }
+
+    /// <inheritdoc />
+    async Task<IReadOnlyList<MarketInfo>> ILunoMarketOperations.FetchMarketsAsync(string[]? pairs, CancellationToken ct)
+    {
+        var response = await _apiClient.Api.Exchange.One.Markets.GetAsync(req =>
+        {
+            req.QueryParameters.Pair = pairs;
+            req.Options.Add(new LunoTelemetryOptions("GetMarkets"));
+        }, ct);
+
+        return response!.Markets!
+            .Select(Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity)
+            .ToList()
+            .AsReadOnly();
     }
 }
