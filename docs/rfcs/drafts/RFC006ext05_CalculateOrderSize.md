@@ -142,7 +142,7 @@ public static PostLimitOrderCommand ToCommand(
         2. **Status Guard**: Throw `LunoMarketStateException` if status is not `Active` or `PostOnly`.
         3. If `AtPrice` is null, fetch **Ticker** via the injected `GetTickerHandler`.
         4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
-        5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice`.
+        5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice` or `Price < MarketInfo.MinPrice`.
         6. **Calculate Volume**:
             - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
             - If `Spend.Unit == Base`: `Volume = Spend.Value`.
@@ -152,7 +152,7 @@ public static PostLimitOrderCommand ToCommand(
                 - **Side.Sell**: Round **UP** (`MidpointRounding.AwayFromZero`) to ensure `CalculatedPrice >= Ticker.Bid`. This ensures we never sell lower than the current market bid, maintaining the "Sell at X or Better" guarantee.
             - **Note**: This logic treats the top-of-book (Ask/Bid) as the **limit of our willingness to trade**. By rounding "inward" (cheaper for the user), we maximize price improvement while minimizing the risk of a "stale tick" causing an `ErrInsufficientFunds` rejection on the Quote side.
             - **Volume**: **ALWAYS** use `MidpointRounding.ToZero` (Floor) relative to the calculated `Spend` to guarantee `ExpectedSpend <= Spend`.
-        8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume`.
+        8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume` and `Volume <= MarketInfo.MaxVolume`. Throw `LunoValidationException` if invariants are violated.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
 
 
@@ -196,7 +196,7 @@ public static PostLimitOrderCommand ToCommand(
 - **Tier:** Unit
 - **Given:** A market with `MinVolume=0.0005`.
 - **When:** Calculation results in `Volume=0.0004`.
-- **Then:** Throw `LunoOrderRejectedException` (ErrVolumeTooLow).
+- **Then:** Throw `LunoValidationException` (ErrVolumeTooLow).
 - **Verification:** Assert exception message contains "below minimum volume".
 
 ## 7. Operational Reality (The Anti-P1 Guardrails)
