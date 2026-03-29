@@ -80,7 +80,6 @@ A read-only record representing the result of the calculation.
 To maintain semantic fidelity with the Luno API, the following denominations are enforced:
 1.  **Price** (Quote/Base): The amount of **Quote** currency (e.g., MYR) per 1 unit of **Base** currency (e.g., XBT).
 2.  **Volume** (Base): The amount of **Base** currency (e.g., XBT) to be traded.
-3.  **TotalSpend** (Quote): The total value of the trade in **Quote** currency, calculated as `Volume * Price`.
 
 **Formula**: `Volume (Base) = Spend (Quote) / Price (Quote/Base)`
 
@@ -88,7 +87,6 @@ To maintain semantic fidelity with the Luno API, the following denominations are
 - `Side` (OrderSide)
 - `Volume` (decimal) - Precision-rounded to `VolumeScale`.
 - `Price` (decimal) - Precision-rounded to `PriceScale`.
-- `TotalSpend` (decimal) - `Volume * Price`. Guaranteed <= requested Spend (if Spend was in Quote).
 
 **The "Plug-and-Play" Guarantee**:
 To satisfy the "Less is More" philosophy and protect users from the "Dumbass Design" of the raw API, the `OrderQuote` will provide a `ToCommand()` helper. This helper maps the calculated `Volume` and `Price` directly into a `PostLimitOrderCommand`.
@@ -144,8 +142,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Then:** 
     - The handler selects the **Ask** price (`250000.00`).
     - `Volume` is `100 / 250000 = 0.000400`.
-    - `TotalSpend` is exactly `100.00`.
-- **Verification:** Assert `Price == 250000.00`, `Volume == 0.0004`, and `TotalSpend == 100.00`.
+- **Verification:** Assert `Price == 250000.00` and `Volume == 0.0004`.
 
 ### 6.2 Market-Relative Sell (Bid Selection)
 - **Tier:** Unit (High-Fidelity)
@@ -156,8 +153,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Then:** 
     - The handler selects the **Bid** price (`249000.00`).
     - `Volume` is `100 / 249000 = 0.000401606...` -> Rounded to `0.000401` (ToZero).
-    - `TotalSpend` is `0.000401 * 249000 = 99.849`.
-- **Verification:** Assert `Price == 249000.00`, `Volume == 0.000401`, and `TotalSpend <= 100.00`.
+- **Verification:** Assert `Price == 249000.00` and `Volume == 0.000401`.
 
 ### 6.3 Target-Fixed Order (Price Override)
 - **Tier:** Unit (High-Fidelity)
@@ -166,8 +162,7 @@ This ensures the request is "Validated-by-Construction" while allowing the devel
 - **Then:** 
     - The handler ignores the Ticker and uses `200000`.
     - `Volume` is `100 / 200000 = 0.000500`.
-    - `TotalSpend` is exactly `100.00`.
-- **Verification:** Assert `Price == 200000.00`, `Volume == 0.0005`, and `TotalSpend == 100.00`.
+- **Verification:** Assert `Price == 200000.00` and `Volume == 0.0005`.
 
 ### 6.4 The "Minimum Volume" Failure
 - **Tier:** Unit
