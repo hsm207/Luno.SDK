@@ -16,6 +16,14 @@ namespace Luno.SDK.Infrastructure.Market;
 /// </summary>
 internal static class MarketMapper
 {
+    // Production-verified scale ranges (Empirically discovered on 2026-03-28)
+    private const int MinPriceScale = -3;
+    private const int MaxPriceScale = 8;
+    private const int MinVolumeScale = 0;
+    private const int MaxVolumeScale = 6;
+    private const int MinFeeScale = 8;
+    private const int MaxFeeScale = 8;
+
     /// <summary>
     /// Maps a generated ticker DTO to a domain entity.
     /// </summary>
@@ -66,21 +74,22 @@ internal static class MarketMapper
             CounterCurrency = dto.CounterCurrency ?? throw new LunoMappingException("API returned a market without a valid counter currency.", nameof(GeneratedMarketInfo)),
             MinVolume = minVolume,
             MaxVolume = ParseDecimal(dto.MaxVolume),
-            VolumeScale = DowncastScale(dto.VolumeScale),
+            VolumeScale = DowncastScale(dto.VolumeScale, MinVolumeScale, MaxVolumeScale),
             MinPrice = ParseDecimal(dto.MinPrice),
             MaxPrice = ParseDecimal(dto.MaxPrice),
-            PriceScale = DowncastScale(dto.PriceScale),
-            FeeScale = DowncastScale(dto.FeeScale)
+            PriceScale = DowncastScale(dto.PriceScale, MinPriceScale, MaxPriceScale),
+            FeeScale = DowncastScale(dto.FeeScale, MinFeeScale, MaxFeeScale)
         };
     }
 
-    private static int DowncastScale(long? scale, [CallerArgumentExpression("scale")] string paramName = "")
+    private static int DowncastScale(long? scale, int min, int max, [CallerArgumentExpression("scale")] string paramName = "")
     {
         if (scale is null)
             throw new LunoMappingException($"Missing scale property.", paramName);
 
-        if (scale < 0 || scale > 28)
-            throw new LunoDataException($"Scale {scale} is outside the allowable range of 0 to 28 for C# decimals.");
+        // Rationale: These ranges were empirically verified against all 144 Luno markets on 2026-03-28.
+        if (scale < min || scale > max)
+            throw new LunoDataException($"Scale {scale} for '{paramName}' is outside the empirically verified production range of {min} to {max}.");
 
         return (int)scale.Value;
     }
