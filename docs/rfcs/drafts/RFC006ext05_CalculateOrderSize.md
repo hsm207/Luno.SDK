@@ -25,12 +25,12 @@
     - Enforce **Domain Invariants** (MinVolume, MaxPrice) before returning an `OrderQuote`.
 - **Non-Goals (The Shield):**
     - This utility does NOT place the order. It only calculates the parameters.
-    - This utility does NOT handle fee calculations (Maker/Taker). It calculates the gross spend.
+    - **Fee Management (Net Settlement)**: This utility does NOT calculate Maker/Taker fees. Per the Luno API Specification, fees are deducted from the *proceeds* (the currency being received). Therefore, the "Spend" amount calculated here is the absolute maximum that will be deducted from the user's account, eliminating the risk of "Insufficient Funds" errors due to unexpected fee additions.
     - This utility does NOT implement caching for Tickers or MarketInfo (handled by underlying handlers or consumer).
 
 ## 4. Proposed Technical Design
 ### 4.1 Architecture & Boundaries
-This follows the "Split & Seal" pattern, acting as a "Macro-UseCase" that composes existing "Micro-UseCases" (GetTicker, GetMarkets).
+This follows the "Split & Seal" pattern, acting as a "Macro-UseCase" that composes existing "Micro-UseCases" via **Constructor Injection (CI)**. This ensures that all dependencies are explicit and validated at startup (Fail-Fast).
 
 ```mermaid
 graph TD
@@ -41,12 +41,13 @@ graph TD
 
     %% @boundary: Application-Layer | Isolation: Orchestration
     subgraph Application [Application Layer]
-        Dispatcher[ILunoCommandDispatcher]
         Handler[CalculateOrderSizeHandler]
+        TickerHandler[ICommandHandler GetTickerQuery, Ticker]
+        MarketsHandler[ICommandHandler GetMarketsQuery, MarketInfo]
         
-        %% @logic: Orchestration | Dependencies: [GetTicker, GetMarkets]
-        Handler -- "Get Ticker" --> Dispatcher
-        Handler -- "Get MarketInfo" --> Dispatcher
+        %% @logic: Orchestration | Dependencies: [Direct Injection]
+        Handler -- "Inject" --> TickerHandler
+        Handler -- "Inject" --> MarketsHandler
     end
 
     %% @boundary: Core-Domain | Isolation: Pure Value Objects
@@ -57,9 +58,8 @@ graph TD
         Quote[OrderQuote]
     end
 
-    Extensions -- "1. Dispatch Query" --> Dispatcher
-    Dispatcher -- "2. Execute" --> Handler
-    Handler -- "3. Validate & Round" --> Quote
+    Extensions -- "1. Dispatch Query" --> Handler
+    Handler -- "2. Execute" --> Quote
 ```
 
 ### 4.2 Public Contracts & Schema Mutations
@@ -86,11 +86,12 @@ To maintain semantic fidelity with the Luno API, the following denominations are
     - `Cost (Quote) = Volume * Price`
     - **Rounding**: No rounding needed on Volume (it's the target). Price is rounded to `PriceScale`.
 
+**Properties**:
 - `Pair` (string)
 - `Side` (OrderSide)
 - `Volume` (decimal) - Precision-rounded to `VolumeScale`.
 - `Price` (decimal) - Precision-rounded to `PriceScale`.
-- `ExpectedSpend` (decimal) - The gross cost (`Volume * Price`).
+- `ExpectedSpend` (decimal) - The gross cost (`Volume * Price`). This is the maximum amount that will leave the user's account.
 - `SpentCurrency` (string) - The currency code of the `ExpectedSpend` (always the Quote currency).
 
 ### 4.3 The Language of the Trader (Ubiquitous Language)
@@ -125,21 +126,23 @@ public static PostLimitOrderCommand ToCommand(
 - **Phase 1: Core Value Objects**
     - **Description:** Implement `TradingAmount` and `TradingPrice` in `Luno.SDK.Core.Trading`.
 - **Phase 2: Application Orchestration**
-    - **Description:** Implement `CalculateOrderSizeHandler`.
+    - **Description:** Implement `CalculateOrderSizeHandler` using **Constructor Injection**.
     - **Logic Flow:**
-        1. Fetch `MarketInfo` via `GetMarketsQuery` using the specific **Pair Filter** (Performance Fix).
+        1. **Fetch MarketInfo**: Invoke the injected `GetMarketsHandler`.
         2. **Status Guard**: Throw `LunoMarketStateException` if status is not `Active` or `PostOnly`.
-        3. If `AtPrice` is null, fetch `Ticker` via `GetTickerQuery`.
+        3. If `AtPrice` is null, fetch **Ticker** via the injected `GetTickerHandler`.
         4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
         5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice`.
         6. **Calculate Volume**:
             - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
             - If `Spend.Unit == Base`: `Volume = Spend.Value`.
         7. **The Precision Squeeze (Safety-First Rounding)**:
-            - **Price**: Round to `PriceScale`. For `Side.Buy`, we prefer `MidpointRounding.AwayFromZero` (Ceiling) on the Ticker Ask to increase fill probability, while for `Side.Sell` we floor the Bid.
+            - **Price (Simple Fill-Heuristic)**: Round to `PriceScale`. For `Side.Buy`, we use `MidpointRounding.AwayFromZero` (Ceiling) on the Ticker Ask to slightly over-bid the market and increase fill probability. For `Side.Sell`, we use `MidpointRounding.ToZero` (Floor) on the Bid. 
+            - **Note**: This is a simple heuristic designed to combat "stale tick" rejections. A formal `SlippageTolerance` parameter is deferred until empirical evidence from users demands a more complex model.
             - **Volume**: **ALWAYS** use `MidpointRounding.ToZero` (Floor) relative to the calculated `Spend` to guarantee `ExpectedSpend <= Spend`.
         8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume`.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
+
 
 ## 6. Behavioral Contracts (The "Given/When/Then" Specs)
 > **Verification Note**: Per the "Less is More" mandate (Lesson 06), this utility is verified via Tier 1 High-Fidelity Unit tests. Since the underlying endpoints (Ticker, Markets) are already verified in Tier 2 suites, we focus here on the **Orchestration Logic** and **Mathematical Invariants**.
@@ -194,9 +197,10 @@ public static PostLimitOrderCommand ToCommand(
 ## 9. The Pre-Mortem & Trade-offs
 - **Rejected Options:** 
     - **Caching in Client**: Rejected. The SDK remains stateless. Price dynamics are too volatile for generic caching; consumers must implement their own decorators if needed.
+    - **Complex Slippage Models**: Deferred. While a `SlippageTolerance` parameter was considered during audit, the current "Fill-Heuristic" (rounding toward a better price) provides a baseline safety net without introducing the API complexity of percentage-based slippage.
     - **Stop-Limit Support**: Deferred. Focus remains on standard Limit orders until Luno API consistency for stop-triggers is empirically verified.
 - **The Pre-Mortem:** "The user spent 100 MYR but only got 90 MYR worth of BTC because the Ticker moved between calculation and placement."
-    - **Mitigation:** The `OrderQuote` is a point-in-time calculation. Users should use the returned `Price` in a Limit Order to guarantee the execution price.
+    - **Mitigation:** The `OrderQuote` is a point-in-time calculation. Users should use the returned `Price` in a Limit Order to guarantee the execution price. The "Fill-Heuristic" slightly improves the odds of the Limit Order being matched immediately.
 
 ## 10. Definition of Done
 - **Verification Strategy:** 100% test coverage on `CalculateOrderSizeHandler`.
