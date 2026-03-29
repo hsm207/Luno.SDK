@@ -201,12 +201,13 @@ public static PostLimitOrderCommand ToCommand(
 
 ### 6.5 Quote to Command Mapping (ToCommand)
 - **Tier:** Unit
-- **Given:** A calculated `OrderQuote` (Pair="XBTMYR", Volume=0.001, Price=200000.00).
+- **Given:** A calculated `OrderQuote` (Pair="XBTMYR", Side=Side.Buy, Volume=0.001, Price=200000.00).
 - **When:** `ToCommand()` is called with `baseAccountId=123`, `counterAccountId=456`, and `postOnly=true`.
 - **Then:** 
     - The returned `PostLimitOrderCommand` must match all quote parameters.
     - Optional overrides (e.g., `postOnly`) must be correctly applied.
 - **Verification:** 
+    - Assert `command.Pair == "XBTMYR"` and `command.Side == Side.Buy`.
     - Assert `command.Volume == 0.001` and `command.Price == 200000.00`.
     - Assert `command.BaseAccountId == 123` and `command.CounterAccountId == 456`.
     - Assert `command.PostOnly == true`.
