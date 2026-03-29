@@ -77,12 +77,21 @@ To maintain semantic fidelity with the Luno API, the following denominations are
 1.  **Price** (Quote/Base): The amount of **Quote** currency (e.g., MYR) per 1 unit of **Base** currency (e.g., XBT).
 2.  **Volume** (Base): The amount of **Base** currency (e.g., XBT) to be traded.
 
-**Formula**: `Volume (Base) = Spend (Quote) / Price (Quote/Base)`
+**Polymorphic Calculation Logic**:
+- **If `Spend` is in Quote (e.g., "Spend 100 MYR")**:
+    - `Volume (Base) = Spend / Price`
+    - **Rounding**: Floor `Volume` to `VolumeScale` to ensure `Cost <= Spend`.
+- **If `Spend` is in Base (e.g., "Spend 0.1 BTC")**:
+    - `Volume (Base) = Spend`
+    - `Cost (Quote) = Volume * Price`
+    - **Rounding**: No rounding needed on Volume (it's the target). Price is rounded to `PriceScale`.
 
 - `Pair` (string)
 - `Side` (OrderSide)
 - `Volume` (decimal) - Precision-rounded to `VolumeScale`.
 - `Price` (decimal) - Precision-rounded to `PriceScale`.
+- `ExpectedSpend` (decimal) - The gross cost (`Volume * Price`).
+- `SpentCurrency` (string) - The currency code of the `ExpectedSpend` (always the Quote currency).
 
 ### 4.3 The Language of the Trader (Ubiquitous Language)
 While the Luno Infrastructure uses the term "Counter Currency," this utility explicitly adopts the professional trader dialect of **"Quote Currency"**. The Application layer serves as the translation boundary, ensuring the SDK speaks the language of its users (Traders) rather than the quirks of the underlying vendor.
@@ -110,6 +119,8 @@ public static PostLimitOrderCommand ToCommand(
 - `Spend` (TradingAmount)
 - `AtPrice` (TradingPrice?) - Optional. If null, the handler fetches the current Ticker and uses the **Ask** (for Buys) or **Bid** (for Sells).
 
+**Intent Note**: This utility is designed for **Limit Orders**. It provides a point-in-time snapshot calculation to help users express "Spend X" intent while retaining the safety of a Limit Price. If a user requires guaranteed execution regardless of price, they should utilize a Market Order.
+
 ## 5. Execution, Rollout, & The Sunset
 - **Phase 1: Core Value Objects**
     - **Description:** Implement `TradingAmount` and `TradingPrice` in `Luno.SDK.Core.Trading`.
@@ -121,8 +132,12 @@ public static PostLimitOrderCommand ToCommand(
         3. If `AtPrice` is null, fetch `Ticker` via `GetTickerQuery`.
         4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
         5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice`.
-        6. Calculate `Volume`: `Volume = Spend.Value / Price`.
-        7. **The Precision Squeeze**: Round `Price` and `Volume` to their respective scales using `MidpointRounding.ToZero`.
+        6. **Calculate Volume**:
+            - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
+            - If `Spend.Unit == Base`: `Volume = Spend.Value`.
+        7. **The Precision Squeeze (Safety-First Rounding)**:
+            - **Price**: Round to `PriceScale`. For `Side.Buy`, we prefer `MidpointRounding.AwayFromZero` (Ceiling) on the Ticker Ask to increase fill probability, while for `Side.Sell` we floor the Bid.
+            - **Volume**: **ALWAYS** use `MidpointRounding.ToZero` (Floor) relative to the calculated `Spend` to guarantee `ExpectedSpend <= Spend`.
         8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume`.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
 
