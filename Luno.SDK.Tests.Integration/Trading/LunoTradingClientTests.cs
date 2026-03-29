@@ -510,4 +510,52 @@ public class LunoTradingClientTests : IDisposable
         var ex = await Assert.ThrowsAsync<LunoMappingException>(() => infraClient.FetchOrderAsync(orderId: orderId));
         Assert.Contains("side", ex.Message);
     }
+
+    [Fact(DisplayName = "Given a successful API response with the SOLMYR order, When listing orders, Then verify 100% mapping fidelity.")]
+    public async Task ListOrdersAsync_SolMyrHappyPath_ReturnsMappedOrder()
+    {
+        // Arrange
+        // Using real-world data discovered in the Lab!
+        var orderId = "BXCYWHEBTGMH56H";
+        var timestamp = 1697753134000L; // 10/19/2023 22:05:34 UTC
+
+        _server.Given(Request.Create().WithPath("/api/exchange/2/listorders").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new
+                {
+                    orders = new[]
+                    {
+                        new
+                        {
+                            order_id = orderId,
+                            status = "PENDING",
+                            side = "BUY",
+                            type = "LIMIT",
+                            pair = "SOLMYR",
+                            base_account_id = 12345, // Required by Invariant!
+                            limit_price = "34.95",
+                            limit_volume = "1.5737",
+                            creation_timestamp = timestamp
+                        }
+                    }
+                }));
+
+        var client = CreateClient();
+
+        // Act
+        var results = await client.Trading.ListOrdersAsync(pair: "SOLMYR", state: OrderStatus.Pending);
+
+        // Assert
+        Assert.Single(results);
+        var o = results[0];
+        Assert.Equal(orderId, o.OrderId);
+        Assert.Equal(OrderStatus.Pending, o.State);
+        Assert.Equal(OrderSide.Buy, o.Side);
+        Assert.Equal("SOLMYR", o.Pair);
+        Assert.Equal(34.95m, o.LimitPrice);
+        Assert.Equal(1.5737m, o.LimitVolume);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(timestamp), o.CreationTimestamp);
+    }
 }
