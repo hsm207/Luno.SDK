@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
-namespace Luno.SDK;
+namespace Luno.SDK.Telemetry;
 
 /// <summary>
 /// Defines the interface for accessing Luno SDK observability signals, including traces and metrics.

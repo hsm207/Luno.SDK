@@ -61,7 +61,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act
-        var balances = await client.GetBalancesAsync(); // Uses Application Layer extension!
+        var balances = await client.Accounts.GetBalancesAsync(); // Uses Application Layer extension!
 
         // Assert
         Assert.NotNull(balances);
@@ -118,5 +118,33 @@ public class LunoAccountClientTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<LunoAuthenticationException>(() => client.Accounts.GetBalancesAsync());
+    }
+
+    [Fact(DisplayName = "Given asset filters, When getting balances, Then send request with correct query string")]
+    public async Task GetBalancesAsync_WithAssetsFilter_SendsCorrectQueryString()
+    {
+        // Arrange
+        _server.Given(Request.Create()
+            .WithPath("/api/1/balance")
+            .UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { balance = Array.Empty<object>() }));
+
+        var client = CreateClient("user", "pass");
+
+        // Act
+        await client.Accounts.GetBalancesAsync(new[] { "XBT", "ETH" });
+
+        // Assert
+        var logs = _server.LogEntries;
+        var request = logs.First().RequestMessage;
+        
+        // High-fidelity verification of the boundary handshake
+        // We verify that both assets are present as separate parameters (exploded)
+        // Note: WireMock URL string will contain the raw query string.
+        Assert.Contains("assets=XBT", request.Url);
+        Assert.Contains("assets=ETH", request.Url);
     }
 }

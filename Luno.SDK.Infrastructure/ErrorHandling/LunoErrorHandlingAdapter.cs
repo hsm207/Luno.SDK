@@ -56,7 +56,6 @@ public class LunoErrorHandlingAdapter : IRequestAdapter
         // Market State
         { "ErrUnderMaintenance", (m, e, s, r, i) => new LunoMarketStateException(m, e, s, i) },
         { "ErrMarketUnavailable", (m, e, s, r, i) => new LunoMarketStateException(m, e, s, i) },
-        { "ErrPostOnlyMode", (m, e, s, r, i) => new LunoMarketStateException(m, e, s, i) },
         { "ErrMarketNotAllowed", (m, e, s, r, i) => new LunoMarketStateException(m, e, s, i) },
         { "ErrCannotTradeWhileQuoteActive", (m, e, s, r, i) => new LunoMarketStateException(m, e, s, i) },
 
@@ -90,7 +89,9 @@ public class LunoErrorHandlingAdapter : IRequestAdapter
         { "ErrInvalidStopDirection", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },
         { "ErrInvalidStopPrice", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },
         { "ErrNotEnoughLiquidity", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },
-        { "ErrPostOnlyNotAllowed", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },
+        { "ErrPostOnlyNotAllowed", (m, e, s, r, i) => new LunoPostOnlyViolationException(m, e, s, i) },
+        { "ErrPostOnlyMode", (m, e, s, r, i) => new LunoPostOnlyViolationException(m, e, s, i) },
+        { "ErrPostOnly", (m, e, s, r, i) => new LunoPostOnlyViolationException(m, e, s, i) },
         { "ErrOrderCanceled", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },
         { "ErrPriceDenominationNotAllowed", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },
         { "ErrVolumeDenominationNotAllowed", (m, e, s, r, i) => new LunoOrderRejectedException(m, e, s, i) },

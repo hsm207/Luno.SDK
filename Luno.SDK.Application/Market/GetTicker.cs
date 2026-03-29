@@ -10,10 +10,10 @@ namespace Luno.SDK.Application.Market;
 public record GetTickerQuery(string Pair);
 
 /// <summary>
-/// Orchestrates the retrieval of a single market ticker from the Luno API.
+/// Orchestrates the retrieval of a single market ticker.
 /// </summary>
-/// <param name="marketClient">The specialized market client used to fetch raw market data.</param>
-public class GetTickerHandler(ILunoMarketClient marketClient)
+/// <param name="market">The specialized market client.</param>
+internal class GetTickerHandler(ILunoMarketOperations market) : ICommandHandler<GetTickerQuery, Task<TickerResponse>>
 {
     /// <summary>
     /// Returns the latest ticker indicators for a specific pair.
@@ -25,7 +25,19 @@ public class GetTickerHandler(ILunoMarketClient marketClient)
         GetTickerQuery query,
         CancellationToken ct = default)
     {
-        var ticker = await marketClient.GetTickerAsync(query.Pair, ct);
+        Validate(query);
+        var ticker = await market.FetchTickerAsync(query.Pair, ct);
         return ticker.ToResponse();
+    }
+
+    /// <summary>
+    /// Validates the query against Application-layer business rules.
+    /// </summary>
+    private static void Validate(GetTickerQuery query)
+    {
+        if (string.IsNullOrWhiteSpace(query.Pair))
+        {
+            throw new LunoValidationException("Pair must be provided to fetch a ticker.");
+        }
     }
 }

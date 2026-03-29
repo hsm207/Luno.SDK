@@ -87,4 +87,22 @@ public class LunoAuthenticationProviderTests
         var authHeader = request.Headers["Authorization"].First();
         Assert.Equal("Basic dXNlcjpwYXNz", authHeader);
     }
+
+    [Fact(DisplayName = "Given an existing Authorization header, When authenticating, Then return early without overwriting")]
+    public async Task AuthenticateRequestAsync_ExistingAuthHeader_ReturnsEarly()
+    {
+        // Arrange
+        var options = new LunoClientOptions { ApiKeyId = "new_user", ApiKeySecret = "new_pass" };
+        var provider = new LunoAuthenticationProvider(options);
+        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/ticker") };
+        request.Headers.Add("Authorization", "Bearer custom_token_from_user");
+
+        // Act
+        await provider.AuthenticateRequestAsync(request);
+
+        // Assert
+        Assert.True(request.Headers.ContainsKey("Authorization"));
+        var authHeader = request.Headers["Authorization"].First();
+        Assert.Equal("Bearer custom_token_from_user", authHeader);
+    }
 }

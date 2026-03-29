@@ -94,7 +94,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Candles
         {
             /// <summary>Candle duration in seconds.For example, 300 corresponds to 5m candles. Currently supporteddurations are: 60 (1m), 300 (5m), 900 (15m), 1800 (30m), 3600 (1h),10800 (3h), 14400 (4h), 28800 (8h), 86400 (24h), 259200 (3d), 604800(7d).</summary>
             [QueryParameter("duration")]
-            public int? Duration { get; set; }
+            public long? Duration { get; set; }
             /// <summary>Currency pair</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

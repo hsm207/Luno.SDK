@@ -21,6 +21,12 @@ public enum MarketStatus
     Disabled,
 
     /// <summary>
+    /// The market is temporarily suspended due to volatility. 
+    /// New orders can only be posted as post-only.
+    /// </summary>
+    Suspended,
+
+    /// <summary>
     /// The market status is unknown or not recognized by the current SDK version.
     /// </summary>
     Unknown

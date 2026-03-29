@@ -1,4 +1,7 @@
 using Luno.SDK;
+using Luno.SDK.Application.Market;
+using Luno.SDK.Application.Trading;
+using Luno.SDK.Trading;
 
 namespace Luno.SDK.Cli.Concepts;
 
@@ -13,20 +16,32 @@ public static class Concept01_MarketData
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task RunAsync()
     {
-        Console.WriteLine("--- Demonstration: Market Data ---");
-        Console.WriteLine("📡 Fetching latest tickers from Luno...");
-
+        Console.WriteLine("\n=== Concept 01: Market Data ===");
+        
         // 1. Initialize the standalone client
         var luno = new LunoClient();
 
-        // 2. Use the fluent extension to stream tickers
-        // This method automatically maps the raw domain entities to application-layer DTOs.
-        await foreach (var ticker in luno.GetTickersAsync())
+        // 2. Unfiltered Demo
+        Console.WriteLine("\n📡 Fetching ALL latest tickers from Luno...");
+        await foreach (var ticker in luno.Market.GetTickersAsync().Take(5))
         {
-            var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
-            Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");
+            PrintTicker(ticker);
         }
 
-        Console.WriteLine("--- Demonstration Complete ---");
+        // 3. Filtered Demo
+        var pairs = new[] { "XBTMYR", "ETHMYR" };
+        Console.WriteLine($"\n🎯 Fetching FILTERED tickers ({string.Join(", ", pairs)}) from Luno...");
+        await foreach (var ticker in luno.Market.GetTickersAsync(pairs))
+        {
+            PrintTicker(ticker);
+        }
+
+        Console.WriteLine("\n--- Demonstration Complete ---");
+    }
+
+    private static void PrintTicker(TickerResponse ticker)
+    {
+        var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
+        Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");
     }
 }

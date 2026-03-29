@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Luno.SDK.Telemetry;
+
 
 namespace Luno.SDK.Infrastructure.Telemetry;
 

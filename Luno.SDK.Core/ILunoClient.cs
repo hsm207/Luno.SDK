@@ -1,5 +1,8 @@
+using System;
 using Luno.SDK.Account;
 using Luno.SDK.Market;
+using Luno.SDK.Telemetry;
+using Luno.SDK.Trading;
 
 namespace Luno.SDK;
 
@@ -18,6 +21,11 @@ public interface ILunoClient
     /// Gets the specialized client for account management and balances.
     /// </summary>
     ILunoAccountClient Accounts { get; }
+
+    /// <summary>
+    /// Gets the specialized client for trading and order lifecycle management.
+    /// </summary>
+    ILunoTradingClient Trading { get; }
 
     /// <summary>
     /// Gets the observability provider for the SDK, including traces and metrics.

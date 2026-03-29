@@ -81,7 +81,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Price { get; set; }
 #endif
         /// <summary>The sequence property</summary>
-        public int? Sequence { get; set; }
+        public long? Sequence { get; set; }
         /// <summary>Unix timestamp in milliseconds</summary>
         public int? Timestamp { get; set; }
         /// <summary>Order type</summary>
@@ -128,7 +128,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "order_id", n => { OrderId = n.GetStringValue(); } },
                 { "pair", n => { Pair = n.GetStringValue(); } },
                 { "price", n => { Price = n.GetStringValue(); } },
-                { "sequence", n => { Sequence = n.GetIntValue(); } },
+                { "sequence", n => { Sequence = n.GetLongValue(); } },
                 { "timestamp", n => { Timestamp = n.GetIntValue(); } },
                 { "type", n => { Type = n.GetEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.TradeV2_type>(); } },
                 { "volume", n => { Volume = n.GetStringValue(); } },
@@ -150,7 +150,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteStringValue("order_id", OrderId);
             writer.WriteStringValue("pair", Pair);
             writer.WriteStringValue("price", Price);
-            writer.WriteIntValue("sequence", Sequence);
+            writer.WriteLongValue("sequence", Sequence);
             writer.WriteIntValue("timestamp", Timestamp);
             writer.WriteEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.TradeV2_type>("type", Type);
             writer.WriteStringValue("volume", Volume);

@@ -32,4 +32,5 @@ public class LunoClientOptions
     /// Gets or sets the API Key Secret for authenticated requests.
     /// </summary>
     public string? ApiKeySecret { get; set; }
+
 }

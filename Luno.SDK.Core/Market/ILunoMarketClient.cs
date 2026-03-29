@@ -1,22 +1,47 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Luno.SDK.Market;
 
 /// <summary>
-/// Defines the interface for a client specialized in Luno Market data operations.
+/// Defines the low-level data-fetching operations for Luno Market.
+/// This interface is used by handlers to avoid a circular dependency on the command dispatcher.
+/// </summary>
+internal interface ILunoMarketOperations
+{
+    /// <summary>
+    /// Asynchronously fetches a stream of market tickers.
+    /// </summary>
+    /// <param name="pairs">Optional market pairs to filter for.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="Ticker"/>.</returns>
+    IAsyncEnumerable<Ticker> FetchTickersAsync(string[]? pairs = null, CancellationToken ct = default);
+    
+    /// <summary>
+    /// Asynchronously fetches a market ticker for a specific pair.
+    /// </summary>
+    /// <param name="pair">The market pair to fetch (e.g. XBTZAR).</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A <see cref="Task"/> returning the <see cref="Ticker"/>.</returns>
+    Task<Ticker> FetchTickerAsync(string pair, CancellationToken ct = default);
+
+    /// <summary>
+    /// Asynchronously fetches a list of markets.
+    /// </summary>
+    /// <param name="pairs">Optional market pairs to filter for.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A <see cref="Task"/> returning a list of <see cref="MarketInfo"/>.</returns>
+    Task<IReadOnlyList<MarketInfo>> FetchMarketsAsync(string[]? pairs = null, CancellationToken ct = default);
+}
+
+/// <summary>
+/// Defines the full contract for Luno Market data operations, including command dispatching.
 /// </summary>
 public interface ILunoMarketClient
 {
     /// <summary>
-    /// Asynchronously retrieves the latest tickers for all available market pairs.
+    /// Gets the command dispatcher used to orchestrate market application-layer logic.
     /// </summary>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="Ticker"/>.</returns>
-    IAsyncEnumerable<Ticker> GetTickersAsync(CancellationToken ct = default);
-
-    /// <summary>
-    /// Asynchronously retrieves the latest ticker for a single market pair.
-    /// </summary>
-    /// <param name="pair">The market pair (e.g., XBTZAR).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a <see cref="Ticker"/>.</returns>
-    Task<Ticker> GetTickerAsync(string pair, CancellationToken ct = default);
+    ILunoCommandDispatcher Commands { get; }
 }

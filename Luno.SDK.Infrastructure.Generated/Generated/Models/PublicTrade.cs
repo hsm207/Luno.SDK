@@ -25,7 +25,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Price { get; set; }
 #endif
         /// <summary>The ever incrementing trade identifier within a market</summary>
-        public int? Sequence { get; set; }
+        public long? Sequence { get; set; }
         /// <summary>Unix timestamp in milliseconds</summary>
         public int? Timestamp { get; set; }
         /// <summary>Amount of assets traded</summary>
@@ -63,7 +63,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             {
                 { "is_buy", n => { IsBuy = n.GetBoolValue(); } },
                 { "price", n => { Price = n.GetStringValue(); } },
-                { "sequence", n => { Sequence = n.GetIntValue(); } },
+                { "sequence", n => { Sequence = n.GetLongValue(); } },
                 { "timestamp", n => { Timestamp = n.GetIntValue(); } },
                 { "volume", n => { Volume = n.GetStringValue(); } },
             };
@@ -77,7 +77,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteBoolValue("is_buy", IsBuy);
             writer.WriteStringValue("price", Price);
-            writer.WriteIntValue("sequence", Sequence);
+            writer.WriteLongValue("sequence", Sequence);
             writer.WriteIntValue("timestamp", Timestamp);
             writer.WriteStringValue("volume", Volume);
             writer.WriteAdditionalData(AdditionalData);

@@ -21,7 +21,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals
         /// <summary>Gets an item from the Luno.SDK.Infrastructure.Generated.api.One.withdrawals.item collection</summary>
         /// <param name="position">Withdrawal ID to retrieve.</param>
         /// <returns>A <see cref="global::Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals.Item.WithdrawalsItemRequestBuilder"/></returns>
-        public global::Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals.Item.WithdrawalsItemRequestBuilder this[int position]
+        public global::Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals.Item.WithdrawalsItemRequestBuilder this[long position]
         {
             get
             {
@@ -150,10 +150,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals
         {
             /// <summary>Filter to withdrawals requested on or before the withdrawal with this ID.Can be used for pagination.</summary>
             [QueryParameter("before_id")]
-            public int? BeforeId { get; set; }
+            public long? BeforeId { get; set; }
             /// <summary>Limit to this many withdrawals</summary>
             [QueryParameter("limit")]
-            public int? Limit { get; set; }
+            public long? Limit { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.
@@ -181,7 +181,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals
 #endif
             /// <summary>The beneficiary ID of the bank account the withdrawal will be paid out to.This parameter is required if the user has set up multiple beneficiaries.The beneficiary ID can be found by selecting on the beneficiary name on the user’s &lt;a href=&quot;/wallet/beneficiaries&quot;&gt;Beneficiaries&lt;/a&gt; page.</summary>
             [QueryParameter("beneficiary_id")]
-            public int? BeneficiaryId { get; set; }
+            public long? BeneficiaryId { get; set; }
             /// <summary>Optional unique ID to associate with this withdrawal.Useful to prevent duplicate sends.This field supports all alphanumeric characters including &quot;-&quot; and &quot;_&quot;.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -207,7 +207,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Withdrawals
 #endif
             /// <summary>Optional source account ID representing the account from which the Withdrawal will be made,fall back to the default account if not provided.</summary>
             [QueryParameter("source_account_id")]
-            public int? SourceAccountId { get; set; }
+            public long? SourceAccountId { get; set; }
             /// <summary>Withdrawal method.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

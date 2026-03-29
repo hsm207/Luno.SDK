@@ -46,17 +46,24 @@ public static class Concept03_AccountBalances
 
         try
         {
-            Console.WriteLine("Fetching balances...");
-            // Use the application-layer extension method directly on the client!
-            var balances = await client.GetBalancesAsync();
+            // 1. Unfiltered Fetch
+            Console.WriteLine("\n--- Step 1: Fetching ALL balances (Unfiltered) ---");
+            var allBalances = await client.Accounts.GetBalancesAsync();
 
-            Console.WriteLine($"Successfully retrieved {balances.Count} balances:");
-            foreach (var balance in balances)
+            Console.WriteLine($"Successfully retrieved {allBalances.Count} balances:");
+            foreach (var balance in allBalances.Where(b => b.Total > 0))
             {
-                if (balance.Total > 0)
-                {
-                    Console.WriteLine($"- {balance.Asset}: {balance.Total} (Available: {balance.Available}, Reserved: {balance.Reserved})");
-                }
+                Console.WriteLine($"- {balance.Asset}: {balance.Total} (Available: {balance.Available})");
+            }
+
+            // 2. Filtered Fetch
+            Console.WriteLine("\n--- Step 2: Fetching specific balances (Filtered: XBT, ETH) ---");
+            var filteredBalances = await client.Accounts.GetBalancesAsync(new[] { "XBT", "ETH" });
+
+            Console.WriteLine($"Successfully retrieved {filteredBalances.Count} filtered balances:");
+            foreach (var balance in filteredBalances)
+            {
+                Console.WriteLine($"- {balance.Asset}: {balance.Total} (Available: {balance.Available})");
             }
         }
         catch (LunoAuthenticationException ex)
