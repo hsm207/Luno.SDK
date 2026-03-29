@@ -25,9 +25,9 @@
     - Enforce **Domain Invariants** (MinVolume, MaxPrice) before returning an `OrderQuote`.
 - **Non-Goals (The Shield):**
     - This utility does NOT place the order. It only calculates the parameters.
-    - **⚠️ EXPLICIT NOTICE: Fee Management (Net Settlement)**: Per the Luno API Specification and standard exchange protocol, **fees are ALWAYS deducted from the proceeds** (the currency being received). 
-        - *Example*: If you "Spend 100 MYR" to buy BTC, you will receive `(100 / Price) - Fees` in BTC. 
-        - *Example*: If you "Spend 0.1 BTC" to sell for MYR, you will receive `(0.1 * Price) - Fees` in MYR.
+    - **⚠️ EXPLICIT NOTICE: Fee Management (Net Settlement)**: Per the Luno API Specification and standard exchange protocol, **fees are ALWAYS deducted from the proceeds** (the currency being received). This ensures that a "Spend X" request in the Quote currency will always be covered by the specified amount, as the fee is settled against the resulting Base asset.
+        - *Example*: If you "Spend 100 MYR" to buy BTC, you will receive `(100 / Price) - Fees` in BTC. The MYR spend remains exactly 100.
+        - *Example*: If you "Spend 0.1 BTC" to sell for MYR, you will receive `(0.1 * Price) - Fees` in MYR. The BTC spend remains exactly 0.1.
         - This utility calculates the **Gross Volume** and **Limit Price**. It does NOT provide a "Net-of-Fees" estimate, as fees are dynamic and determined at the moment of execution by the exchange.
     - **Limit Orders Only**: This utility is strictly for **Limit Orders**. It does not support Market, Stop, or complex order types. It calculates a "Price or Better" contract.
     - This utility does NOT implement caching for Tickers or MarketInfo (handled by underlying handlers or consumer).
@@ -46,8 +46,8 @@ graph TD
     %% @boundary: Application-Layer | Isolation: Orchestration
     subgraph Application [Application Layer]
         Handler[CalculateOrderSizeHandler]
-        TickerHandler[ICommandHandler GetTickerQuery, Ticker]
-        MarketsHandler[ICommandHandler GetMarketsQuery, MarketInfo]
+        TickerHandler[ICommandHandler GetTickerQuery, TickerResponse]
+        MarketsHandler[ICommandHandler GetMarketsQuery, IReadOnlyList MarketInfo]
         
         %% @logic: Orchestration | Dependencies: [Direct Injection]
         Handler -- "Inject" --> TickerHandler
@@ -67,6 +67,12 @@ graph TD
 ```
 
 ### 4.2 Public Contracts & Schema Mutations
+#### TickerResponse (Application)
+To support the "Price or Better" rounding logic, the `TickerResponse` contract is expanded to expose the raw Ask and Bid prices. This ensures the Handler can execute its rounding invariants without bypassing Application-layer boundaries.
+
+- `Ask` (decimal): The current lowest sell price.
+- `Bid` (decimal): The current highest buy price.
+
 #### Value Objects (Core)
 To prevent "Parameter Jumbling," we introduce static factory methods for units:
 
@@ -132,7 +138,7 @@ public static PostLimitOrderCommand ToCommand(
 - **Phase 2: Application Orchestration**
     - **Description:** Implement `CalculateOrderSizeHandler` using **Constructor Injection**.
     - **Logic Flow:**
-        1. **Fetch MarketInfo**: Invoke the injected `GetMarketsHandler`.
+        1. **Fetch MarketInfo**: Invoke the injected `GetMarketsHandler` **parameterized with the specific Pair** (e.g., `new GetMarketsQuery([command.Pair])`) to avoid the performance penalty of a full-market fetch.
         2. **Status Guard**: Throw `LunoMarketStateException` if status is not `Active` or `PostOnly`.
         3. If `AtPrice` is null, fetch **Ticker** via the injected `GetTickerHandler`.
         4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
