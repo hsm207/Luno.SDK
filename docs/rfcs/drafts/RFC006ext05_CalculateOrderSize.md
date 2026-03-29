@@ -186,7 +186,7 @@ public static PostLimitOrderCommand ToCommand(
 ### 6.3 Target-Fixed Order (Price Override)
 - **Tier:** Unit (High-Fidelity)
 - **Given:** `MarketInfo` (XBTMYR, VolumeScale=6, Status=Active, MaxPrice=1000000).
-- **When:** Handler is called with `Spend.InQuote(100)` and `AtPrice = Price.InQuote(200000)`.
+- **When:** Handler is called with `Side.Buy`, `Spend.InQuote(100)` and `AtPrice = Price.InQuote(200000)`.
 - **Then:** 
     - The handler ignores the Ticker and uses `200000`.
     - `Volume` is `100 / 200000 = 0.000500`.
