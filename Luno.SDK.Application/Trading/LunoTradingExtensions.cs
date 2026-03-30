@@ -93,4 +93,45 @@ public static class LunoTradingExtensions
     {
         return client.ListOrdersAsync(new ListOrdersQuery(State: state, Pair: pair), ct);
     }
+
+    /// <summary>
+    /// Calculates the optimal limit order size (Volume and Price) for a given spend amount.
+    /// Ensures mathematical boundaries and precision rules are strictly maintained.
+    /// </summary>
+    public static Task<OrderQuote> CalculateOrderSizeAsync(
+        this ILunoTradingClient client,
+        CalculateOrderSizeQuery query,
+        CancellationToken ct = default)
+    {
+        return client.Commands.DispatchAsync<CalculateOrderSizeQuery, Task<OrderQuote>>(query, ct);
+    }
+
+    /// <summary>
+    /// Transforms the finalized mathematical <see cref="OrderQuote"/> directly into a <see cref="PostLimitOrderCommand"/>.
+    /// </summary>
+    public static PostLimitOrderCommand ToCommand(
+        this OrderQuote quote,
+        long baseAccountId, 
+        long counterAccountId, 
+        string? clientOrderId = null,
+        TimeInForce timeInForce = TimeInForce.GTC,
+        bool postOnly = false,
+        long? timestamp = null,
+        long? ttl = null)
+    {
+        return new PostLimitOrderCommand
+        {
+            Pair = quote.Pair,
+            Side = quote.Side,
+            Volume = quote.Volume,
+            Price = quote.Price,
+            BaseAccountId = baseAccountId,
+            CounterAccountId = counterAccountId,
+            ClientOrderId = clientOrderId,
+            TimeInForce = timeInForce,
+            PostOnly = postOnly,
+            Timestamp = timestamp,
+            TTL = ttl
+        };
+    }
 }
