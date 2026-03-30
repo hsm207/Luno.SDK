@@ -6,6 +6,7 @@ using Luno.SDK;
 using Luno.SDK.Trading;
 using Luno.SDK.Market;
 using Luno.SDK.Application.Trading;
+using Luno.SDK.Telemetry;
 using Moq;
 using Xunit;
 
@@ -14,12 +15,17 @@ namespace Luno.SDK.Tests.Unit.Application.Trading;
 public class CalculateOrderSizeHandlerTests
 {
     private readonly Mock<ILunoMarketOperations> _marketMock;
+    private readonly Mock<ILunoTelemetry> _telemetryMock;
     private readonly CalculateOrderSizeHandler _handler;
 
     public CalculateOrderSizeHandlerTests()
     {
         _marketMock = new Mock<ILunoMarketOperations>();
-        _handler = new CalculateOrderSizeHandler(_marketMock.Object);
+        _telemetryMock = new Mock<ILunoTelemetry>();
+        var meter = new System.Diagnostics.Metrics.Meter("Luno.SDK.Tests");
+        _telemetryMock.SetupGet(t => t.Meter).Returns(meter);
+        
+        _handler = new CalculateOrderSizeHandler(_marketMock.Object, _telemetryMock.Object);
     }
 
     private void SetupMarket(string pair, decimal minVol, decimal maxVol, decimal maxPrice, int volScale, int priceScale, MarketStatus status = MarketStatus.Active)
@@ -140,5 +146,28 @@ public class CalculateOrderSizeHandlerTests
         // Assert
         Assert.Equal(250000.00m, result.Price);
         Assert.Equal(0.123456m, result.Volume); // Floored to 6 decimals
+    }
+
+    [Fact(DisplayName = "Given valid Buy Ask but dead Bid, When calculated, Then Buy succeeds")]
+    public async Task Handle_SidedLiquidity_AllowsDeadOppositeSide()
+    {
+        // Arrange
+        SetupMarket("XBTMYR", 0.0001m, 100m, 1000000m, 6, 2);
+        SetupTicker("XBTMYR", ask: 250000.00m, bid: 0m); // Dead Bid
+        var query = new CalculateOrderSizeQuery("XBTMYR", OrderSide.Buy, TradingAmount.InBase(0.1m));
+
+        // Act
+        var result = await _handler.HandleAsync(query);
+
+        // Assert
+        Assert.Equal(250000.00m, result.Price);
+    }
+
+    [Fact(DisplayName = "Given negative TradingAmount, When created, Then throws ArgumentOutOfRangeException")]
+    public void TradingAmount_Negative_ThrowsException()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => TradingAmount.InBase(-0.1m));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TradingAmount.InQuote(-10m));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TradingAmount.InBase(0m));
     }
 }
