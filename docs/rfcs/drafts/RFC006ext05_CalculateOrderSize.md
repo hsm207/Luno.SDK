@@ -34,7 +34,7 @@
 
 ## 4. Proposed Technical Design
 ### 4.1 Architecture & Boundaries
-This follows the "Split & Seal" pattern, acting as a "Macro-UseCase" that composes existing "Micro-UseCases" via **Constructor Injection (CI)**. This ensures that all dependencies are explicit and validated at startup (Fail-Fast).
+This follows the "Split & Seal" pattern, acting as a "Macro-UseCase" that orchestrates data retrieval via the **Market Gateway**. To maintain **Use Case Independence** and adhere to the **Dependency Inversion Principle (DIP)**, the handler depends directly on the infrastructure-layer operations rather than other application-layer interactors.
 
 ```mermaid
 graph TD
@@ -46,12 +46,9 @@ graph TD
     %% @boundary: Application-Layer | Isolation: Orchestration
     subgraph Application [Application Layer]
         Handler[CalculateOrderSizeHandler]
-        TickerHandler[ICommandHandler GetTickerQuery, TickerResponse]
-        MarketsHandler[ICommandHandler GetMarketsQuery, IReadOnlyList MarketInfo]
         
         %% @logic: Orchestration | Dependencies: [Direct Injection]
-        Handler -- "Inject" --> TickerHandler
-        Handler -- "Inject" --> MarketsHandler
+        Handler -- "Inject" --> Gateway[ILunoMarketOperations]
     end
 
     %% @boundary: Core-Domain | Isolation: Pure Value Objects
@@ -142,10 +139,10 @@ public static PostLimitOrderCommand ToCommand(
 - **Phase 2: Application Orchestration**
     - **Description:** Implement `CalculateOrderSizeHandler` using **Constructor Injection**.
     - **Logic Flow:**
-        1. **Fetch MarketInfo**: Invoke the injected `GetMarketsHandler` **parameterized with the specific Pair** (e.g., `new GetMarketsQuery([command.Pair])`) to avoid the performance penalty of a full-market fetch.
+        1. **Fetch MarketInfo**: Invoke `market.FetchMarketsAsync([command.Pair])` via the injected gateway.
         2. **Status Guard**: Throw `LunoMarketStateException` if status is not `Active` or `PostOnly`.
-        3. If `AtPrice` is null, fetch **Ticker** via the injected `GetTickerHandler`.
-        4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
+        3. If `AtPrice` is null, fetch **Ticker** via `market.FetchTickerAsync(command.Pair)`.
+        4. Resolve `Price`: Use `AtPrice` or the **Ask/Bid** from the raw Ticker (mapped via `ToResponse()` for consistency).
         5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice` or `Price < MarketInfo.MinPrice`.
         6. **Calculate Volume (Precision Mandate)**:
             - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
