@@ -23,6 +23,7 @@
     - Implement a `CalculateOrderSizeHandler` that orchestrates Ticker and MarketInfo retrieval.
     - Enforce **Strict Precision Guardrails** using `MidpointRounding.ToZero` (floor) to ensure the calculated spend never exceeds the requested amount.
     - Enforce **Domain Invariants** (MinVolume, MaxPrice) before returning an `OrderQuote`.
+    - **Operational Robustness**: Implement "No Mercy" guards against zero prices, negative values, and missing market liquidity (empty order books).
 - **Non-Goals (The Shield):**
     - This utility does NOT place the order. It only calculates the parameters.
     - **⚠️ EXPLICIT NOTICE: Fee Management (Net Settlement)**: Per the Luno API Specification and standard exchange protocol, **fees are ALWAYS deducted from the proceeds** (the currency being received). This ensures that a "Spend X" request in the Quote currency will always be covered by the specified amount, as the fee is settled against the resulting Base asset.
@@ -142,8 +143,10 @@ public static PostLimitOrderCommand ToCommand(
         1. **Fetch MarketInfo**: Invoke `market.FetchMarketsAsync([command.Pair])` via the injected gateway.
         2. **Status Guard**: Throw `LunoMarketStateException` if status is not `Active` or `PostOnly`.
         3. If `AtPrice` is null, fetch **Ticker** via `market.FetchTickerAsync(command.Pair)`.
-        4. Resolve `Price`: Use `AtPrice` or the **Ask/Bid** from the raw Ticker (mapped via `ToResponse()` for consistency).
-        5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice` or `Price < MarketInfo.MinPrice`.
+        4. **Resolve & Guard Price (Liquidity Check)**: 
+            - Use `AtPrice` or the **Ask/Bid** from the raw Ticker.
+            - **Chaos Path Guard**: If the resolved price is `null`, `0`, or negative (e.g., empty order book or API malfunction), throw `LunoValidationException` with `ErrCode.ErrInvalidPrice`.
+        5. **Market Boundary Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice` or `Price < MarketInfo.MinPrice`. This naturally prevents execution at "Zero Price" levels.
         6. **Calculate Volume (Precision Mandate)**:
             - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
             - If `Spend.Unit == Base`: `Volume = Spend.Value`.
@@ -154,7 +157,7 @@ public static PostLimitOrderCommand ToCommand(
                 - **Side.Sell**: Round **UP** (`MidpointRounding.ToPositiveInfinity`) to ensure `CalculatedPrice >= Ticker.Bid`. This ensures we never sell lower than the current market bid, maintaining the "Sell at X or Better" guarantee.
             - **Note**: This logic treats the top-of-book (Ask/Bid) as the **limit of our willingness to trade**. By rounding "inward" (favoring the user), we maximize price improvement while minimizing the risk of a "stale tick" causing an `ErrInsufficientFunds` rejection on the Quote side.
             - **The Output Contract**: The resulting `OrderQuote` record derives its semantic properties (`EstimatedCost`, `EstimatedProceeds`) from these precision-scrubbed inputs.
-        8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume` and `Volume <= MarketInfo.MaxVolume`. Throw `LunoValidationException` if invariants are violated.
+        8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume` and `Volume <= MarketInfo.MaxVolume`. Throw `LunoValidationException` (mapping `ErrVolumeTooLow` or `ErrVolumeTooHigh`) if invariants are violated.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
 
 
@@ -216,6 +219,9 @@ public static PostLimitOrderCommand ToCommand(
 
 ## 7. Operational Reality (The Anti-P1 Guardrails)
 - **Blast Radius:** This utility is "Read-Only" (Query). Failure in this component prevents order *placement* but does not corrupt existing orders or account states.
+- **7.1 Chaos Path Guardrails:**
+    - **Price <= 0**: Explicitly blocked. Even if `MarketInfo.MinPrice` is zero (unlikely), the handler forces a positive price check to avoid `DivideByZeroException`.
+    - **Missing Liquidity**: If a ticker returns `null` for Bid/Ask, it represents a "Dead Market." The utility refuses to calculate a quote, forcing the user to specify a price or wait for market activity.
 - **Capacity Breaking Points:** High-frequency usage of this utility will trigger rate limits on the Ticker and Market endpoints. Consumers should use the underlying `GetTicker` and `GetMarkets` handlers directly if they have high-performance caching needs.
 - **Observability:** Telemetry should track "Calculation Latency" and "Invariant Failures" (how often users try to spend less than the minimum).
 
