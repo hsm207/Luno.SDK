@@ -150,9 +150,9 @@ public static PostLimitOrderCommand ToCommand(
             - **Mandatory Squeeze**: In all cases, `Volume` MUST be floored (`MidpointRounding.ToZero`) to `MarketInfo.VolumeScale`.
         7. **The Precision Squeeze (Steel-Clad Limit Math)**:
             - **Limit Price (The 'Better or Equal' Contract)**: Round to `PriceScale`. 
-                - **Side.Buy**: Round **DOWN** (`MidpointRounding.ToZero`) to ensure `CalculatedPrice <= Ticker.Ask`. This ensures we never bid higher than the current market ask, maintaining the "Buy at X or Better" guarantee.
-                - **Side.Sell**: Round **UP** (`MidpointRounding.AwayFromZero`) to ensure `CalculatedPrice >= Ticker.Bid`. This ensures we never sell lower than the current market bid, maintaining the "Sell at X or Better" guarantee.
-            - **Note**: This logic treats the top-of-book (Ask/Bid) as the **limit of our willingness to trade**. By rounding "inward" (cheaper for the user), we maximize price improvement while minimizing the risk of a "stale tick" causing an `ErrInsufficientFunds` rejection on the Quote side.
+                - **Side.Buy**: Round **DOWN** (`MidpointRounding.ToNegativeInfinity`) to ensure `CalculatedPrice <= Ticker.Ask`. This ensures we never bid higher than the current market ask, maintaining the "Buy at X or Better" guarantee.
+                - **Side.Sell**: Round **UP** (`MidpointRounding.ToPositiveInfinity`) to ensure `CalculatedPrice >= Ticker.Bid`. This ensures we never sell lower than the current market bid, maintaining the "Sell at X or Better" guarantee.
+            - **Note**: This logic treats the top-of-book (Ask/Bid) as the **limit of our willingness to trade**. By rounding "inward" (favoring the user), we maximize price improvement while minimizing the risk of a "stale tick" causing an `ErrInsufficientFunds` rejection on the Quote side.
             - **The Output Contract**: The resulting `OrderQuote` record derives its semantic properties (`EstimatedCost`, `EstimatedProceeds`) from these precision-scrubbed inputs.
         8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume` and `Volume <= MarketInfo.MaxVolume`. Throw `LunoValidationException` if invariants are violated.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
@@ -180,7 +180,7 @@ public static PostLimitOrderCommand ToCommand(
     - Real `Ticker` with Ask=`250000.00` and Bid=`248999.991` (unrounded).
 - **When:** `CalculateOrderSizeHandler` is called with `Side.Sell` and `Spend.InQuote(100)`.
 - **Then:** 
-    - The handler selects the **Bid** and rounds **UP** (`MidpointRounding.AwayFromZero`).
+    - The handler selects the **Bid** and rounds **UP** (`MidpointRounding.ToPositiveInfinity`).
     - `Price` is `249000.00`.
     - `Volume` is `100 / 249000 = 0.000401606...` -> Rounded to `0.000401` (ToZero).
 - **Verification:** Assert `Price == 249000.00` and `Volume == 0.000401`.
