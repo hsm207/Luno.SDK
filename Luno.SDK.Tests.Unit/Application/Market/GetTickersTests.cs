@@ -51,8 +51,8 @@ public class GetTickersTests
     public void Equality_IdenticalTickerResponses_ReturnsTrue()
     {
         var timestamp = DateTimeOffset.UtcNow;
-        var r1 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);
-        var r2 = new TickerResponse("XBTZAR", 100m, 10m, true, timestamp);
+        var r1 = new TickerResponse("XBTZAR", 100m, 105m, 95m, 10m, true, timestamp);
+        var r2 = new TickerResponse("XBTZAR", 100m, 105m, 95m, 10m, true, timestamp);
 
         Assert.Equal(r1, r2);
         Assert.Equal(r1.GetHashCode(), r2.GetHashCode());

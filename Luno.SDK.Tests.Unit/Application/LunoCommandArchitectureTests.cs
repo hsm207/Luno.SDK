@@ -99,7 +99,7 @@ public class LunoCommandArchitectureTests
         handlerMock.Setup(h => h.HandleAsync(It.IsAny<GetTickerQuery>(), It.IsAny<CancellationToken>()))
                    .ReturnsAsync(() => {
                        executionFullTrace.Add("Handler");
-                       return new TickerResponse("XBTZAR", 1000m, 10m, true, DateTimeOffset.UtcNow);
+                       return new TickerResponse("XBTZAR", 1000m, 1005m, 995m, 10m, true, DateTimeOffset.UtcNow);
                    });
         
         services.AddTransient(_ => handlerMock.Object);
