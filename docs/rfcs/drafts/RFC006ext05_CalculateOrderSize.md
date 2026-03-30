@@ -93,16 +93,20 @@ To maintain semantic fidelity with the Luno API, the following denominations are
     - **Rounding**: Floor `Volume` to `VolumeScale` to ensure `Cost <= Spend`.
 - **If `Spend` is in Base (e.g., "Spend 0.1 BTC")**:
     - `Volume (Base) = Spend`
-    - `Cost (Quote) = Volume * Price`
-    - **Rounding**: No rounding needed on Volume (it's the target). Price is rounded to `PriceScale`.
+    - **Rounding**: Floor `Volume` to `VolumeScale` (Mandatory). This ensures that even when the user specifies a target in Base currency, the volume respects the market's precision constraints.
+    - `Price` is rounded to `PriceScale`.
 
-**Properties**:
+**Properties (The "Source of Truth")**:
 - `Pair` (string)
 - `Side` (OrderSide)
 - `Volume` (decimal) - Precision-rounded to `VolumeScale`.
 - `Price` (decimal) - Precision-rounded to `PriceScale`.
-- `ExpectedSpend` (decimal) - The gross cost (`Volume * Price`). This is the maximum amount that will leave the user's account.
-- `SpentCurrency` (string) - The currency code of the `ExpectedSpend` (always the Quote currency).
+- `QuoteCurrency` (string) - The currency code of the Quote asset (e.g., "MYR").
+
+**Derived Properties (Side-Aware Semantics)**:
+- `GrossQuoteValue` (decimal): The raw calculated value (`Volume * Price`).
+- `EstimatedCost` (decimal): If `Side == Buy`, this is the `GrossQuoteValue`. Otherwise, `0`. Represents the total budget to be spent in the Quote currency.
+- `EstimatedProceeds` (decimal): If `Side == Sell`, this is the `GrossQuoteValue`. Otherwise, `0`. Represents the total proceeds to be received in the Quote currency.
 
 ### 4.3 The Language of the Trader (Ubiquitous Language)
 While the Luno Infrastructure uses the term "Counter Currency," this utility explicitly adopts the professional trader dialect of **"Quote Currency"**. The Application layer serves as the translation boundary, ensuring the SDK speaks the language of its users (Traders) rather than the quirks of the underlying vendor.
@@ -143,15 +147,16 @@ public static PostLimitOrderCommand ToCommand(
         3. If `AtPrice` is null, fetch **Ticker** via the injected `GetTickerHandler`.
         4. Resolve `Price`: Use `AtPrice` or `Ticker.Ask/Bid`.
         5. **Price Guard**: Throw `LunoValidationException` if `Price > MarketInfo.MaxPrice` or `Price < MarketInfo.MinPrice`.
-        6. **Calculate Volume**:
+        6. **Calculate Volume (Precision Mandate)**:
             - If `Spend.Unit == Quote`: `Volume = Spend.Value / Price`.
             - If `Spend.Unit == Base`: `Volume = Spend.Value`.
+            - **Mandatory Squeeze**: In all cases, `Volume` MUST be floored (`MidpointRounding.ToZero`) to `MarketInfo.VolumeScale`.
         7. **The Precision Squeeze (Steel-Clad Limit Math)**:
             - **Limit Price (The 'Better or Equal' Contract)**: Round to `PriceScale`. 
                 - **Side.Buy**: Round **DOWN** (`MidpointRounding.ToZero`) to ensure `CalculatedPrice <= Ticker.Ask`. This ensures we never bid higher than the current market ask, maintaining the "Buy at X or Better" guarantee.
                 - **Side.Sell**: Round **UP** (`MidpointRounding.AwayFromZero`) to ensure `CalculatedPrice >= Ticker.Bid`. This ensures we never sell lower than the current market bid, maintaining the "Sell at X or Better" guarantee.
             - **Note**: This logic treats the top-of-book (Ask/Bid) as the **limit of our willingness to trade**. By rounding "inward" (cheaper for the user), we maximize price improvement while minimizing the risk of a "stale tick" causing an `ErrInsufficientFunds` rejection on the Quote side.
-            - **Volume**: **ALWAYS** use `MidpointRounding.ToZero` (Floor) relative to the calculated `Spend` to guarantee `ExpectedSpend <= Spend`.
+            - **The Output Contract**: The resulting `OrderQuote` record derives its semantic properties (`EstimatedCost`, `EstimatedProceeds`) from these precision-scrubbed inputs.
         8. **Invariant Check**: Verify `Volume >= MarketInfo.MinVolume` and `Volume <= MarketInfo.MaxVolume`. Throw `LunoValidationException` if invariants are violated.
     - **Merge Gate:** High-Fidelity Unit tests (Tier 1) verify the orchestration and rounding.
 
