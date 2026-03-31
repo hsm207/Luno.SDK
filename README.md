@@ -15,6 +15,17 @@ await foreach (var ticker in luno.GetTickersAsync())
 {
     Console.WriteLine($"{ticker.Pair}: {ticker.Price}");
 }
+
+// Safely calculate a Limit Order to spend exactly 100 MYR on Bitcoin
+var quote = await luno.Trading.CalculateOrderSizeAsync(new CalculateOrderSizeQuery(
+    Pair: "XBTMYR",
+    Side: OrderSide.Buy,
+    Spend: TradingAmount.InQuote(100m)
+));
+
+// Map the strict mathematical quote seamlessly into a command
+var command = quote.ToCommand(baseAccountId: 12345, counterAccountId: 67890);
+await luno.Trading.PostLimitOrderAsync(command);
 ```
 
 ## Demonstration Gallery

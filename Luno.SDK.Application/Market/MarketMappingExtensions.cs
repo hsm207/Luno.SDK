@@ -13,6 +13,8 @@ internal static class MarketMappingExtensions
     public static TickerResponse ToResponse(this Ticker ticker) => new(
         ticker.Pair,
         ticker.LastTrade,
+        ticker.Ask,
+        ticker.Bid,
         ticker.Spread,
         ticker.IsActive,
         ticker.Timestamp

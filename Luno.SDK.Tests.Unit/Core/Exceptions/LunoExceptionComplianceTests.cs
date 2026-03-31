@@ -88,6 +88,7 @@ public class LunoExceptionComplianceTests
         yield return new object[] { typeof(LunoTimeoutException) };
         yield return new object[] { typeof(LunoResourceNotFoundException) };
         yield return new object[] { typeof(LunoClientException) };
+        yield return new object[] { typeof(LunoPostOnlyViolationException) };
     }
 
     [Theory(DisplayName = "Given an exception type, When constructed with parameterless constructor, Then inherit LunoException")]
@@ -255,6 +256,12 @@ public class LunoExceptionComplianceTests
         var policyMeta = new LunoAccountPolicyException(_testMessage, "ErrPol", 400, _testInnerException);
         var stateMeta = new LunoMarketStateException(_testMessage, "ErrMkt", 400, _testInnerException);
         var securityMeta = new LunoSecurityException(_testMessage, "ErrSec", 401, _testInnerException);
+
+        AssertBase(new LunoPostOnlyViolationException());
+        AssertMsg(new LunoPostOnlyViolationException(_testMessage));
+        AssertInner(new LunoPostOnlyViolationException(_testMessage, _testInnerException));
+        var postMeta = new LunoPostOnlyViolationException(_testMessage, "ErrPost", 400, _testInnerException);
+        Assert.Equal("ErrPost", postMeta.ErrorCode);
 
         Assert.Equal("ErrAuth", authFull.ErrorCode);
         Assert.Equal("ErrForb", forbiddenFull.ErrorCode);

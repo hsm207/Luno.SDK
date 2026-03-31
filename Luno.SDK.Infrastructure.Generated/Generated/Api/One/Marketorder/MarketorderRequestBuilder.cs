@@ -87,7 +87,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Marketorder
         {
             /// <summary>The base currency account to use in the trade.</summary>
             [QueryParameter("base_account_id")]
-            public int? BaseAccountId { get; set; }
+            public long? BaseAccountId { get; set; }
             /// <summary>For a &lt;code&gt;SELL&lt;/code&gt; order: amount of the base currency to use (e.g. how much BTC to sell for EUR in the BTC/EUR market)</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -110,7 +110,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Marketorder
 #endif
             /// <summary>The counter currency account to use in the trade.</summary>
             [QueryParameter("counter_account_id")]
-            public int? CounterAccountId { get; set; }
+            public long? CounterAccountId { get; set; }
             /// <summary>For a &lt;code&gt;BUY&lt;/code&gt; order: amount of the counter currency to use (e.g. how much EUR to use to buy BTC in the BTC/EUR market)</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -133,10 +133,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Marketorder
 #endif
             /// <summary>Unix timestamp in milliseconds of when the request was created and sent.</summary>
             [QueryParameter("timestamp")]
-            public int? Timestamp { get; set; }
+            public long? Timestamp { get; set; }
             /// <summary>Specifies the number of milliseconds after timestamp the request is valid for.If `timestamp` is not specified, `ttl` will not be used.</summary>
             [QueryParameter("ttl")]
-            public int? Ttl { get; set; }
+            public long? Ttl { get; set; }
             /// <summary>&lt;code&gt;BUY&lt;/code&gt; to buy an asset&lt;br&gt;&lt;code&gt;SELL&lt;/code&gt; to sell an asset</summary>
             [Obsolete("This property is deprecated, use TypeAsPostTypeQueryParameterType instead")]
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER

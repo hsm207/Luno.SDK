@@ -27,9 +27,9 @@ public static class AccountMapper
         {
             AccountId = dto.AccountId,
             Asset = dto.Asset,
-            Available = decimal.Parse(dto.Balance ?? "0", CultureInfo.InvariantCulture),
-            Reserved = decimal.Parse(dto.Reserved ?? "0", CultureInfo.InvariantCulture),
-            Unconfirmed = decimal.Parse(dto.Unconfirmed ?? "0", CultureInfo.InvariantCulture),
+            Available = decimal.Parse(dto.Balance ?? throw new LunoMappingException("Missing balance field", nameof(AccountBalance)), CultureInfo.InvariantCulture),
+            Reserved = decimal.Parse(dto.Reserved ?? throw new LunoMappingException("Missing reserved field", nameof(AccountBalance)), CultureInfo.InvariantCulture),
+            Unconfirmed = decimal.Parse(dto.Unconfirmed ?? throw new LunoMappingException("Missing unconfirmed field", nameof(AccountBalance)), CultureInfo.InvariantCulture),
             Name = dto.Name ?? string.Empty
         };
     }

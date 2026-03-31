@@ -144,7 +144,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Funding_address
 #endif
             /// <summary>The blockchain network to use for the transaction. If none is provided the default network is used</summary>
             [QueryParameter("network")]
-            public int? Network { get; set; }
+            public long? Network { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.
@@ -162,7 +162,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Funding_address
         {
             /// <summary>An optional account_id to assign the new Receive Address to. If omitted, Receive Address will be assigned to the default account.</summary>
             [QueryParameter("account_id")]
-            public int? AccountId { get; set; }
+            public long? AccountId { get; set; }
             /// <summary>Currency code of the asset.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -185,7 +185,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Funding_address
 #endif
             /// <summary>The blockchain network to use for the transaction. If none is provided the default network is used</summary>
             [QueryParameter("network")]
-            public int? Network { get; set; }
+            public long? Network { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

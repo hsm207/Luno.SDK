@@ -93,7 +93,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Send
         {
             /// <summary>Optional source account. In case of multiple accounts for a single currency, the source account that will provide the funds for the transaction may be specified. If omitted, the default account will be used.</summary>
             [QueryParameter("account_id")]
-            public int? AccountId { get; set; }
+            public long? AccountId { get; set; }
             /// <summary>Destination address or email address.&lt;b&gt;Note&lt;/b&gt;:&lt;ul&gt;&lt;li&gt;Ethereum addresses must be&lt;a href=&quot;https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md&quot; target=&quot;_blank&quot; rel=&quot;nofollow&quot;&gt;checksummed&lt;/a&gt;.&lt;/li&gt;&lt;li&gt;Ethereum sends to email addresses are not supported.&lt;/li&gt;&lt;/ul&gt;</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -136,7 +136,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Send
 #endif
             /// <summary>Optional XRP destination tag. Note that HasDestinationTag must be true if this value is provided.</summary>
             [QueryParameter("destination_tag")]
-            public int? DestinationTag { get; set; }
+            public long? DestinationTag { get; set; }
             /// <summary>Optional unique ID to associate with this withdrawal.Useful to prevent duplicate sends in case of failure.This supports all alphanumeric characters, as well as &quot;-&quot; and &quot;_&quot;.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -181,7 +181,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Send
 #endif
             /// <summary>The blockchain network to use for the transaction. If none is provided the default network is used</summary>
             [QueryParameter("network")]
-            public int? Network { get; set; }
+            public long? Network { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

@@ -147,7 +147,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
 #endif
             /// <summary>Optional XRP destination tag. Note that HasDestinationTag must be true if this value is provided.</summary>
             [QueryParameter("destination_tag")]
-            public int? DestinationTag { get; set; }
+            public long? DestinationTag { get; set; }
             /// <summary>Optional boolean flag indicating that a XRP destination tag is provided (even if zero).</summary>
             [QueryParameter("has_destination_tag")]
             public bool? HasDestinationTag { get; set; }
