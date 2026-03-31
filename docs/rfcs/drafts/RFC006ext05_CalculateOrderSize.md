@@ -234,6 +234,9 @@ public static PostLimitOrderCommand ToCommand(
     - **Caching in Client**: Rejected. The SDK remains stateless. Price dynamics are too volatile for generic caching; consumers must implement their own decorators if needed.
     - **Complex Slippage Models**: Deferred. While a `SlippageTolerance` parameter was considered during audit, the current "Fill-Heuristic" (rounding toward a better price) provides a baseline safety net without introducing the API complexity of percentage-based slippage.
     - **Stop-Limit Support**: Deferred. Focus remains on standard Limit orders until Luno API consistency for stop-triggers is empirically verified.
+- **Technical Rationale: LunoMarketStateException vs. LunoValidationException**: 
+    - While `LunoValidationException` is used for mathematical and client-input boundaries (Step 4, 5, 8), the handler explicitly uses `LunoMarketStateException` for the initial Status Guard (Step 2). 
+    - This distinction is semantically superior as it differentiates between "Client Error" (Invalid Input) and "System/Market State Error" (Market Unavailable), allowing consumers to handle "Dead Markets" differently than "Invalid Spend" requests.
 - **The Pre-Mortem:** "The user spent 100 MYR but only got 90 MYR worth of BTC because the Ticker moved between calculation and placement."
     - **Mitigation:** The `OrderQuote` is a point-in-time calculation. Users should use the returned `Price` in a Limit Order to guarantee the execution price. The "Fill-Heuristic" slightly improves the odds of the Limit Order being matched immediately.
 
