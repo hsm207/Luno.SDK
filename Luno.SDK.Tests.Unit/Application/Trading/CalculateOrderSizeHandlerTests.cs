@@ -115,7 +115,22 @@ public class CalculateOrderSizeHandlerTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(() => _handler.HandleAsync(query));
-        Assert.Contains("minimum volume", ex.Message.ToLower());
+        Assert.Contains("below the minimum allowed volume", ex.Message);
+        Assert.Equal("ErrVolumeTooLow", ex.ErrorCode);
+    }
+
+    [Fact(DisplayName = "Given volume above maximum, When calculated, Then throws LunoValidationException with ErrVolumeTooHigh")]
+    public async Task Handle_VolumeAboveMax_ThrowsValidationException()
+    {
+        // Arrange
+        SetupMarket("XBTMYR", 0.0001m, 100m, 1000000m, 6, 2);
+        // Spend 50,000,000 MYR at price 200,000 to get a volume of 250 XBT (which is > max of 100)
+        var query = new CalculateOrderSizeQuery("XBTMYR", OrderSide.Buy, TradingAmount.InQuote(50000000m), TradingPrice.InQuote(200000m));
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => _handler.HandleAsync(query));
+        Assert.Contains("exceeds the maximum allowed volume", ex.Message);
+        Assert.Equal("ErrVolumeTooHigh", ex.ErrorCode);
     }
 
     [Fact(DisplayName = "Given a dead market, When calculating without AtPrice, Then throws InvalidPrice exception")]

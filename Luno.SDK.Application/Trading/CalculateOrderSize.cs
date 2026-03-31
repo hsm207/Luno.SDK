@@ -35,6 +35,9 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
 
     public CalculateOrderSizeHandler(ILunoMarketOperations marketOperations, ILunoTelemetry telemetry)
     {
+        ArgumentNullException.ThrowIfNull(marketOperations);
+        ArgumentNullException.ThrowIfNull(telemetry);
+
         _marketOperations = marketOperations;
         _latencyHistogram = telemetry.Meter.CreateHistogram<long>("luno_calculate_order_size_latency_ms");
         _failureCounter = telemetry.Meter.CreateCounter<long>("luno_calculate_order_size_failures");
@@ -64,7 +67,6 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
                 var ticker = await _marketOperations.FetchTickerAsync(query.Pair, ct).ConfigureAwait(false);
                 if (ticker == null || (query.Side == OrderSide.Buy && ticker.Ask <= 0) || (query.Side == OrderSide.Sell && ticker.Bid <= 0))
                 {
-                    _failureCounter.Add(1);
                     throw new LunoValidationException("Invalid price: Market has no liquidity or returned dead ticker.", "ErrInvalidPrice", null);
                 }
                 price = query.Side == OrderSide.Buy ? ticker.Ask : ticker.Bid;
@@ -72,7 +74,6 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
 
             if (price <= 0)
             {
-                _failureCounter.Add(1);
                 throw new LunoValidationException("Invalid price: Must be strictly greater than 0.", "ErrInvalidPrice", null);
             }
 
@@ -83,7 +84,6 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
             // 2. Perform limit checks AFTER rounding
             if (price > marketInfo.MaxPrice || price < marketInfo.MinPrice)
             {
-                _failureCounter.Add(1);
                 throw new LunoValidationException($"Invalid price: Must be between {marketInfo.MinPrice} and {marketInfo.MaxPrice}.", "ErrInvalidPrice", null);
             }
 
@@ -93,13 +93,22 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
 
             var volume = Math.Round(unroundedVolume, marketInfo.VolumeScale, MidpointRounding.ToZero);
 
-            if (volume < marketInfo.MinVolume || volume > marketInfo.MaxVolume)
+            if (volume < marketInfo.MinVolume)
             {
-                _failureCounter.Add(1);
-                throw new LunoValidationException($"Volume {volume} is out of bounds. Below minimum volume.", "ErrVolumeTooLow", null);
+                throw new LunoValidationException($"Volume {volume} is below the minimum allowed volume of {marketInfo.MinVolume}.", "ErrVolumeTooLow", null);
+            }
+
+            if (volume > marketInfo.MaxVolume)
+            {
+                throw new LunoValidationException($"Volume {volume} exceeds the maximum allowed volume of {marketInfo.MaxVolume}.", "ErrVolumeTooHigh", null);
             }
 
             return new OrderQuote(query.Pair, query.Side, volume, price, marketInfo.CounterCurrency);
+        }
+        catch
+        {
+            _failureCounter.Add(1);
+            throw;
         }
         finally
         {
