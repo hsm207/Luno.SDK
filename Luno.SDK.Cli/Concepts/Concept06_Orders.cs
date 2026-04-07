@@ -78,14 +78,23 @@ public static class Concept06_Orders
         var market = await ResolveMarketMetadataAsync(client, targetPair);
 
         // 3. Calculate Order Size (Optimal Quote)
-        Console.WriteLine($"\n📡 Strategy: Calculating optimal quote at MinPrice ({market.MinPrice})...");
+        Console.WriteLine($"\n📡 Strategy: Calculating optimal quote at MinPrice ({market.MinPrice:N2} {market.CounterCurrency})...");
         var quote = await client.Trading.CalculateOrderSizeAsync(new CalculateOrderSizeQuery(
             Pair: targetPair,
             Side: OrderSide.Buy,
             Spend: TradingAmount.InQuote(100),
             AtPrice: TradingPrice.InQuote(market.MinPrice)
         ));
-        Console.WriteLine($"[QUOTE] Strategy: {quote.Volume} @ {quote.Price}");
+
+        // Format according to market constraints for perfect UX 💅
+        string volFmt = $"N{market.VolumeScale}";
+        string priceFmt = $"N{market.PriceScale}";
+        string sideAction = quote.Side == OrderSide.Buy ? "BUY" : "SELL";
+        string financialAction = quote.Side == OrderSide.Buy ? "PAY" : "RECEIVE";
+
+        Console.WriteLine($"[QUOTE] ACTION:    {sideAction} {quote.Volume.ToString(volFmt)} {market.BaseCurrency}");
+        Console.WriteLine($"[QUOTE] PRICE:     {quote.Price.ToString(priceFmt)} {market.CounterCurrency} per {market.BaseCurrency}");
+        Console.WriteLine($"[QUOTE] FINANCIAL: You will {financialAction} {quote.GrossQuoteValue:N2} {quote.QuoteCurrency} (estimated, excl. fees)");
 
         // 4. Post the Order with Idempotency
         string clientOrderId = Guid.NewGuid().ToString();
