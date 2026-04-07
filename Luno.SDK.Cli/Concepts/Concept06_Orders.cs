@@ -25,10 +25,6 @@ public static class Concept06_Orders
 
         try
         {
-            // PART 1: Read-Only Operations (Listing)
-            await DemonstrateOrderListingAsync(client);
-
-            // PART 2: Write Operations (Trading)
             await DemonstrateTradingLifecycleAsync(client);
         }
         catch (Exception ex)
@@ -67,70 +63,58 @@ public static class Concept06_Orders
         };
     }
 
-    private static async Task DemonstrateOrderListingAsync(ILunoClient client)
-    {
-        Console.WriteLine("\n--- Part 1: Order Listing (Read-Only) ---");
-
-        // 1. Unfiltered Fetch
-        Console.WriteLine("📡 Fetching ALL recent orders...");
-        var allOrders = await client.Trading.ListOrdersAsync();
-        Console.WriteLine($"[RESULT] Retrieved {allOrders.Count} orders.");
-
-        foreach (var order in allOrders.Take(3))
-        {
-            Console.WriteLine($"- [{order.State}] {order.OrderId}: {order.Side} {order.LimitVolume} {order.Pair} @ {order.LimitPrice}");
-        }
-
-        // 2. Filtered Fetch (Pending)
-        Console.WriteLine("\n📡 Fetching PENDING orders...");
-        var pendingOrders = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending);
-        Console.WriteLine($"[RESULT] Found {pendingOrders.Count} pending orders.");
-
-        // 3. Filtered Fetch (Specific Pair)
-        Console.WriteLine("\n📡 Fetching XBTMYR orders...");
-        var xbtOrders = await client.Trading.ListOrdersAsync(pair: "XBTMYR");
-        Console.WriteLine($"[RESULT] Found {xbtOrders.Count} XBTMYR orders.");
-    }
-
     private static async Task DemonstrateTradingLifecycleAsync(ILunoClient client)
     {
-        Console.WriteLine("\n--- Part 2: Trading Lifecycle (Read/Write) ---");
+        const string targetPair = "XBTMYR";
+        Console.WriteLine($"\n--- Starting Lifecycle Demonstration for {targetPair} ---");
 
-        // A. Resolve Accounts and Market Constraints
+        // 1. Snapshot Initial State
+        Console.WriteLine($"\n📡 Snapshot: Fetching current pending orders for {targetPair}...");
+        var initialPending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: targetPair);
+        Console.WriteLine($"[STATE] Current Pending Count: {initialPending.Count}");
+
+        // 2. Resolve Accounts and Market Constraints
         var (baseId, counterId) = await ResolveTradingAccountsAsync(client, "XBT", "MYR");
-        var market = await ResolveMarketMetadataAsync(client, "XBTMYR");
+        var market = await ResolveMarketMetadataAsync(client, targetPair);
 
-        // B. Calculate Order Size (Optimal Quote)
-        Console.WriteLine($"\n📡 Calculating optimal quote for XBTMYR at MinPrice ({market.MinPrice})...");
+        // 3. Calculate Order Size (Optimal Quote)
+        Console.WriteLine($"\n📡 Strategy: Calculating optimal quote at MinPrice ({market.MinPrice})...");
         var quote = await client.Trading.CalculateOrderSizeAsync(new CalculateOrderSizeQuery(
-            Pair: "XBTMYR",
+            Pair: targetPair,
             Side: OrderSide.Buy,
             Spend: TradingAmount.InQuote(100),
             AtPrice: TradingPrice.InQuote(market.MinPrice)
         ));
         Console.WriteLine($"[QUOTE] Strategy: {quote.Volume} @ {quote.Price}");
 
-        // C. Post the Order with Idempotency
+        // 4. Post the Order with Idempotency
         string clientOrderId = Guid.NewGuid().ToString();
         var command = quote.ToCommand(baseId, counterId, clientOrderId);
 
-        Console.WriteLine("\n📡 Placing Limit Order...");
+        Console.WriteLine("\n📡 Action: Placing Limit Order...");
         var response = await client.Trading.PostLimitOrderAsync(command);
         Console.WriteLine($"[POST] Success! OrderId: {response.OrderId}");
 
-        // D. Verify Idempotency Reconciliation
-        Console.WriteLine("\n📡 Testing Idempotency (resending same command)...");
-        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command);
-        Console.WriteLine($"[IDEMPOTENCY] Correctly reconciled to same OrderId: {duplicateResponse.OrderId == response.OrderId}");
+        // 5. Verify via Listing
+        Console.WriteLine($"\n📡 Verification: Fetching pending orders for {targetPair} after placement...");
+        var midPending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: targetPair);
+        bool isListed = midPending.Any(o => o.OrderId == response.OrderId);
+        Console.WriteLine($"[VERIFY] Order {response.OrderId} found in pending list: {isListed}");
 
-        // E. Cancel the order
-        Console.WriteLine("\n📡 Cancelling Order...");
+        // 6. Test Idempotency Reconciliation
+        Console.WriteLine("\n📡 Idempotency: Resending same command...");
+        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command);
+        Console.WriteLine($"[IDEMPOTENCY] Reconciled to same OrderId: {duplicateResponse.OrderId == response.OrderId}");
+
+        // 7. Cancel the order
+        Console.WriteLine("\n📡 Cleanup: Cancelling Order...");
         await client.Trading.StopOrderAsync(response.OrderId);
         Console.WriteLine("[STOP] Stop request dispatched.");
 
-        // F. Final Verification
-        var pending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: "XBTMYR");
-        bool isRemoved = pending.All(o => o.OrderId != response.OrderId);
+        // 8. Final Verification
+        Console.WriteLine($"\n📡 Final State: Fetching pending orders for {targetPair} after cancellation...");
+        var finalPending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: targetPair);
+        bool isRemoved = finalPending.All(o => o.OrderId != response.OrderId);
         Console.WriteLine($"[VERIFY] Order removed from pending list: {isRemoved}");
     }
 
