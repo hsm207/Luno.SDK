@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Luno.SDK;
 
@@ -10,12 +12,22 @@ namespace Luno.SDK;
 public interface ILunoCommandDispatcher
 {
     /// <summary>
-    /// Dispatches a command/query to its registered handler.
+    /// Dispatches a command/query to its registered handler for a single result.
     /// </summary>
     /// <typeparam name="TRequest">The type of the command/request.</typeparam>
-    /// <typeparam name="TResponse">The type of the expected response. Can be Task{T} or IAsyncEnumerable{T}.</typeparam>
-    /// <param name="request">The command object carrying the intent and parameters.</param>
+    /// <typeparam name="TResponse">The type of the underlying response result.</typeparam>
+    /// <param name="request">The command object.</param>
     /// <param name="ct">A cancellation token.</param>
-    /// <returns>The response directly from the handler.</returns>
-    TResponse DispatchAsync<TRequest, TResponse>(TRequest request, CancellationToken ct = default);
+    /// <returns>A task containing the response result.</returns>
+    Task<TResponse> DispatchAsync<TRequest, TResponse>(TRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Dispatches a command/query to its registered handler for a stream of results.
+    /// </summary>
+    /// <typeparam name="TRequest">The type of the command/request.</typeparam>
+    /// <typeparam name="TResponse">The type of the results in the stream.</typeparam>
+    /// <param name="request">The command object.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>An asynchronous stream of response results.</returns>
+    IAsyncEnumerable<TResponse> CreateStreamAsync<TRequest, TResponse>(TRequest request, CancellationToken ct = default);
 }
