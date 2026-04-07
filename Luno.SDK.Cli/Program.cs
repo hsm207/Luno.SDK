@@ -16,6 +16,7 @@ if (string.IsNullOrWhiteSpace(choice))
     Console.WriteLine("4. Single Ticker (Targeted Retrieval)");
     Console.WriteLine("5. Ticker Wrapping (User Decorators)");
     Console.WriteLine("6. Limit Order Lifecycle (Private API)");
+    Console.WriteLine("7. Real-Time Quote (Live Market Data)");
     Console.WriteLine("0. Exit");
     Console.WriteLine();
     Console.Write("Selection > ");
@@ -44,6 +45,9 @@ switch (choice)
         break;
     case "6":
         await Concept06_Orders.RunAsync();
+        break;
+    case "7":
+        await Concept07_RealTimeQuote.RunAsync();
         break;
     case "0":
         Console.WriteLine("Exiting application.");
