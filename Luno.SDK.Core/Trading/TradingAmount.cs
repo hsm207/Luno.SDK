@@ -3,7 +3,7 @@ namespace Luno.SDK.Trading;
 /// <summary>
 /// Represents a strongly-typed intended trade amount to prevent unit ambiguity (Base vs. Quote).
 /// </summary>
-public readonly record struct TradingAmount(decimal Value, TradingUnit Unit)
+public record TradingAmount(decimal Value, TradingUnit Unit)
 {
     /// <summary>
     /// Creates a trading amount expressed in the Base currency.

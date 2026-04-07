@@ -3,7 +3,7 @@ namespace Luno.SDK.Trading;
 /// <summary>
 /// Represents a calculated limit order quote that enforces volume and price invariants.
 /// </summary>
-public readonly record struct OrderQuote(
+public record OrderQuote(
     string Pair,
     OrderSide Side,
     decimal Volume,
