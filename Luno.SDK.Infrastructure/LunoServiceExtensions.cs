@@ -18,6 +18,7 @@ using Luno.SDK.Infrastructure.Authentication;
 using Luno.SDK.Infrastructure.ErrorHandling;
 using Luno.SDK.Infrastructure.Telemetry;
 using Luno.SDK.Telemetry;
+using Luno.SDK.Application.Telemetry;
 using Microsoft.Kiota.Abstractions.Authentication;
 
 namespace Luno.SDK;
@@ -81,6 +82,11 @@ public static class LunoServiceExtensions
         // 4. Command Dispatcher & Handlers
         services.TryAddSingleton<ILunoCommandDispatcher>(sp => new LunoCommandDispatcher(type => sp.GetService(type)));
         RegisterCommandHandlers(services);
+        RegisterStreamHandlers(services);
+        
+        // Register the global telemetry behaviors for all command handlers.
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TelemetryPipelineBehavior<,>));
+        services.AddTransient(typeof(IStreamPipelineBehavior<,>), typeof(TelemetryStreamPipelineBehavior<,>));
 
         // 5. Sub-Clients (Breaking circularity by registering implementation types)
         services.TryAddTransient<LunoMarketClient>();
@@ -112,9 +118,31 @@ public static class LunoServiceExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers a streaming pipeline behavior for all compatible commands.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="behaviorType">The open generic type of the behavior (e.g. typeof(LoggingStreamBehavior&lt;,&gt;)).</param>
+    public static IServiceCollection AddLunoStreamBehavior(this IServiceCollection services, Type behaviorType)
+    {
+        services.AddTransient(typeof(IStreamPipelineBehavior<,>), behaviorType);
+        return services;
+    }
+
     private static void RegisterCommandHandlers(IServiceCollection services)
     {
         var handlerInterface = typeof(ICommandHandler<,>);
+        RegisterHandlers(services, handlerInterface);
+    }
+
+    private static void RegisterStreamHandlers(IServiceCollection services)
+    {
+        var handlerInterface = typeof(IStreamCommandHandler<,>);
+        RegisterHandlers(services, handlerInterface);
+    }
+
+    private static void RegisterHandlers(IServiceCollection services, Type handlerInterface)
+    {
         var applicationAssembly = typeof(LunoCommandDispatcher).Assembly;
 
         var handlers = applicationAssembly.GetTypes()
