@@ -1,21 +1,27 @@
 using Luno.SDK.Cli.Concepts;
 
-Console.WriteLine("Luno.SDK - Demonstration Gallery");
-Console.WriteLine("=================================================");
-Console.WriteLine("Welcome to the Luno SDK Demonstration Gallery.");
-Console.WriteLine("Select a demonstration to explore the API capabilities:");
-Console.WriteLine();
-Console.WriteLine("1. Market Data (Heartbeat Demonstration)");
-Console.WriteLine("2. Dependency Injection Integration");
-Console.WriteLine("3. Account Balances (Authentication)");
-Console.WriteLine("4. Single Ticker (Targeted Retrieval)");
-Console.WriteLine("5. Ticker Wrapping (User Decorators)");
-Console.WriteLine("6. Orders Listing (Private API)");
-Console.WriteLine("0. Exit");
-Console.WriteLine();
-Console.Write("Selection > ");
+// Check if a selection was passed via command-line arguments (useful for solo debugging!)
+var choice = args.FirstOrDefault();
 
-var choice = Console.ReadLine();
+if (string.IsNullOrWhiteSpace(choice))
+{
+    Console.WriteLine("Luno.SDK - Demonstration Gallery");
+    Console.WriteLine("=================================================");
+    Console.WriteLine("Welcome to the Luno SDK Demonstration Gallery.");
+    Console.WriteLine("Select a demonstration to explore the API capabilities:");
+    Console.WriteLine();
+    Console.WriteLine("1. Market Data (Heartbeat Demonstration)");
+    Console.WriteLine("2. Dependency Injection Integration");
+    Console.WriteLine("3. Account Balances (Authentication)");
+    Console.WriteLine("4. Single Ticker (Targeted Retrieval)");
+    Console.WriteLine("5. Ticker Wrapping (User Decorators)");
+    Console.WriteLine("6. Limit Order Lifecycle (Private API)");
+    Console.WriteLine("0. Exit");
+    Console.WriteLine();
+    Console.Write("Selection > ");
+
+    choice = Console.ReadLine();
+}
 
 Console.WriteLine("-------------------------------------------------");
 
