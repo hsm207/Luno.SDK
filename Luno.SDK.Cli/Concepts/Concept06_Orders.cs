@@ -12,20 +12,20 @@ using Luno.SDK.Application.Account;
 namespace Luno.SDK.Cli.Concepts;
 
 /// <summary>
-/// Provides a comprehensive demonstration of the Trading API lifecycle.
+/// Provides a comprehensive demonstration of the Limit Order API lifecycle.
 /// </summary>
 public static class Concept06_Orders
 {
     public static async Task RunAsync()
     {
-        Console.WriteLine("\n=== Concept 06: Trading Lifecycle (Private API) ===");
+        Console.WriteLine("\n=== Concept 06: Limit Order Lifecycle (Private API) ===");
 
         var options = LoadCredentials();
         var client = new LunoClient(options);
 
         try
         {
-            await DemonstrateTradingLifecycleAsync(client);
+            await DemonstrateLimitOrderLifecycleAsync(client);
         }
         catch (Exception ex)
         {
@@ -63,10 +63,10 @@ public static class Concept06_Orders
         };
     }
 
-    private static async Task DemonstrateTradingLifecycleAsync(ILunoClient client)
+    private static async Task DemonstrateLimitOrderLifecycleAsync(ILunoClient client)
     {
         const string targetPair = "XBTMYR";
-        Console.WriteLine($"\n--- Starting Lifecycle Demonstration for {targetPair} ---");
+        Console.WriteLine($"\n--- Starting Limit Order Lifecycle Demonstration for {targetPair} ---");
 
         // 1. Snapshot Initial State
         Console.WriteLine($"\n📡 Snapshot: Fetching current pending orders for {targetPair}...");
