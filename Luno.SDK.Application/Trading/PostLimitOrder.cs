@@ -55,7 +55,7 @@ public record PostLimitOrderCommand
 /// Owns validation, boundary-DTO mapping, and idempotency reconciliation.
 /// </summary>
 /// <param name="tradingClient">The specialized trading client used to post order parameters.</param>
-internal class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : ICommandHandler<PostLimitOrderCommand, Task<OrderResponse>>
+internal class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : ICommandHandler<PostLimitOrderCommand, OrderResponse>
 {
     /// <summary>Handles the limit order command.</summary>
     /// <param name="command">The command parameters.</param>

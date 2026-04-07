@@ -26,7 +26,7 @@ public record StopOrderCommand
 /// Orchestrates the process of stopping an order via the Luno API.
 /// </summary>
 /// <param name="tradingClient">The specialized trading client.</param>
-internal class StopOrderHandler(ILunoTradingOperations tradingClient) : ICommandHandler<StopOrderCommand, Task<OrderResponse>>
+internal class StopOrderHandler(ILunoTradingOperations tradingClient) : ICommandHandler<StopOrderCommand, OrderResponse>
 {
     /// <summary>
     /// Handles the stop order command.

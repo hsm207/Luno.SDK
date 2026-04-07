@@ -21,7 +21,7 @@ public static class LunoAccountExtensions
         this ILunoAccountClient client,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetBalancesQuery, Task<IReadOnlyList<AccountBalanceResponse>>>(new GetBalancesQuery(), ct);
+        return client.Commands.DispatchAsync<GetBalancesQuery, IReadOnlyList<AccountBalanceResponse>>(new GetBalancesQuery(), ct);
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public static class LunoAccountExtensions
         IEnumerable<string> assets,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetBalancesQuery, Task<IReadOnlyList<AccountBalanceResponse>>>(
+        return client.Commands.DispatchAsync<GetBalancesQuery, IReadOnlyList<AccountBalanceResponse>>(
             new GetBalancesQuery { Assets = assets?.ToArray() }, ct);
     }
 }

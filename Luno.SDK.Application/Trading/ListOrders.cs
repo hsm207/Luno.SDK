@@ -23,7 +23,7 @@ public record ListOrdersQuery(
 /// Orchestrates the retrieval of a list of orders.
 /// </summary>
 /// <param name="trading">The specialized trading operations client.</param>
-internal class ListOrdersHandler(ILunoTradingOperations trading) : ICommandHandler<ListOrdersQuery, Task<IReadOnlyList<OrderDetailsResponse>>>
+internal class ListOrdersHandler(ILunoTradingOperations trading) : ICommandHandler<ListOrdersQuery, IReadOnlyList<OrderDetailsResponse>>
 {
     /// <summary>
     /// Handles the retrieval of the order list.

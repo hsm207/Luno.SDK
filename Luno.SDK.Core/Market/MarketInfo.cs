@@ -60,4 +60,9 @@ public record MarketInfo
     /// The maximum number of decimal places permitted for fees.
     /// </summary>
     public required int FeeScale { get; init; }
+
+    /// <summary>
+    /// Identifies whether the market is currently active and capable of receiving trades.
+    /// </summary>
+    public bool IsTradable() => Status == MarketStatus.Active || Status == MarketStatus.PostOnly;
 }

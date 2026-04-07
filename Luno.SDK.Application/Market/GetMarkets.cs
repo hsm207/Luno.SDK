@@ -15,7 +15,7 @@ public record GetMarketsQuery(string[]? Pairs = null);
 /// Orchestrates the retrieval of market information.
 /// </summary>
 /// <param name="market">The specialized market operations client.</param>
-internal class GetMarketsHandler(ILunoMarketOperations market) : ICommandHandler<GetMarketsQuery, Task<IReadOnlyList<MarketInfo>>>
+internal class GetMarketsHandler(ILunoMarketOperations market) : ICommandHandler<GetMarketsQuery, IReadOnlyList<MarketInfo>>
 {
     /// <summary>
     /// Returns a list of all supported markets and their rules.

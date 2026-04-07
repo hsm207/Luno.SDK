@@ -24,4 +24,14 @@ public readonly record struct TradingAmount(decimal Value, TradingUnit Unit)
         if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), "Trading amount must be strictly greater than 0.");
         return new(value, TradingUnit.Quote);
     }
+
+    /// <summary>
+    /// Resolves the equivalent Base volume for the current trading amount given a limit price.
+    /// </summary>
+    /// <param name="limitPrice">The execution price to convert against.</param>
+    public decimal ResolveBaseVolume(decimal limitPrice)
+    {
+        if (limitPrice <= 0) throw new ArgumentOutOfRangeException(nameof(limitPrice), "Limit price must be strictly greater than 0.");
+        return Unit == TradingUnit.Quote ? Value / limitPrice : Value;
+    }
 }

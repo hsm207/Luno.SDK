@@ -22,7 +22,7 @@ public record GetBalancesQuery
 /// Orchestrates the retrieval of account balances from the Luno API.
 /// </summary>
 /// <param name="accountClient">The specialized account client used to fetch core balance entities.</param>
-internal class GetBalancesHandler(ILunoAccountOperations accountClient) : ICommandHandler<GetBalancesQuery, Task<IReadOnlyList<AccountBalanceResponse>>>
+internal class GetBalancesHandler(ILunoAccountOperations accountClient) : ICommandHandler<GetBalancesQuery, IReadOnlyList<AccountBalanceResponse>>
 {
     /// <summary>
     /// The list of all Accounts and their respective balances for the requesting user.

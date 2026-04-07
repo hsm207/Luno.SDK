@@ -33,7 +33,7 @@ public static class LunoMarketExtensions
         IEnumerable<string>? pairs,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetTickersQuery, IAsyncEnumerable<TickerResponse>>(new GetTickersQuery(pairs?.ToArray()), ct);
+        return client.Commands.CreateStreamAsync<GetTickersQuery, TickerResponse>(new GetTickersQuery(pairs?.ToArray()), ct);
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public static class LunoMarketExtensions
         string pair,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetTickerQuery, Task<TickerResponse>>(new GetTickerQuery(pair), ct);
+        return client.Commands.DispatchAsync<GetTickerQuery, TickerResponse>(new GetTickerQuery(pair), ct);
     }
 
     /// <summary>
@@ -76,6 +76,6 @@ public static class LunoMarketExtensions
         IEnumerable<string>? pairs,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetMarketsQuery, Task<IReadOnlyList<MarketInfo>>>(new GetMarketsQuery(pairs?.ToArray()), ct);
+        return client.Commands.DispatchAsync<GetMarketsQuery, IReadOnlyList<MarketInfo>>(new GetMarketsQuery(pairs?.ToArray()), ct);
     }
 }

@@ -13,7 +13,7 @@ public record GetTickersQuery(string[]? Pairs = null);
 /// Orchestrates the retrieval of market tickers.
 /// </summary>
 /// <param name="market">The specialized market client.</param>
-internal class GetTickersHandler(ILunoMarketOperations market) : ICommandHandler<GetTickersQuery, IAsyncEnumerable<TickerResponse>>
+internal class GetTickersHandler(ILunoMarketOperations market) : IStreamCommandHandler<GetTickersQuery, TickerResponse>
 {
     /// <summary>
     /// Returns the latest ticker indicators from all active Luno exchanges.

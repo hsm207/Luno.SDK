@@ -23,7 +23,7 @@ public static class LunoTradingExtensions
         PostLimitOrderCommand command,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<PostLimitOrderCommand, Task<OrderResponse>>(command, ct);
+        return client.Commands.DispatchAsync<PostLimitOrderCommand, OrderResponse>(command, ct);
     }
 
     /// <summary>
@@ -38,7 +38,7 @@ public static class LunoTradingExtensions
         StopOrderCommand command,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<StopOrderCommand, Task<OrderResponse>>(command, ct);
+        return client.Commands.DispatchAsync<StopOrderCommand, OrderResponse>(command, ct);
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public static class LunoTradingExtensions
         ListOrdersQuery query,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<ListOrdersQuery, Task<IReadOnlyList<OrderDetailsResponse>>>(query, ct);
+        return client.Commands.DispatchAsync<ListOrdersQuery, IReadOnlyList<OrderDetailsResponse>>(query, ct);
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public static class LunoTradingExtensions
         CalculateOrderSizeQuery query,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<CalculateOrderSizeQuery, Task<OrderQuote>>(query, ct);
+        return client.Commands.DispatchAsync<CalculateOrderSizeQuery, OrderQuote>(query, ct);
     }
 
     /// <summary>
