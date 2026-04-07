@@ -23,7 +23,7 @@ public static class Concept05_TickerWrapping
         services.AddLunoClient();
         
         // Register our logging behavior for the ticker query
-        services.AddTransient<IPipelineBehavior<GetTickerQuery, Task<TickerResponse>>, TickerLoggingBehavior>();
+        services.AddTransient<IPipelineBehavior<GetTickerQuery, TickerResponse>, TickerLoggingBehavior>();
 
         var sp = services.BuildServiceProvider();
         var luno = sp.GetRequiredService<ILunoClient>();
@@ -47,11 +47,11 @@ public static class Concept05_TickerWrapping
     /// A custom pipeline behavior that logs the execution of a ticker request.
     /// This follows the modern 'Middleware' pattern.
     /// </summary>
-    private class TickerLoggingBehavior : IPipelineBehavior<GetTickerQuery, Task<TickerResponse>>
+    private class TickerLoggingBehavior : IPipelineBehavior<GetTickerQuery, TickerResponse>
     {
         public async Task<TickerResponse> Handle(
             GetTickerQuery request, 
-            RequestHandlerDelegate<Task<TickerResponse>> next, 
+            RequestHandlerDelegate<TickerResponse> next, 
             CancellationToken ct)
         {
             var startTime = DateTime.UtcNow;

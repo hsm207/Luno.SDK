@@ -15,17 +15,12 @@ namespace Luno.SDK.Tests.Unit.Application.Trading;
 public class CalculateOrderSizeHandlerTests
 {
     private readonly Mock<ILunoMarketOperations> _marketMock;
-    private readonly Mock<ILunoTelemetry> _telemetryMock;
     private readonly CalculateOrderSizeHandler _handler;
 
     public CalculateOrderSizeHandlerTests()
     {
         _marketMock = new Mock<ILunoMarketOperations>();
-        _telemetryMock = new Mock<ILunoTelemetry>();
-        var meter = new System.Diagnostics.Metrics.Meter("Luno.SDK.Tests");
-        _telemetryMock.SetupGet(t => t.Meter).Returns(meter);
-        
-        _handler = new CalculateOrderSizeHandler(_marketMock.Object, _telemetryMock.Object);
+        _handler = new CalculateOrderSizeHandler(_marketMock.Object);
     }
 
     private void SetupMarket(string pair, decimal minVol, decimal maxVol, decimal maxPrice, int volScale, int priceScale, MarketStatus status = MarketStatus.Active)
