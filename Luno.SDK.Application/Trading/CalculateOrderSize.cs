@@ -46,9 +46,9 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
 
         decimal price;
 
-        if (query.AtPrice.HasValue)
+        if (query.AtPrice != null)
         {
-            price = query.AtPrice.Value.Value;
+            price = query.AtPrice.Value;
         }
         else
         {
