@@ -127,7 +127,7 @@ public class LunoMarketClientTests : IDisposable
 
         // Act
         var results = new List<Luno.SDK.Application.Market.TickerResponse>();
-        await foreach (var ticker in client.Market.GetTickersAsync())
+        await foreach (var ticker in client.Market.GetTickersAsync(new Luno.SDK.Application.Market.GetTickersQuery()))
         {
             results.Add(ticker);
         }
@@ -188,7 +188,7 @@ public class LunoMarketClientTests : IDisposable
 
         // Act
         var results = new List<Luno.SDK.Application.Market.TickerResponse>();
-        await foreach (var ticker in client.Market.GetTickersAsync(pairs))
+        await foreach (var ticker in client.Market.GetTickersAsync(new Luno.SDK.Application.Market.GetTickersQuery(pairs)))
         {
             results.Add(ticker);
         }
@@ -223,7 +223,7 @@ public class LunoMarketClientTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<LunoApiException>(async () =>
         {
-            await foreach (var _ in client.Market.GetTickersAsync()) { }
+            await foreach (var _ in client.Market.GetTickersAsync(new Luno.SDK.Application.Market.GetTickersQuery())) { }
         });
 
         // Wait for the telemetry activity to physically stop
@@ -251,7 +251,7 @@ public class LunoMarketClientTests : IDisposable
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoMappingException>(async () =>
         {
-            await foreach (var ticker in client.Market.GetTickersAsync())
+            await foreach (var ticker in client.Market.GetTickersAsync(new Luno.SDK.Application.Market.GetTickersQuery()))
             {
                 // Should throw on first iteration
             }
@@ -287,7 +287,7 @@ public class LunoMarketClientTests : IDisposable
         using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         // Act
-        var results = await client.Market.GetMarketsAsync(pairs);
+        var results = await client.Market.GetMarketsAsync(new Luno.SDK.Application.Market.GetMarketsQuery(pairs));
 
         // Wait for telemetry
         activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
@@ -340,7 +340,7 @@ public class LunoMarketClientTests : IDisposable
         using var listener = CaptureActivity(operationName, activityStoppedEvent, activity => capturedActivity = activity);
 
         // Act
-        var result = await client.Market.GetTickerAsync("XBTZAR");
+        var result = await client.Market.GetTickerAsync(new Luno.SDK.Application.Market.GetTickerQuery("XBTZAR"));
 
         // Wait for the telemetry activity to physically stop
         activityStoppedEvent.Wait(TimeSpan.FromSeconds(2));
@@ -380,7 +380,7 @@ public class LunoMarketClientTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync(expectedExceptionType, async () =>
         {
-            await client.Market.GetTickerAsync("XBTZAR");
+            await client.Market.GetTickerAsync(new Luno.SDK.Application.Market.GetTickerQuery("XBTZAR"));
         });
 
         // Wait for the telemetry activity to physically stop
@@ -408,6 +408,6 @@ public class LunoMarketClientTests : IDisposable
         var client = CreateClient();
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoMappingException>(() => client.Market.GetTickerAsync("XBTZAR"));
+        await Assert.ThrowsAsync<LunoMappingException>(() => client.Market.GetTickerAsync(new Luno.SDK.Application.Market.GetTickerQuery("XBTZAR")));
     }
 }

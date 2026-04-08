@@ -61,7 +61,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act
-        var balances = await client.Accounts.GetBalancesAsync(); // Uses Application Layer extension!
+        var balances = await client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()); // Uses Application Layer extension!
 
         // Assert
         Assert.NotNull(balances);
@@ -91,7 +91,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("wrong", "keys");
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoUnauthorizedException>(() => client.Accounts.GetBalancesAsync());
+        await Assert.ThrowsAsync<LunoUnauthorizedException>(() => client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()));
     }
 
     [Fact(DisplayName = "Given 403 response, When getting balances, Then translate to LunoForbiddenException")]
@@ -107,7 +107,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoForbiddenException>(() => client.Accounts.GetBalancesAsync());
+        await Assert.ThrowsAsync<LunoForbiddenException>(() => client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()));
     }
 
     [Fact(DisplayName = "Given no credentials, When getting balances, Then fail fast with LunoAuthenticationException")]
@@ -117,7 +117,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient(); // No keys provided
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoAuthenticationException>(() => client.Accounts.GetBalancesAsync());
+        await Assert.ThrowsAsync<LunoAuthenticationException>(() => client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()));
     }
 
     [Fact(DisplayName = "Given asset filters, When getting balances, Then send request with correct query string")]
@@ -135,7 +135,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act
-        await client.Accounts.GetBalancesAsync(new[] { "XBT", "ETH" });
+        await client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery { Assets = new[] { "XBT", "ETH" } });
 
         // Assert
         var logs = _server.LogEntries;
