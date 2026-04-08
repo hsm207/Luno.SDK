@@ -13,10 +13,10 @@ namespace Luno.SDK.Infrastructure.Trading;
 /// <summary>
 /// Provides a concrete implementation of the trading clients using the generated Kiota client.
 /// </summary>
-internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoTradingClient, ILunoTradingOperations
+internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher requests) : ILunoTradingClient, ILunoTradingOperations
 {
     private readonly LunoApiClient _apiClient = api;
-    public ILunoCommandDispatcher Commands { get; } = commands;
+    public ILunoRequestDispatcher Requests { get; } = requests;
 
     async Task<OrderReference> ILunoTradingOperations.FetchPostLimitOrderAsync(LimitOrderRequest request, CancellationToken ct)
     {
@@ -39,8 +39,8 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
             req.QueryParameters.Timestamp = request.Timestamp;
             req.QueryParameters.Ttl = request.TTL;
 
-            if (request.StopDirection.HasValue)
-                req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(request.StopDirection.Value);
+            if (request.StopDirection != null)
+                req.QueryParameters.StopDirectionAsPostStopDirectionQueryParameterType = MapStopDirection(request.StopDirection);
 
             req.QueryParameters.TimeInForceAsPostTimeInForceQueryParameterType = MapTimeInForce(request.TimeInForce);
 
@@ -304,27 +304,27 @@ internal class LunoTradingClient(LunoApiClient api, ILunoCommandDispatcher comma
     private static PostTypeQueryParameterType MapPostSide(OrderSide side) =>
         side switch
         {
-            OrderSide.Buy  => PostTypeQueryParameterType.BID,
-            OrderSide.Sell => PostTypeQueryParameterType.ASK,
-            _              => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(side), "Invalid order side.")),
+            OrderSide.BuySide  => PostTypeQueryParameterType.BID,
+            OrderSide.SellSide => PostTypeQueryParameterType.ASK,
+            _                  => throw new ArgumentOutOfRangeException(nameof(side), $"Unexpected order side type: {side.GetType().Name}")
         };
 
     private static PostStop_directionQueryParameterType MapStopDirection(StopDirection direction) =>
         direction switch
         {
-            StopDirection.RelativeLastTrade => PostStop_directionQueryParameterType.RELATIVE_LAST_TRADE,
-            StopDirection.Above             => PostStop_directionQueryParameterType.ABOVE,
-            StopDirection.Below             => PostStop_directionQueryParameterType.BELOW,
-            _                               => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(direction), "Invalid stop direction.")),
+            StopDirection.RelativeLastTradeDirection => PostStop_directionQueryParameterType.RELATIVE_LAST_TRADE,
+            StopDirection.AboveDirection             => PostStop_directionQueryParameterType.ABOVE,
+            StopDirection.BelowDirection             => PostStop_directionQueryParameterType.BELOW,
+            _                                        => throw new ArgumentOutOfRangeException(nameof(direction), $"Unexpected stop direction type: {direction.GetType().Name}")
         };
 
     private static PostTime_in_forceQueryParameterType MapTimeInForce(TimeInForce tif) =>
         tif switch
         {
-            TimeInForce.GTC => PostTime_in_forceQueryParameterType.GTC,
-            TimeInForce.IOC => PostTime_in_forceQueryParameterType.IOC,
-            TimeInForce.FOK => PostTime_in_forceQueryParameterType.FOK,
-            _               => throw new InvalidOperationException("Unreachable state due to Domain invariants.", new ArgumentOutOfRangeException(nameof(tif), "Invalid time in force.")),
+            TimeInForce.GtcType => PostTime_in_forceQueryParameterType.GTC,
+            TimeInForce.IocType => PostTime_in_forceQueryParameterType.IOC,
+            TimeInForce.FokType => PostTime_in_forceQueryParameterType.FOK,
+            _                   => throw new ArgumentOutOfRangeException(nameof(tif), $"Unexpected time-in-force type: {tif.GetType().Name}")
         };
 
     // ── Parse helpers ────────────────────────────────────────────────────────────
