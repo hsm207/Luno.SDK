@@ -11,81 +11,14 @@ using Luno.SDK.Infrastructure.Generated;
 namespace Luno.SDK.Tests.Unit.Infrastructure;
 
 /// <summary>
-/// Regression tests that intentionally bypass the Domain validation layer by casting invalid enum values
-/// directly into a <see cref="LimitOrderRequest"/> boundary DTO. These verify that Infrastructure's
-/// enum-mapping switch expressions throw <see cref="InvalidOperationException"/> on unreachable states.
+/// Infrastructure boundary tests.
+/// Note: Previous regression tests for invalid Enum casting were removed as the 
+/// transition to Closed Record Hierarchies for domain types has rendered such 
+/// attacks impossible at the compiler level.
 /// </summary>
 public class LunoTradingClientBoundaryTests
 {
     private readonly Mock<IRequestAdapter> _requestAdapterMock = new();
 
-    [Fact(DisplayName = "Given an invalid OrderSide bypassing domain, When LunoTradingClient maps side, Then throw InvalidOperationException")]
-    public async Task PostLimitOrderAsync_InvalidOrderSide_ThrowsInvalidOperationException()
-    {
-        var apiClient = new LunoApiClient(_requestAdapterMock.Object);
-        var client = (ILunoTradingOperations)new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
-
-        var request = new LimitOrderRequest
-        {
-            Pair             = "XBTZAR",
-            Side             = (OrderSide)999,   // bypassing domain validation deliberately
-            Volume           = 1m,
-            Price            = 1000m,
-            BaseAccountId    = 1,
-            CounterAccountId = 2,
-        };
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
-        Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
-        Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
-        Assert.Contains("Invalid order side", ex.InnerException!.Message);
-    }
-
-    [Fact(DisplayName = "Given an invalid TimeInForce bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
-    public async Task PostLimitOrderAsync_InvalidTimeInForce_ThrowsInvalidOperationException()
-    {
-        var apiClient = new LunoApiClient(_requestAdapterMock.Object);
-        var client = (ILunoTradingOperations)new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
-
-        var request = new LimitOrderRequest
-        {
-            Pair             = "XBTZAR",
-            Side             = OrderSide.Buy,
-            Volume           = 1m,
-            Price            = 1000m,
-            BaseAccountId    = 1,
-            CounterAccountId = 2,
-            TimeInForce      = (TimeInForce)999,
-        };
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
-        Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
-        Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
-        Assert.Contains("Invalid time in force", ex.InnerException!.Message);
-    }
-
-    [Fact(DisplayName = "Given an invalid StopDirection bypassing domain, When LunoTradingClient maps type, Then throw InvalidOperationException")]
-    public async Task PostLimitOrderAsync_InvalidStopDirection_ThrowsInvalidOperationException()
-    {
-        var apiClient = new LunoApiClient(_requestAdapterMock.Object);
-        var client = (ILunoTradingOperations)new LunoTradingClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
-
-        var request = new LimitOrderRequest
-        {
-            Pair             = "XBTZAR",
-            Side             = OrderSide.Buy,
-            Volume           = 1m,
-            Price            = 1000m,
-            BaseAccountId    = 1,
-            CounterAccountId = 2,
-            StopPrice        = 500m,
-            StopDirection    = (StopDirection)999,
-        };
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.FetchPostLimitOrderAsync(request));
-        Assert.Contains("Unreachable state due to Domain invariants", ex.Message);
-        Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
-        Assert.Contains("Invalid stop direction", ex.InnerException!.Message);
-    }
+    // Placeholder for future infrastructure-only boundary tests that don't rely on invalid enum casting.
 }
-
