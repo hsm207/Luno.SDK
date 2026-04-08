@@ -39,25 +39,38 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
             request.HttpMethod.ToString(),
             request.UrlTemplate ?? string.Empty);
 
-        var authOption = request.RequestOptions.OfType<LunoAuthenticationOption>().FirstOrDefault();
-        
-        bool isMandatory = requiredPermission != null;
-        bool isPublicOptIn = !isMandatory && authOption is { AuthenticatePublicEndpoints: true };
-        bool shouldAuth = isMandatory || isPublicOptIn;
+        // Check for explicit intent attached to the request, or peek at the LunoSecurityContext
+        var requestOptions = request.RequestOptions.OfType<LunoRequestOptions>().FirstOrDefault()
+                            ?? LunoSecurityContext.Current;
 
-        // 2. Skip if not required and not requested
+        var authorizePublic = requestOptions?.AuthenticatePublicEndpoint ?? false;
+        var authorizeWrite = requestOptions?.AuthorizeWriteOperation ?? false;
+
+        // 2. Write Intent Sentry (Pre-flight guard)
+        if (requiredPermission?.StartsWith("Perm_W") == true && !authorizeWrite)
+        {
+            throw new LunoSecurityException(
+                request.HttpMethod.ToString(),
+                request.UrlTemplate ?? string.Empty,
+                requiredPermission);
+        }
+
+        bool isMandatory = requiredPermission != null;
+        bool shouldAuth = isMandatory || authorizePublic;
+
+        // 3. Skip if not required and not requested
         if (!shouldAuth)
         {
             return Task.CompletedTask;
         }
 
-        // 3. Early return if the header is already present
+        // 4. Early return if the header is already present
         if (request.Headers.ContainsKey("Authorization"))
         {
             return Task.CompletedTask;
         }
 
-        // 4. Guard Clause: We must have keys if we are supposed to auth
+        // 5. Guard Clause: We must have keys if we are supposed to auth
         if (_preComputedAuthHeader == null)
         {
             var reason = isMandatory ? $"Mandatory Permission Required: {requiredPermission}" : "Explicitly Requested by User";
@@ -65,7 +78,7 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
                 $"This request ({request.HttpMethod} {request.UrlTemplate}) requires authentication ({reason}), but API keys were not provided.");
         }
 
-        // 5. Attach Header
+        // 6. Attach Header
         request.Headers.TryAdd("Authorization", _preComputedAuthHeader);
 
         return Task.CompletedTask;

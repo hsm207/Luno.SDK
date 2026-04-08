@@ -100,8 +100,8 @@ public static class Concept06_Orders
         string clientOrderId = Guid.NewGuid().ToString();
         var command = quote.ToCommand(baseId, counterId, clientOrderId);
 
-        Console.WriteLine("\n📡 Action: Placing Limit Order...");
-        var response = await client.Trading.PostLimitOrderAsync(command);
+        Console.WriteLine("\n📡 Action: Placing Limit Order (requires explicit write intent)...");
+        var response = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
         Console.WriteLine($"[POST] Success! OrderId: {response.OrderId}");
 
         // 5. Verify via Listing
@@ -111,13 +111,13 @@ public static class Concept06_Orders
         Console.WriteLine($"[VERIFY] Order {response.OrderId} found in pending list: {isListed}");
 
         // 6. Test Idempotency Reconciliation
-        Console.WriteLine("\n📡 Idempotency: Resending same command...");
-        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command);
+        Console.WriteLine("\n📡 Idempotency: Resending same command (requires explicit write intent)...");
+        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
         Console.WriteLine($"[IDEMPOTENCY] Reconciled to same OrderId: {duplicateResponse.OrderId == response.OrderId}");
 
         // 7. Cancel the order
-        Console.WriteLine("\n📡 Cleanup: Cancelling Order...");
-        await client.Trading.StopOrderAsync(response.OrderId);
+        Console.WriteLine("\n📡 Cleanup: Cancelling Order (requires explicit write intent)...");
+        await client.Trading.StopOrderAsync(response.OrderId, opt => opt.AuthorizeWriteOperation = true);
         Console.WriteLine("[STOP] Stop request dispatched.");
 
         // 8. Final Verification
@@ -159,6 +159,12 @@ public static class Concept06_Orders
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"\n[Permission Denied] {ex.Message}");
             Console.WriteLine("Note: Ensure your API key has 'Perm_W_Trade' enabled.");
+        }
+        else if (ex is LunoSecurityException)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"\n[Security Boundary Violated] {ex.Message}");
+            Console.WriteLine("Resolution: This is a pre-flight SDK check. You must explicitly set 'AuthorizeWriteOperation = true' for this call.");
         }
         else
         {

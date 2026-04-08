@@ -17,9 +17,10 @@ public interface ILunoCommandDispatcher
     /// <typeparam name="TRequest">The type of the command/request.</typeparam>
     /// <typeparam name="TResponse">The type of the underlying response result.</typeparam>
     /// <param name="request">The command object.</param>
+    /// <param name="options">Optional per-request security and behavior options.</param>
     /// <param name="ct">A cancellation token.</param>
     /// <returns>A task containing the response result.</returns>
-    Task<TResponse> DispatchAsync<TRequest, TResponse>(TRequest request, CancellationToken ct = default);
+    Task<TResponse> DispatchAsync<TRequest, TResponse>(TRequest request, LunoRequestOptions? options = null, CancellationToken ct = default);
 
     /// <summary>
     /// Dispatches a command/query to its registered handler for a stream of results.

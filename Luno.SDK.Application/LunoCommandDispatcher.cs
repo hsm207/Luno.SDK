@@ -14,8 +14,10 @@ namespace Luno.SDK.Application;
 public class LunoCommandDispatcher(Func<Type, object?> resolver) : ILunoCommandDispatcher
 {
     /// <inheritdoc />
-    public Task<TResponse> DispatchAsync<TRequest, TResponse>(TRequest request, CancellationToken ct = default)
+    public Task<TResponse> DispatchAsync<TRequest, TResponse>(TRequest request, LunoRequestOptions? options = null, CancellationToken ct = default)
     {
+        using var scope = LunoSecurityContext.Set(options);
+
         // 1. Resolve the primary handler
         var handlerType = typeof(ICommandHandler<TRequest, TResponse>);
         var handler = (ICommandHandler<TRequest, TResponse>?)resolver(handlerType);

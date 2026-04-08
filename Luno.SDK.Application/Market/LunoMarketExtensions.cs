@@ -48,7 +48,30 @@ public static class LunoMarketExtensions
         string pair,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetTickerQuery, TickerResponse>(new GetTickerQuery(pair), ct);
+        return client.GetTickerAsync(pair, null, ct);
+    }
+
+    /// <summary>
+    /// Asynchronously fetches a market ticker for a specific pair with explicit intent configuration.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
+    /// <param name="pair">The market pair to fetch (e.g., XBTZAR).</param>
+    /// <param name="options">An action to configure request options (e.g., AuthenticatePublicEndpoint = true).</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A ticker response representing the market state.</returns>
+    public static Task<TickerResponse> GetTickerAsync(
+        this ILunoMarketClient client,
+        string pair,
+        Action<LunoRequestOptions>? options,
+        CancellationToken ct = default)
+    {
+        LunoRequestOptions? requestOptions = null;
+        if (options != null)
+        {
+            requestOptions = new LunoRequestOptions();
+            options(requestOptions);
+        }
+        return client.Commands.DispatchAsync<GetTickerQuery, TickerResponse>(new GetTickerQuery(pair), requestOptions, ct);
     }
 
     /// <summary>
@@ -76,6 +99,29 @@ public static class LunoMarketExtensions
         IEnumerable<string>? pairs,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<GetMarketsQuery, IReadOnlyList<MarketInfo>>(new GetMarketsQuery(pairs?.ToArray()), ct);
+        return client.GetMarketsAsync(pairs, null, ct);
+    }
+
+    /// <summary>
+    /// Asynchronously fetches a list of markets for the specified pairs with explicit intent configuration.
+    /// </summary>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
+    /// <param name="pairs">The market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
+    /// <param name="options">An action to configure request options (e.g., AuthenticatePublicEndpoint = true).</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A list of market info objects.</returns>
+    public static Task<IReadOnlyList<MarketInfo>> GetMarketsAsync(
+        this ILunoMarketClient client,
+        IEnumerable<string>? pairs,
+        Action<LunoRequestOptions>? options,
+        CancellationToken ct = default)
+    {
+        LunoRequestOptions? requestOptions = null;
+        if (options != null)
+        {
+            requestOptions = new LunoRequestOptions();
+            options(requestOptions);
+        }
+        return client.Commands.DispatchAsync<GetMarketsQuery, IReadOnlyList<MarketInfo>>(new GetMarketsQuery(pairs?.ToArray()), requestOptions, ct);
     }
 }

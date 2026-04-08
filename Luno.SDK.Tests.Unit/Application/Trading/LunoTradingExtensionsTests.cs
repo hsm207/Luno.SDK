@@ -50,7 +50,7 @@ public class LunoTradingExtensionsTests
         var quote = new OrderQuote("XBTMYR", OrderSide.Sell, 0.001m, 250000m, "MYR");
 
         dispatcherMock
-            .Setup(d => d.DispatchAsync<CalculateOrderSizeQuery, OrderQuote>(query, It.IsAny<CancellationToken>()))
+            .Setup(d => d.DispatchAsync<CalculateOrderSizeQuery, OrderQuote>(query, It.IsAny<LunoRequestOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(quote);
 
         // Act
@@ -58,6 +58,6 @@ public class LunoTradingExtensionsTests
 
         // Assert
         Assert.Equal(quote, result);
-        dispatcherMock.Verify(d => d.DispatchAsync<CalculateOrderSizeQuery, OrderQuote>(query, It.IsAny<CancellationToken>()), Times.Once);
+        dispatcherMock.Verify(d => d.DispatchAsync<CalculateOrderSizeQuery, OrderQuote>(query, It.IsAny<LunoRequestOptions>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

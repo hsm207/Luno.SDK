@@ -83,7 +83,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var response = await client.Trading.PostLimitOrderAsync(command);
+        var response = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
 
         // Assert
         Assert.NotNull(response.OrderId);
@@ -113,7 +113,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.Trading.StopOrderByClientOrderIdAsync(clientId);
+        var result = await client.Trading.StopOrderByClientOrderIdAsync(clientId, opt => opt.AuthorizeWriteOperation = true);
 
         // Assert
         Assert.NotNull(result.OrderId);
@@ -143,7 +143,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoForbiddenException>(async () =>
-            await client.Trading.PostLimitOrderAsync(command));
+            await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true));
 
         Assert.Equal(403, ex.StatusCode);
     }
@@ -166,7 +166,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var result = await client.Trading.PostLimitOrderAsync(command);
+        var result = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
 
         // Assert
         Assert.Equal(expectedOrderId, result.OrderId);
@@ -195,7 +195,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act
-        var result = await client.Trading.PostLimitOrderAsync(command);
+        var result = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
 
         // Assert
         Assert.Equal(expectedOrderId, result.OrderId);
@@ -215,7 +215,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.Trading.StopOrderAsync(new StopOrderCommand { OrderId = orderId });
+        var result = await client.Trading.StopOrderAsync(new StopOrderCommand { OrderId = orderId }, opt => opt.AuthorizeWriteOperation = true);
 
         // Assert
         Assert.Equal(orderId, result.OrderId);
@@ -253,7 +253,7 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
 
         // Act
-        var result = await client.Trading.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId });
+        var result = await client.Trading.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId }, opt => opt.AuthorizeWriteOperation = true);
 
         // Assert
         Assert.Equal(orderId, result.OrderId);
@@ -296,7 +296,7 @@ public class LunoTradingClientTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<LunoValidationException>(async () =>
-            await client.Trading.PostLimitOrderAsync(command));
+            await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true));
 
         Assert.Contains("both StopPrice and StopDirection must be provided", ex.Message);
     }
@@ -328,7 +328,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoResourceNotFoundException>(async () => await client.Trading.PostLimitOrderAsync(command));
+        await Assert.ThrowsAsync<LunoResourceNotFoundException>(async () => await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true));
     }
 
     [Fact(DisplayName = "Given Idempotency Reconcilation, When parameters mismatch, Then throw LunoIdempotencyException.")]
@@ -371,7 +371,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.Trading.PostLimitOrderAsync(command));
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true));
         Assert.Contains("Price", ex.Message);
     }
 
@@ -415,7 +415,7 @@ public class LunoTradingClientTests : IDisposable
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.Trading.PostLimitOrderAsync(command));
+        var ex = await Assert.ThrowsAsync<LunoIdempotencyException>(async () => await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true));
         Assert.Contains("Side", ex.Message);
     }
 
