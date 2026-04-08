@@ -92,6 +92,13 @@ graph TD
 - **Then:** The request **must fail** with an `HttpRequestException` (SSL error).
 - **Verification:** Behavioral proof that global state is ignored.
 
+### 6.4 The Enterprise Escape Hatch (Bypass Success)
+- **Tier:** Unit
+- **Given:** `DangerouslyDisableDomainPinning` is set to `true`.
+- **When:** Setting `BaseUrl` to an untrusted domain (e.g., `http://my-internal-proxy.local`).
+- **Then:** No exception is thrown.
+- **Verification:** Property assignment succeeds.
+
 ## 7. Operational Reality (The Anti-P1 Guardrails)
 - **Blast Radius:** Limited to developers using non-standard internal proxies who must now opt-out via flag.
 - **Capacity & Financial Breaking Points:** Minimal memory overhead for an isolated `HttpClient` instance per client lifecycle.
