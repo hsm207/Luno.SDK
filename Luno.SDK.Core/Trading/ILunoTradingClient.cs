@@ -41,7 +41,7 @@ internal interface ILunoTradingOperations
 public interface ILunoTradingClient
 {
     /// <summary>
-    /// Gets the command dispatcher used to orchestrate trading application-layer logic.
+    /// Gets the request dispatcher used to orchestrate trading application-layer logic.
     /// </summary>
-    ILunoCommandDispatcher Commands { get; }
+    ILunoRequestDispatcher Requests { get; }
 }

@@ -41,7 +41,7 @@ internal interface ILunoMarketOperations
 public interface ILunoMarketClient
 {
     /// <summary>
-    /// Gets the command dispatcher used to orchestrate market application-layer logic.
+    /// Gets the request dispatcher used to orchestrate market application-layer logic.
     /// </summary>
-    ILunoCommandDispatcher Commands { get; }
+    ILunoRequestDispatcher Requests { get; }
 }
