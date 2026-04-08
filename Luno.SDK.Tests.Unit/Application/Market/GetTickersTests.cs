@@ -21,7 +21,7 @@ public class GetTickersTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.luno.com") };
         var adapter = new HttpClientRequestAdapter(new AnonymousAuthenticationProvider(), httpClient: httpClient);
         var apiClient = new LunoApiClient(adapter);
-        return new LunoMarketClient(apiClient, new Mock<ILunoCommandDispatcher>().Object);
+        return new LunoMarketClient(apiClient, new Mock<ILunoRequestDispatcher>().Object);
     }
 
     [Fact(DisplayName = "Given cancellation token is cancelled, When handling query, Then stop streaming results.")]

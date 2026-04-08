@@ -11,7 +11,7 @@ namespace Luno.SDK.Tests.Unit.Trading;
 public class OrderTests
 {
     private const string OrderId = "BX-123";
-    private const OrderSide Side = OrderSide.Buy;
+    private static readonly OrderSide Side = OrderSide.Buy;
     private const OrderStatus Status = OrderStatus.Awaiting;
     private const string Pair = "XBTZAR";
     private const long CreationTimestamp = 1700000000000;

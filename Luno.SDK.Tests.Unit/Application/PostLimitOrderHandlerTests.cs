@@ -20,18 +20,18 @@ public class PostLimitOrderHandlerTests
         string? clientOrderId = "cli-001",
         decimal price = 1000m,
         decimal volume = 1m,
-        OrderSide side = OrderSide.Buy,
-        TimeInForce tif = TimeInForce.GTC) =>
+        OrderSide? side = null,
+        TimeInForce? tif = null) =>
         new()
         {
             Pair             = "XBTZAR",
-            Side             = side,
+            Side             = side ?? OrderSide.Buy,
             Volume           = volume,
             Price            = price,
             BaseAccountId    = 1,
             CounterAccountId = 2,
             ClientOrderId    = clientOrderId,
-            TimeInForce      = tif
+            TimeInForce      = tif ?? TimeInForce.GTC
         };
 
     private static LimitOrder BuildExistingOrder(
@@ -39,12 +39,12 @@ public class PostLimitOrderHandlerTests
         string? clientOrderId = "cli-001",
         decimal limitPrice = 1000m,
         decimal limitVolume = 1m,
-        OrderSide side = OrderSide.Buy,
-        TimeInForce timeInForce = TimeInForce.GTC,
+        OrderSide? side = null,
+        TimeInForce? timeInForce = null,
         string pair = "XBTZAR") =>
         new(
             orderId: orderId,
-            side: side,
+            side: side ?? OrderSide.Buy,
             status: OrderStatus.Awaiting,
             pair: pair,
             creationTimestamp: 1700000000000,
@@ -52,16 +52,16 @@ public class PostLimitOrderHandlerTests
             counterAccountId: 2,
             limitPrice: limitPrice,
             limitVolume: limitVolume,
-            timeInForce: timeInForce,
+            timeInForce: timeInForce ?? TimeInForce.GTC,
             clientOrderId: clientOrderId);
 
     private static MarketOrder BuildExistingMarketOrder(
         string orderId = "BX-MARKET",
         string? clientOrderId = "cli-001",
-        OrderSide side = OrderSide.Buy) =>
+        OrderSide? side = null) =>
         new(
             orderId: orderId,
-            side: side,
+            side: side ?? OrderSide.Buy,
             status: OrderStatus.Awaiting,
             pair: "XBTZAR",
             creationTimestamp: 1700000000000,
@@ -251,40 +251,5 @@ public class PostLimitOrderHandlerTests
 
         var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
         Assert.Contains("Explicit Account Mandate violated", ex.Message);
-    }
-
-    // ── Enum Validation ─────────────────────────────────────────────────────────
-
-    [Fact(DisplayName = "Given an invalid OrderSide cast, When handling, Then throw LunoValidationException")]
-    public async Task HandleAsync_Validation_InvalidOrderSide_ThrowsLunoValidationException()
-    {
-        var tradingClientMock = new Mock<ILunoTradingOperations>();
-        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand() with { Side = (OrderSide)999 };
-
-        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
-        Assert.Contains("Invalid OrderSide", ex.Message);
-    }
-
-    [Fact(DisplayName = "Given an invalid TimeInForce cast, When handling, Then throw LunoValidationException")]
-    public async Task HandleAsync_Validation_InvalidTimeInForce_ThrowsLunoValidationException()
-    {
-        var tradingClientMock = new Mock<ILunoTradingOperations>();
-        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand() with { TimeInForce = (TimeInForce)999 };
-
-        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
-        Assert.Contains("Invalid TimeInForce", ex.Message);
-    }
-
-    [Fact(DisplayName = "Given an invalid StopDirection cast, When handling, Then throw LunoValidationException")]
-    public async Task HandleAsync_Validation_InvalidStopDirection_ThrowsLunoValidationException()
-    {
-        var tradingClientMock = new Mock<ILunoTradingOperations>();
-        var handler = new PostLimitOrderHandler(tradingClientMock.Object);
-        var command = BuildValidCommand() with { StopPrice = 1000m, StopDirection = (StopDirection)999 };
-
-        var ex = await Assert.ThrowsAsync<LunoValidationException>(() => handler.HandleAsync(command));
-        Assert.Contains("Invalid StopDirection", ex.Message);
     }
 }

@@ -40,14 +40,14 @@ public class LunoCommandArchitectureTests
         // (These are normally registered by AddLunoClient but we might need to override for pure architecture tests)
     }
 
-    [Fact(DisplayName = "Architecture: The Command Dispatcher must Fail-Fast when a handler is not registered.")]
+    [Fact(DisplayName = "Architecture: The Request Dispatcher must Fail-Fast when a handler is not registered.")]
     public async Task Dispatcher_UnknownCommand_ThrowsInvalidOperationException()
     {
         // Arrange
-        var dispatcher = new LunoCommandDispatcher(type => null); // Resolver returns nothing
+        var dispatcher = new LunoRequestDispatcher(type => null); // Resolver returns nothing
         
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => dispatcher.DispatchAsync<DummyCommand, string>(new DummyCommand()));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => dispatcher.SendAsync<string>(new DummyCommand()));
         Assert.Contains("No handler registered for ICommandHandler`2", ex.Message);
     }
 
@@ -57,7 +57,7 @@ public class LunoCommandArchitectureTests
         // 1. Arrange: Find all concrete handler interfaces in the Application assembly
         var handlerInterfaceDefinition = typeof(ICommandHandler<,>);
         var streamHandlerInterfaceDefinition = typeof(IStreamCommandHandler<,>);
-        var assembly = typeof(LunoCommandDispatcher).Assembly;
+        var assembly = typeof(LunoRequestDispatcher).Assembly;
 
         var handlerInterfacesInAssembly = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract)
@@ -98,10 +98,20 @@ public class LunoCommandArchitectureTests
         var services = new ServiceCollection();
         // Register a mock handler
         var handlerMock = new Mock<ICommandHandler<GetTickerQuery, TickerResponse>>();
+        
+        // Mock the generic method
         handlerMock.Setup(h => h.HandleAsync(It.IsAny<GetTickerQuery>(), It.IsAny<CancellationToken>()))
-                   .ReturnsAsync(() => {
+                   .ReturnsAsync((GetTickerQuery _, CancellationToken _) => {
                        executionFullTrace.Add("Handler");
                        return new TickerResponse("XBTZAR", 1000m, 1005m, 995m, 10m, true, DateTimeOffset.UtcNow);
+                   });
+        
+        // Mock the base method to ensure Moq correctly intercepts calls from the Dispatcher
+        handlerMock.As<ICommandHandlerBase<TickerResponse>>()
+                   .Setup(h => h.HandleAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()))
+                   .ReturnsAsync((object q, CancellationToken ct) => 
+                   {
+                       return handlerMock.Object.HandleAsync((GetTickerQuery)q, ct).Result;
                    });
         
         services.AddTransient(_ => handlerMock.Object);
@@ -110,11 +120,11 @@ public class LunoCommandArchitectureTests
         services.AddLunoCommandBehavior(typeof(TraceBehavior<,>));
         
         var sp = services.BuildServiceProvider();
-        var dispatcher = new LunoCommandDispatcher(type => sp.GetService(type));
+        var dispatcher = new LunoRequestDispatcher(type => sp.GetService(type));
         TraceBehavior<GetTickerQuery, TickerResponse>.Trace = executionFullTrace;
 
         // Act
-        await dispatcher.DispatchAsync<GetTickerQuery, TickerResponse>(new GetTickerQuery("XBTZAR"));
+        await dispatcher.SendAsync<TickerResponse>(new GetTickerQuery("XBTZAR"));
 
         // Assert
         Assert.Equal(3, executionFullTrace.Count);
@@ -130,19 +140,30 @@ public class LunoCommandArchitectureTests
         var executionFullTrace = new List<string>();
         var services = new ServiceCollection();
         
+        // Register a mock handler
         var handlerMock = new Mock<IStreamCommandHandler<GetTickersQuery, TickerResponse>>();
+        
+        // Mock the generic method
         handlerMock.Setup(h => h.HandleAsync(It.IsAny<GetTickersQuery>(), It.IsAny<CancellationToken>()))
                    .Returns(new[] { new TickerResponse("XBTZAR", 1000m, 1005m, 995m, 10m, true, DateTimeOffset.UtcNow) }.ToAsyncEnumerable());
         
+        // Mock the base method to ensure Moq correctly intercepts calls from the Dispatcher
+        handlerMock.As<IStreamCommandHandlerBase<TickerResponse>>()
+                   .Setup(h => h.HandleAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()))
+                   .Returns((object q, CancellationToken ct) => 
+                   {
+                       return handlerMock.Object.HandleAsync((GetTickersQuery)q, ct);
+                   });
+
         services.AddTransient(_ => handlerMock.Object);
         services.AddLunoStreamBehavior(typeof(StreamTraceBehavior<,>));
         
         var sp = services.BuildServiceProvider();
-        var dispatcher = new LunoCommandDispatcher(type => sp.GetService(type));
+        var dispatcher = new LunoRequestDispatcher(type => sp.GetService(type));
         StreamTraceBehavior<GetTickersQuery, TickerResponse>.Trace = executionFullTrace;
 
         // Act
-        await foreach (var item in dispatcher.CreateStreamAsync<GetTickersQuery, TickerResponse>(new GetTickersQuery()))
+        await foreach (var item in dispatcher.CreateStreamAsync<TickerResponse>(new GetTickersQuery()))
         {
             executionFullTrace.Add("Item");
         }
@@ -155,7 +176,10 @@ public class LunoCommandArchitectureTests
         Assert.Equal("Stream Finally", executionFullTrace[3]);
     }
 
-    private class DummyCommand { }
+    private class DummyCommand : ILunoRequest<string> 
+    {
+        public LunoRequestOptions Options { get; } = new();
+    }
 
     private class TraceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     {
