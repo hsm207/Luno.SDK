@@ -34,50 +34,42 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         Dictionary<string, object>? additionalAuthenticationContext = null,
         CancellationToken cancellationToken = default)
     {
-        var authOption = request.RequestOptions.OfType<LunoAuthenticationOption>().FirstOrDefault();
+        // 1. Determine if authentication is required by Spec or User
+        var requiredPermission = LunoSecurityMetadata.GetRequiredPermission(
+            request.HttpMethod.ToString(),
+            request.UrlTemplate ?? string.Empty);
 
-        // 1. Explicit Control (The Edge Case) - Opt-Out
-        if (authOption is { RequiresAuthentication: false })
+        var authOption = request.RequestOptions.OfType<LunoAuthenticationOption>().FirstOrDefault();
+        
+        bool isMandatory = requiredPermission != null;
+        bool isPublicOptIn = !isMandatory && authOption is { AuthenticatePublicEndpoints: true };
+        bool shouldAuth = isMandatory || isPublicOptIn;
+
+        // 2. Skip if not required and not requested
+        if (!shouldAuth)
         {
             return Task.CompletedTask;
         }
 
-        // 2. Early return if the header is already present
+        // 3. Early return if the header is already present
         if (request.Headers.ContainsKey("Authorization"))
         {
             return Task.CompletedTask;
         }
 
-        bool isMandatoryPrivate = IsMandatoryPrivateEndpoint(request.URI.AbsolutePath);
-        bool requiresAuth = (authOption is { RequiresAuthentication: true }) || isMandatoryPrivate;
-
-        // 3. Guard Clause: Mandatory Private / Explicit Opt-In missing keys
-        if (requiresAuth && _preComputedAuthHeader == null)
+        // 4. Guard Clause: We must have keys if we are supposed to auth
+        if (_preComputedAuthHeader == null)
         {
-            throw new LunoAuthenticationException("This request requires authentication, but API keys were not provided in LunoClientOptions.");
+            var reason = isMandatory ? $"Mandatory Permission Required: {requiredPermission}" : "Explicitly Requested by User";
+            throw new LunoAuthenticationException(
+                $"This request ({request.HttpMethod} {request.UrlTemplate}) requires authentication ({reason}), but API keys were not provided.");
         }
 
-        // 4. Attach Header (if we have it, covering both Required and Auto-Optimized Public)
-        if (_preComputedAuthHeader != null)
-        {
-            request.Headers.Add("Authorization", _preComputedAuthHeader);
-        }
+        // 5. Attach Header
+        request.Headers.TryAdd("Authorization", _preComputedAuthHeader);
 
         return Task.CompletedTask;
     }
-
-    private static bool IsMandatoryPrivateEndpoint(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return true; // Fail-secure
-
-        // Public Allowlist Strategy (Secure-by-Design)
-        // Only explicitly known market data endpoints are considered public.
-        // Everything else requires authentication.
-        bool isPublic = path.StartsWith("/api/1/ticker", StringComparison.OrdinalIgnoreCase) || // covers /ticker and /tickers
-                        path.StartsWith("/api/1/orderbook", StringComparison.OrdinalIgnoreCase) || // covers /orderbook and /orderbook_top
-                        path.Equals("/api/1/trades", StringComparison.OrdinalIgnoreCase) ||
-                        path.Equals("/api/exchange/1/markets", StringComparison.OrdinalIgnoreCase);
-
-        return !isPublic;
-    }
 }
+
+
