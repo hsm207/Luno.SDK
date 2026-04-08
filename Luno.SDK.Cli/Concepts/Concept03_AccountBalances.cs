@@ -2,6 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Luno.SDK;
+using Luno.SDK.Application.Account;
+using System.Linq;
 
 namespace Luno.SDK.Cli.Concepts;
 
@@ -48,7 +50,7 @@ public static class Concept03_AccountBalances
         {
             // 1. Unfiltered Fetch
             Console.WriteLine("\n--- Step 1: Fetching ALL balances (Unfiltered) ---");
-            var allBalances = await client.Accounts.GetBalancesAsync();
+            var allBalances = await client.Accounts.GetBalancesAsync(new GetBalancesQuery());
 
             Console.WriteLine($"Successfully retrieved {allBalances.Count} balances:");
             foreach (var balance in allBalances.Where(b => b.Total > 0))
@@ -58,7 +60,7 @@ public static class Concept03_AccountBalances
 
             // 2. Filtered Fetch
             Console.WriteLine("\n--- Step 2: Fetching specific balances (Filtered: XBT, ETH) ---");
-            var filteredBalances = await client.Accounts.GetBalancesAsync(new[] { "XBT", "ETH" });
+            var filteredBalances = await client.Accounts.GetBalancesAsync(new GetBalancesQuery { Assets = new[] { "XBT", "ETH" } });
 
             Console.WriteLine($"Successfully retrieved {filteredBalances.Count} filtered balances:");
             foreach (var balance in filteredBalances)

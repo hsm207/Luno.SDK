@@ -23,7 +23,7 @@ public static class Concept01_MarketData
 
         // 2. Unfiltered Demo
         Console.WriteLine("\n📡 Fetching ALL latest tickers from Luno...");
-        await foreach (var ticker in luno.Market.GetTickersAsync().Take(5))
+        await foreach (var ticker in luno.Market.GetTickersAsync(new GetTickersQuery()).Take(5))
         {
             PrintTicker(ticker);
         }
@@ -31,7 +31,7 @@ public static class Concept01_MarketData
         // 3. Filtered Demo
         var pairs = new[] { "XBTMYR", "ETHMYR" };
         Console.WriteLine($"\n🎯 Fetching FILTERED tickers ({string.Join(", ", pairs)}) from Luno...");
-        await foreach (var ticker in luno.Market.GetTickersAsync(pairs))
+        await foreach (var ticker in luno.Market.GetTickersAsync(new GetTickersQuery { Pairs = pairs }))
         {
             PrintTicker(ticker);
         }

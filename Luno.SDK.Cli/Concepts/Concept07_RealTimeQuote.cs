@@ -5,6 +5,7 @@ using Luno.SDK;
 using Luno.SDK.Trading;
 using Luno.SDK.Application.Trading;
 using Luno.SDK.Market;
+using Luno.SDK.Application.Market;
 
 namespace Luno.SDK.Cli.Concepts;
 
@@ -27,8 +28,8 @@ public static class Concept07_RealTimeQuote
             Console.WriteLine($"\n📡 Fetching live market context for {pair}...");
             
             // Parallel fetch for speed ⚡
-            var tickerTask = client.Market.GetTickerAsync(pair);
-            var marketTask = client.Market.GetMarketsAsync(new[] { pair });
+            var tickerTask = client.Market.GetTickerAsync(new GetTickerQuery(pair));
+            var marketTask = client.Market.GetMarketsAsync(new GetMarketsQuery { Pairs = new[] { pair } });
             await Task.WhenAll(tickerTask, marketTask);
 
             var ticker = tickerTask.Result;

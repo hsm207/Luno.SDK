@@ -6,6 +6,7 @@ using Luno.SDK;
 using Luno.SDK.Trading;
 using Luno.SDK.Application.Trading;
 using Luno.SDK.Market;
+using Luno.SDK.Application.Market;
 using Luno.SDK.Account;
 using Luno.SDK.Application.Account;
 
@@ -70,7 +71,7 @@ public static class Concept06_Orders
 
         // 1. Snapshot Initial State
         Console.WriteLine($"\n📡 Snapshot: Fetching current pending orders for {targetPair}...");
-        var initialPending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: targetPair);
+        var initialPending = await client.Trading.ListOrdersAsync(new ListOrdersQuery { State = OrderStatus.Pending, Pair = targetPair });
         Console.WriteLine($"[STATE] Current Pending Count: {initialPending.Count}");
 
         // 2. Resolve Accounts and Market Constraints
@@ -101,28 +102,28 @@ public static class Concept06_Orders
         var command = quote.ToCommand(baseId, counterId, clientOrderId);
 
         Console.WriteLine("\n📡 Action: Placing Limit Order (requires explicit write intent)...");
-        var response = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
+        var response = await client.Trading.PostLimitOrderAsync(command with { Options = command.Options with { AuthorizeWriteOperation = true } });
         Console.WriteLine($"[POST] Success! OrderId: {response.OrderId}");
 
         // 5. Verify via Listing
         Console.WriteLine($"\n📡 Verification: Fetching pending orders for {targetPair} after placement...");
-        var midPending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: targetPair);
+        var midPending = await client.Trading.ListOrdersAsync(new ListOrdersQuery { State = OrderStatus.Pending, Pair = targetPair });
         bool isListed = midPending.Any(o => o.OrderId == response.OrderId);
         Console.WriteLine($"[VERIFY] Order {response.OrderId} found in pending list: {isListed}");
 
         // 6. Test Idempotency Reconciliation
         Console.WriteLine("\n📡 Idempotency: Resending same command (requires explicit write intent)...");
-        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
+        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command with { Options = command.Options with { AuthorizeWriteOperation = true } });
         Console.WriteLine($"[IDEMPOTENCY] Reconciled to same OrderId: {duplicateResponse.OrderId == response.OrderId}");
 
         // 7. Cancel the order
         Console.WriteLine("\n📡 Cleanup: Cancelling Order (requires explicit write intent)...");
-        await client.Trading.StopOrderAsync(response.OrderId, opt => opt.AuthorizeWriteOperation = true);
+        await client.Trading.StopOrderAsync(new StopOrderCommand { OrderId = response.OrderId, Options = new LunoRequestOptions { AuthorizeWriteOperation = true } });
         Console.WriteLine("[STOP] Stop request dispatched.");
 
         // 8. Final Verification
         Console.WriteLine($"\n📡 Final State: Fetching pending orders for {targetPair} after cancellation...");
-        var finalPending = await client.Trading.ListOrdersAsync(state: OrderStatus.Pending, pair: targetPair);
+        var finalPending = await client.Trading.ListOrdersAsync(new ListOrdersQuery { State = OrderStatus.Pending, Pair = targetPair });
         bool isRemoved = finalPending.All(o => o.OrderId != response.OrderId);
         Console.WriteLine($"[VERIFY] Order removed from pending list: {isRemoved}");
     }
@@ -130,7 +131,7 @@ public static class Concept06_Orders
     private static async Task<(long baseId, long counterId)> ResolveTradingAccountsAsync(ILunoClient client, string baseAsset, string counterAsset)
     {
         Console.WriteLine($"📡 Resolving Account IDs for {baseAsset} and {counterAsset}...");
-        var balances = await client.Accounts.GetBalancesAsync();
+        var balances = await client.Accounts.GetBalancesAsync(new GetBalancesQuery());
 
         var baseAcc = balances.FirstOrDefault(b => b.Asset == baseAsset) 
             ?? throw new InvalidOperationException($"No {baseAsset} account found.");
@@ -143,7 +144,7 @@ public static class Concept06_Orders
     private static async Task<MarketInfo> ResolveMarketMetadataAsync(ILunoClient client, string pair)
     {
         Console.WriteLine($"📡 Fetching market constraints for {pair}...");
-        var markets = await client.Market.GetMarketsAsync(new[] { pair });
+        var markets = await client.Market.GetMarketsAsync(new GetMarketsQuery { Pairs = new[] { pair } });
         return markets.FirstOrDefault() ?? throw new InvalidOperationException($"Market info for {pair} not found.");
     }
 

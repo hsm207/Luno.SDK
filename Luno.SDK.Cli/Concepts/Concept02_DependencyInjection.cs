@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Luno.SDK;
+using Luno.SDK.Application.Market;
 
 namespace Luno.SDK.Cli.Concepts;
 
@@ -32,7 +33,7 @@ public static class Concept02_DependencyInjection
 
         // 5. Use the fluent extension to stream tickers
         int count = 0;
-        await foreach (var ticker in luno.Market.GetTickersAsync())
+        await foreach (var ticker in luno.Market.GetTickersAsync(new GetTickersQuery()))
         {
             var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
             Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");

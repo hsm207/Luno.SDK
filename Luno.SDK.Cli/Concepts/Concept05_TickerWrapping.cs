@@ -32,7 +32,7 @@ public static class Concept05_TickerWrapping
 
         try
         {
-            var ticker = await luno.Market.GetTickerAsync("XBTZAR");
+            var ticker = await luno.Market.GetTickerAsync(new GetTickerQuery("XBTZAR"));
             Console.WriteLine($"[RESULT] {ticker.Pair}: {ticker.Price:N2}");
         }
         catch (Exception ex)
