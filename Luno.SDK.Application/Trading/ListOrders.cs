@@ -17,7 +17,7 @@ public record ListOrdersQuery(
     OrderStatus? State = null,
     string? Pair = null,
     long? CreatedBefore = null,
-    long? Limit = null);
+    long? Limit = null) : LunoQueryBase<IReadOnlyList<OrderDetailsResponse>>;
 
 /// <summary>
 /// Orchestrates the retrieval of a list of orders.

@@ -10,7 +10,7 @@ namespace Luno.SDK.Application.Account;
 /// The list of all Accounts and their respective balances for the requesting user.
 /// </summary>
 /// <remarks>Permissions required: Perm_R_Balance</remarks>
-public record GetBalancesQuery
+public record GetBalancesQuery : LunoQueryBase<IReadOnlyList<AccountBalanceResponse>>
 {
     /// <summary>
     /// Only return balances for wallets with these currencies (if not provided, all balances will be returned).
@@ -35,15 +35,8 @@ internal class GetBalancesHandler(ILunoAccountOperations accountClient) : IComma
         GetBalancesQuery query,
         CancellationToken ct = default)
     {
-        Validate(query);
-
         var balances = await accountClient.FetchBalancesAsync(query.Assets, ct).ConfigureAwait(false);
 
         return balances.Select(b => b.ToResponse()).ToList().AsReadOnly();
-    }
-
-    private static void Validate(GetBalancesQuery query)
-    {
-        if (query == null) throw new LunoValidationException("Query cannot be null.");
     }
 }

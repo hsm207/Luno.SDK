@@ -8,7 +8,7 @@ namespace Luno.SDK.Application.Trading;
 /// <summary>
 /// A command representing a request from the consumer to place a limit order.
 /// </summary>
-public record PostLimitOrderCommand
+public record PostLimitOrderCommand : LunoCommandBase<OrderResponse>
 {
     /// <summary>Gets or sets the currency pair (e.g., XBTZAR).</summary>
     public required string Pair { get; init; }
@@ -104,21 +104,6 @@ internal class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : ICo
     /// </summary>
     private static void Validate(PostLimitOrderCommand command)
     {
-        if (!Enum.IsDefined(typeof(OrderSide), command.Side))
-        {
-            throw new LunoValidationException($"Invalid OrderSide: {command.Side}");
-        }
-
-        if (!Enum.IsDefined(typeof(TimeInForce), command.TimeInForce))
-        {
-            throw new LunoValidationException($"Invalid TimeInForce: {command.TimeInForce}");
-        }
-
-        if (command.StopDirection.HasValue && !Enum.IsDefined(typeof(StopDirection), command.StopDirection.Value))
-        {
-            throw new LunoValidationException($"Invalid StopDirection: {command.StopDirection.Value}");
-        }
-
         if (command.PostOnly && command.TimeInForce != TimeInForce.GTC)
         {
             throw new LunoValidationException("PostOnly cannot be used with a TimeInForce other than GTC.");
@@ -129,7 +114,7 @@ internal class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : ICo
             throw new LunoValidationException("Explicit Account Mandate violated: Both BaseAccountId and CounterAccountId must be explicitly provided with valid positive IDs to prevent accidental trading on default accounts.");
         }
 
-        if (command.StopPrice.HasValue != command.StopDirection.HasValue)
+        if (command.StopPrice.HasValue != (command.StopDirection != null))
         {
             throw new LunoValidationException("For Stop-Limit orders, both StopPrice and StopDirection must be provided together.");
         }

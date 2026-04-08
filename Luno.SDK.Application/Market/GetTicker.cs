@@ -7,7 +7,7 @@ namespace Luno.SDK.Application.Market;
 /// Returns the latest ticker indicators for a specific pair.
 /// </summary>
 /// <param name="Pair">The market pair to fetch (e.g., XBTZAR).</param>
-public record GetTickerQuery(string Pair);
+public record GetTickerQuery(string Pair) : LunoQueryBase<TickerResponse>;
 
 /// <summary>
 /// Orchestrates the retrieval of a single market ticker.

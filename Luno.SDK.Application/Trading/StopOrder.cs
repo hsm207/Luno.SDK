@@ -7,7 +7,7 @@ namespace Luno.SDK.Application.Trading;
 /// <summary>
 /// A command representing a request to stop an active order.
 /// </summary>
-public record StopOrderCommand
+public record StopOrderCommand : LunoCommandBase<OrderResponse>
 {
     /// <summary>
     /// Gets or sets the Luno-assigned Order ID.
@@ -64,8 +64,6 @@ internal class StopOrderHandler(ILunoTradingOperations tradingClient) : ICommand
 
     private static void Validate(StopOrderCommand command)
     {
-        if (command == null) throw new LunoValidationException("Command cannot be null.");
-
         if (string.IsNullOrWhiteSpace(command.OrderId) && string.IsNullOrWhiteSpace(command.ClientOrderId))
         {
             throw new LunoValidationException("Either OrderId or ClientOrderId must be provided to stop an order.");

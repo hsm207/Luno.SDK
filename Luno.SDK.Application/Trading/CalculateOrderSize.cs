@@ -18,7 +18,7 @@ public record CalculateOrderSizeQuery(
     string Pair,
     OrderSide Side,
     TradingAmount Spend,
-    TradingPrice? AtPrice = null);
+    TradingPrice? AtPrice = null) : LunoQueryBase<OrderQuote>;
 
 /// <summary>
 /// Orchestrates the calculation of an <see cref="OrderQuote"/> by fetching market limitations and spread.

@@ -7,7 +7,7 @@ namespace Luno.SDK.Application.Market;
 /// Returns the latest ticker indicators from all active Luno exchanges.
 /// </summary>
 /// <param name="Pairs">Optional market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
-public record GetTickersQuery(string[]? Pairs = null);
+public record GetTickersQuery(string[]? Pairs = null) : LunoQueryBase<TickerResponse>;
 
 /// <summary>
 /// Orchestrates the retrieval of market tickers.

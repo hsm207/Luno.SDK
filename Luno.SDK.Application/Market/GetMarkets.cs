@@ -9,7 +9,7 @@ namespace Luno.SDK.Application.Market;
 /// Returns a list of all supported markets and their rules.
 /// </summary>
 /// <param name="Pairs">Optional market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
-public record GetMarketsQuery(string[]? Pairs = null);
+public record GetMarketsQuery(string[]? Pairs = null) : LunoQueryBase<IReadOnlyList<MarketInfo>>;
 
 /// <summary>
 /// Orchestrates the retrieval of market information.

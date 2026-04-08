@@ -7,20 +7,22 @@ using System.Threading.Tasks;
 namespace Luno.SDK.Application;
 
 /// <summary>
-/// The default implementation of a command dispatcher. 
+/// The default implementation of a request dispatcher. 
 /// It uses a resolver to find handlers and behaviors, composing them into an execution pipeline.
 /// </summary>
 /// <param name="resolver">A function that can resolve requested types from a composition root (like a DI container).</param>
-public class LunoCommandDispatcher(Func<Type, object?> resolver) : ILunoCommandDispatcher
+public class LunoRequestDispatcher(Func<Type, object?> resolver) : ILunoRequestDispatcher
 {
     /// <inheritdoc />
-    public Task<TResponse> DispatchAsync<TRequest, TResponse>(TRequest request, LunoRequestOptions? options = null, CancellationToken ct = default)
+    public Task<TResponse> SendAsync<TResponse>(ILunoRequest<TResponse> request, CancellationToken ct = default)
     {
-        using var scope = LunoSecurityContext.Set(options);
+        using var scope = LunoSecurityContext.Set(request.Options);
+
+        var requestType = request.GetType();
 
         // 1. Resolve the primary handler
-        var handlerType = typeof(ICommandHandler<TRequest, TResponse>);
-        var handler = (ICommandHandler<TRequest, TResponse>?)resolver(handlerType);
+        var handlerType = typeof(ICommandHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+        var handler = (ICommandHandlerBase<TResponse>?)resolver(handlerType);
 
         if (handler == null)
         {
@@ -28,8 +30,9 @@ public class LunoCommandDispatcher(Func<Type, object?> resolver) : ILunoCommandD
         }
 
         // 2. Resolve all applicable pipeline behaviors
-        var behaviorType = typeof(IEnumerable<IPipelineBehavior<TRequest, TResponse>>);
-        var behaviors = (IEnumerable<IPipelineBehavior<TRequest, TResponse>>?)resolver(behaviorType) ?? [];
+        var behaviorType = typeof(IEnumerable<>).MakeGenericType(
+            typeof(IPipelineBehavior<,>).MakeGenericType(requestType, typeof(TResponse)));
+        var behaviors = (IEnumerable<IPipelineBehaviorBase<TResponse>>?)resolver(behaviorType) ?? [];
 
         // 3. Build the pipeline chain
         RequestHandlerDelegate<TResponse> pipelineChain = () => handler.HandleAsync(request, ct);
@@ -45,11 +48,13 @@ public class LunoCommandDispatcher(Func<Type, object?> resolver) : ILunoCommandD
     }
 
     /// <inheritdoc />
-    public IAsyncEnumerable<TResponse> CreateStreamAsync<TRequest, TResponse>(TRequest request, CancellationToken ct = default)
+    public IAsyncEnumerable<TResponse> CreateStreamAsync<TResponse>(ILunoRequest<TResponse> request, CancellationToken ct = default)
     {
+        var requestType = request.GetType();
+
         // 1. Resolve the primary stream handler
-        var handlerType = typeof(IStreamCommandHandler<TRequest, TResponse>);
-        var handler = (IStreamCommandHandler<TRequest, TResponse>?)resolver(handlerType);
+        var handlerType = typeof(IStreamCommandHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+        var handler = (IStreamCommandHandlerBase<TResponse>?)resolver(handlerType);
 
         if (handler == null)
         {
@@ -57,8 +62,9 @@ public class LunoCommandDispatcher(Func<Type, object?> resolver) : ILunoCommandD
         }
 
         // 2. Resolve all applicable stream pipeline behaviors
-        var behaviorType = typeof(IEnumerable<IStreamPipelineBehavior<TRequest, TResponse>>);
-        var behaviors = (IEnumerable<IStreamPipelineBehavior<TRequest, TResponse>>?)resolver(behaviorType) ?? [];
+        var behaviorType = typeof(IEnumerable<>).MakeGenericType(
+            typeof(IStreamPipelineBehavior<,>).MakeGenericType(requestType, typeof(TResponse)));
+        var behaviors = (IEnumerable<IStreamPipelineBehaviorBase<TResponse>>?)resolver(behaviorType) ?? [];
 
         // 3. Build the pipeline chain
         StreamHandlerDelegate<TResponse> pipelineChain = () => handler.HandleAsync(request, ct);
