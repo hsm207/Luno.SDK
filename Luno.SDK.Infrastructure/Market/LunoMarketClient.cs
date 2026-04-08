@@ -10,12 +10,12 @@ namespace Luno.SDK;
 /// <summary>
 /// Provides a concrete implementation of the market clients using the Kiota-generated API client.
 /// </summary>
-public class LunoMarketClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoMarketClient, ILunoMarketOperations
+public class LunoMarketClient(LunoApiClient api, ILunoRequestDispatcher requests) : ILunoMarketClient, ILunoMarketOperations
 {
     private readonly LunoApiClient _apiClient = api; // Changed to use the injected api
 
     /// <inheritdoc />
-    public ILunoCommandDispatcher Commands { get; } = commands; // Added Commands property
+    public ILunoRequestDispatcher Requests { get; } = requests;
 
     /// <inheritdoc />
     async IAsyncEnumerable<Ticker> ILunoMarketOperations.FetchTickersAsync(

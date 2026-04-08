@@ -79,12 +79,12 @@ public static class LunoServiceExtensions
         // 3. API Client Wrapper
         services.TryAddSingleton<LunoApiClient>();
 
-        // 4. Command Dispatcher & Handlers
-        services.TryAddSingleton<ILunoCommandDispatcher>(sp => new LunoCommandDispatcher(type => sp.GetService(type)));
+        // 4. Request Dispatcher & Handlers
+        services.TryAddSingleton<ILunoRequestDispatcher>(sp => new LunoRequestDispatcher(type => sp.GetService(type)));
         RegisterCommandHandlers(services);
         RegisterStreamHandlers(services);
         
-        // Register the global telemetry behaviors for all command handlers.
+        // Register the global telemetry behaviors for all request handlers.
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TelemetryPipelineBehavior<,>));
         services.AddTransient(typeof(IStreamPipelineBehavior<,>), typeof(TelemetryStreamPipelineBehavior<,>));
 
@@ -143,7 +143,7 @@ public static class LunoServiceExtensions
 
     private static void RegisterHandlers(IServiceCollection services, Type handlerInterface)
     {
-        var applicationAssembly = typeof(LunoCommandDispatcher).Assembly;
+        var applicationAssembly = typeof(LunoRequestDispatcher).Assembly;
 
         var handlers = applicationAssembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract)

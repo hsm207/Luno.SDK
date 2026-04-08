@@ -65,7 +65,7 @@ public class LunoClient : ILunoClient
         // We resolve the fully-wired dependencies from the internal container
         var sp = services.BuildServiceProvider();
         _telemetry = sp.GetRequiredService<ILunoTelemetry>();
-        var dispatcher = sp.GetRequiredService<ILunoCommandDispatcher>();
+        var dispatcher = sp.GetRequiredService<ILunoRequestDispatcher>();
 
         // Setup the specialized sub-clients (lazy-resolved from the same container)
         _market = new Lazy<ILunoMarketClient>(() => sp.GetRequiredService<ILunoMarketClient>());
@@ -80,7 +80,7 @@ public class LunoClient : ILunoClient
     public LunoClient(
         LunoClientOptions options,
         ILunoTelemetry telemetry,
-        ILunoCommandDispatcher dispatcher,
+        ILunoRequestDispatcher dispatcher,
         ILunoMarketClient market,
         ILunoAccountClient accounts,
         ILunoTradingClient trading)

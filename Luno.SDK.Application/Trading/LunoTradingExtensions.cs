@@ -8,11 +8,13 @@ namespace Luno.SDK;
 
 /// <summary>
 /// Provides fluent extension methods for Luno Trading operations.
+/// All operations follow a unified (Request, CancellationToken) pattern to ensure architectural consistency.
 /// </summary>
 public static class LunoTradingExtensions
 {
     /// <summary>
     /// Asynchronously posts a new limit order.
+    /// Processing is handled by <see cref="PostLimitOrderHandler"/>.
     /// </summary>
     /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
     /// <param name="command">The limit order command parameters.</param>
@@ -23,35 +25,12 @@ public static class LunoTradingExtensions
         PostLimitOrderCommand command,
         CancellationToken ct = default)
     {
-        return client.PostLimitOrderAsync(command, null, ct);
+        return client.Requests.SendAsync(command, ct);
     }
 
     /// <summary>
-    /// Asynchronously posts a new limit order with explicit intent configuration.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
-    /// <param name="command">The limit order command parameters.</param>
-    /// <param name="options">An action to configure the request options (e.g., AuthorizeWriteOperation = true).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A task representing the asynchronous operation, returning the <see cref="OrderResponse"/>.</returns>
-    public static Task<OrderResponse> PostLimitOrderAsync(
-        this ILunoTradingClient client,
-        PostLimitOrderCommand command,
-        Action<LunoRequestOptions>? options,
-        CancellationToken ct = default)
-    {
-        LunoRequestOptions? requestOptions = null;
-        if (options != null)
-        {
-            requestOptions = new LunoRequestOptions();
-            options(requestOptions);
-        }
-
-        return client.Commands.DispatchAsync<PostLimitOrderCommand, OrderResponse>(command, requestOptions, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously stops an active order using its command parameters.
+    /// Asynchronously stops an active order.
+    /// Processing is handled by <see cref="StopOrderHandler"/>.
     /// </summary>
     /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
     /// <param name="command">The stop order command.</param>
@@ -62,130 +41,39 @@ public static class LunoTradingExtensions
         StopOrderCommand command,
         CancellationToken ct = default)
     {
-        return client.StopOrderAsync(command, null, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously stops an active order with explicit intent configuration.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
-    /// <param name="command">The stop order command.</param>
-    /// <param name="options">An action to configure the request options (e.g., AuthorizeWriteOperation = true).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A response containing the stopped Order ID.</returns>
-    public static Task<OrderResponse> StopOrderAsync(
-        this ILunoTradingClient client,
-        StopOrderCommand command,
-        Action<LunoRequestOptions>? options,
-        CancellationToken ct = default)
-    {
-        LunoRequestOptions? requestOptions = null;
-        if (options != null)
-        {
-            requestOptions = new LunoRequestOptions();
-            options(requestOptions);
-        }
-
-        return client.Commands.DispatchAsync<StopOrderCommand, OrderResponse>(command, requestOptions, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously stops an active order using the exchange OrderId.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
-    /// <param name="orderId">The Luno-assigned Order ID.</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A response containing the stopped Order ID.</returns>
-    public static Task<OrderResponse> StopOrderAsync(
-        this ILunoTradingClient client,
-        string orderId,
-        CancellationToken ct = default)
-    {
-        return client.StopOrderAsync(orderId, null, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously stops an active order using the exchange OrderId with explicit intent configuration.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
-    /// <param name="orderId">The Luno-assigned Order ID.</param>
-    /// <param name="options">An action to configure the request options (e.g., AuthorizeWriteOperation = true).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A response containing the stopped Order ID.</returns>
-    public static Task<OrderResponse> StopOrderAsync(
-        this ILunoTradingClient client,
-        string orderId,
-        Action<LunoRequestOptions>? options,
-        CancellationToken ct = default)
-    {
-        return client.StopOrderAsync(new StopOrderCommand { OrderId = orderId }, options, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously stops an active order using the ClientOrderId.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
-    /// <param name="clientOrderId">The client-defined deduplication ID.</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A response containing the stopped Order ID.</returns>
-    public static Task<OrderResponse> StopOrderByClientOrderIdAsync(
-        this ILunoTradingClient client,
-        string clientOrderId,
-        CancellationToken ct = default)
-    {
-        return client.StopOrderByClientOrderIdAsync(clientOrderId, null, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously stops an active order using the ClientOrderId with explicit intent configuration.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
-    /// <param name="clientOrderId">The client-defined deduplication ID.</param>
-    /// <param name="options">An action to configure the request options (e.g., AuthorizeWriteOperation = true).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A response containing the stopped Order ID.</returns>
-    public static Task<OrderResponse> StopOrderByClientOrderIdAsync(
-        this ILunoTradingClient client,
-        string clientOrderId,
-        Action<LunoRequestOptions>? options,
-        CancellationToken ct = default)
-    {
-        return client.StopOrderAsync(new StopOrderCommand { ClientOrderId = clientOrderId }, options, ct);
+        return client.Requests.SendAsync(command, ct);
     }
 
     /// <summary>
     /// Asynchronously retrieves a list of orders.
+    /// Processing is handled by <see cref="ListOrdersHandler"/>.
     /// </summary>
+    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
+    /// <param name="query">The query parameters.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A list of mapped <see cref="OrderDetailsResponse"/> objects.</returns>
     public static Task<IReadOnlyList<OrderDetailsResponse>> ListOrdersAsync(
         this ILunoTradingClient client,
         ListOrdersQuery query,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<ListOrdersQuery, IReadOnlyList<OrderDetailsResponse>>(query, null, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously retrieves a list of orders for a specific pair and state.
-    /// </summary>
-    public static Task<IReadOnlyList<OrderDetailsResponse>> ListOrdersAsync(
-        this ILunoTradingClient client,
-        string? pair = null,
-        OrderStatus? state = null,
-        CancellationToken ct = default)
-    {
-        return client.ListOrdersAsync(new ListOrdersQuery(State: state, Pair: pair), ct);
+        return client.Requests.SendAsync(query, ct);
     }
 
     /// <summary>
     /// Calculates the optimal limit order size (Volume and Price) for a given spend amount.
-    /// Ensures mathematical boundaries and precision rules are strictly maintained.
+    /// Processing is handled by <see cref="CalculateOrderSizeHandler"/>.
     /// </summary>
+    /// <param name="client">The <see cref="ILunoTradingClient"/> instance to use.</param>
+    /// <param name="query">The calculation query parameters.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A task representing the asynchronous operation, returning the <see cref="OrderQuote"/>.</returns>
     public static Task<OrderQuote> CalculateOrderSizeAsync(
         this ILunoTradingClient client,
         CalculateOrderSizeQuery query,
         CancellationToken ct = default)
     {
-        return client.Commands.DispatchAsync<CalculateOrderSizeQuery, OrderQuote>(query, null, ct);
+        return client.Requests.SendAsync(query, ct);
     }
 
     /// <summary>
@@ -196,7 +84,7 @@ public static class LunoTradingExtensions
         long baseAccountId, 
         long counterAccountId, 
         string? clientOrderId = null,
-        TimeInForce timeInForce = TimeInForce.GTC,
+        TimeInForce? timeInForce = null,
         bool postOnly = false,
         long? timestamp = null,
         long? ttl = null)
@@ -210,7 +98,7 @@ public static class LunoTradingExtensions
             BaseAccountId = baseAccountId,
             CounterAccountId = counterAccountId,
             ClientOrderId = clientOrderId,
-            TimeInForce = timeInForce,
+            TimeInForce = timeInForce ?? TimeInForce.GTC,
             PostOnly = postOnly,
             Timestamp = timestamp,
             TTL = ttl

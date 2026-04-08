@@ -23,7 +23,7 @@ public record OrderDetailsResponse
     public required string Pair { get; init; }
 
     /// <summary>Gets or sets the order side (Buy or Sell).</summary>
-    public OrderSide Side { get; init; }
+    public required OrderSide Side { get; init; }
 
     /// <summary>Gets or sets the order type (Limit, Market, StopLimit).</summary>
     public OrderType OrderType { get; init; }

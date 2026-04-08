@@ -27,7 +27,7 @@ public record LimitOrder : Order
         long? counterAccountId,
         decimal limitPrice,
         decimal limitVolume,
-        TimeInForce timeInForce = TimeInForce.GTC,
+        TimeInForce? timeInForce = null,
         string? clientOrderId = null,
         long? completedTimestamp = null,
         long? expirationTimestamp = null,
@@ -42,6 +42,6 @@ public record LimitOrder : Order
     {
         LimitPrice = limitPrice;
         LimitVolume = limitVolume;
-        TimeInForce = timeInForce;
+        TimeInForce = timeInForce ?? TimeInForce.GTC;
     }
 }

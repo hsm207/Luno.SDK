@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Luno.SDK.Market;
 using Luno.SDK.Application.Market;
 
@@ -5,123 +8,55 @@ namespace Luno.SDK;
 
 /// <summary>
 /// Provides fluent extension methods for Luno Market operations.
+/// All operations follow a unified (Request, CancellationToken) pattern to ensure architectural consistency.
 /// </summary>
 public static class LunoMarketExtensions
 {
     /// <summary>
-    /// Asynchronously fetches a stream of market tickers for all available pairs.
+    /// Asynchronously fetches a stream of market tickers.
+    /// Processing is handled by <see cref="GetTickersHandler"/>.
     /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="TickerResponse"/> representing the market state.</returns>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use.</param>
+    /// <param name="query">The query parameters defining which pairs to fetch.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>An asynchronous stream of <see cref="TickerResponse"/> objects.</returns>
     public static IAsyncEnumerable<TickerResponse> GetTickersAsync(
         this ILunoMarketClient client,
+        GetTickersQuery query,
         CancellationToken ct = default)
     {
-        return client.GetTickersAsync(pairs: null, ct: ct);
-    }
-
-    /// <summary>
-    /// Asynchronously fetches a stream of market tickers for the specified pairs.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="pairs">The market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="TickerResponse"/> representing the market state.</returns>
-    public static IAsyncEnumerable<TickerResponse> GetTickersAsync(
-        this ILunoMarketClient client,
-        IEnumerable<string>? pairs,
-        CancellationToken ct = default)
-    {
-        return client.Commands.CreateStreamAsync<GetTickersQuery, TickerResponse>(new GetTickersQuery(pairs?.ToArray()), ct);
+        return client.Requests.CreateStreamAsync(query, ct);
     }
 
     /// <summary>
     /// Asynchronously fetches a market ticker for a specific pair.
+    /// Processing is handled by <see cref="GetTickerHandler"/>.
     /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="pair">The market pair to fetch (e.g., XBTZAR).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a <see cref="TickerResponse"/> representing the market state.</returns>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use.</param>
+    /// <param name="query">The query parameters defining the pair to fetch.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A task representing the asynchronous operation, returning a <see cref="TickerResponse"/>.</returns>
     public static Task<TickerResponse> GetTickerAsync(
         this ILunoMarketClient client,
-        string pair,
+        GetTickerQuery query,
         CancellationToken ct = default)
     {
-        return client.GetTickerAsync(pair, null, ct);
+        return client.Requests.SendAsync(query, ct);
     }
 
     /// <summary>
-    /// Asynchronously fetches a market ticker for a specific pair with explicit intent configuration.
+    /// Asynchronously fetches a list of markets and their associated rules.
+    /// Processing is handled by <see cref="GetMarketsHandler"/>.
     /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="pair">The market pair to fetch (e.g., XBTZAR).</param>
-    /// <param name="options">An action to configure request options (e.g., AuthenticatePublicEndpoint = true).</param>
+    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use.</param>
+    /// <param name="query">The query parameters defining filters for the markets.</param>
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A ticker response representing the market state.</returns>
-    public static Task<TickerResponse> GetTickerAsync(
-        this ILunoMarketClient client,
-        string pair,
-        Action<LunoRequestOptions>? options,
-        CancellationToken ct = default)
-    {
-        LunoRequestOptions? requestOptions = null;
-        if (options != null)
-        {
-            requestOptions = new LunoRequestOptions();
-            options(requestOptions);
-        }
-        return client.Commands.DispatchAsync<GetTickerQuery, TickerResponse>(new GetTickerQuery(pair), requestOptions, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously fetches a list of markets for all available pairs.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a list of <see cref="MarketInfo"/>.</returns>
+    /// <returns>A list of <see cref="MarketInfo"/> objects.</returns>
     public static Task<IReadOnlyList<MarketInfo>> GetMarketsAsync(
         this ILunoMarketClient client,
+        GetMarketsQuery query,
         CancellationToken ct = default)
     {
-        return client.GetMarketsAsync(pairs: null, ct: ct);
-    }
-
-    /// <summary>
-    /// Asynchronously fetches a list of markets for the specified pairs.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="pairs">The market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, returning a list of <see cref="MarketInfo"/>.</returns>
-    public static Task<IReadOnlyList<MarketInfo>> GetMarketsAsync(
-        this ILunoMarketClient client,
-        IEnumerable<string>? pairs,
-        CancellationToken ct = default)
-    {
-        return client.GetMarketsAsync(pairs, null, ct);
-    }
-
-    /// <summary>
-    /// Asynchronously fetches a list of markets for the specified pairs with explicit intent configuration.
-    /// </summary>
-    /// <param name="client">The <see cref="ILunoMarketClient"/> instance to use for the request.</param>
-    /// <param name="pairs">The market pairs to filter for (e.g., XBTMYR, ETHMYR).</param>
-    /// <param name="options">An action to configure request options (e.g., AuthenticatePublicEndpoint = true).</param>
-    /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
-    /// <returns>A list of market info objects.</returns>
-    public static Task<IReadOnlyList<MarketInfo>> GetMarketsAsync(
-        this ILunoMarketClient client,
-        IEnumerable<string>? pairs,
-        Action<LunoRequestOptions>? options,
-        CancellationToken ct = default)
-    {
-        LunoRequestOptions? requestOptions = null;
-        if (options != null)
-        {
-            requestOptions = new LunoRequestOptions();
-            options(requestOptions);
-        }
-        return client.Commands.DispatchAsync<GetMarketsQuery, IReadOnlyList<MarketInfo>>(new GetMarketsQuery(pairs?.ToArray()), requestOptions, ct);
+        return client.Requests.SendAsync(query, ct);
     }
 }

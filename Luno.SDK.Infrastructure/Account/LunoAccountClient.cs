@@ -6,10 +6,10 @@ namespace Luno.SDK.Infrastructure.Account;
 /// <summary>
 /// Provides a concrete implementation of the account clients using the generated Kiota client.
 /// </summary>
-public class LunoAccountClient(LunoApiClient api, ILunoCommandDispatcher commands) : ILunoAccountClient, ILunoAccountOperations
+public class LunoAccountClient(LunoApiClient api, ILunoRequestDispatcher requests) : ILunoAccountClient, ILunoAccountOperations
 {
     /// <inheritdoc />
-    public ILunoCommandDispatcher Commands { get; } = commands;
+    public ILunoRequestDispatcher Requests { get; } = requests;
 
     /// <inheritdoc />
     async Task<IReadOnlyList<Balance>> ILunoAccountOperations.FetchBalancesAsync(string[]? assets, CancellationToken ct)
