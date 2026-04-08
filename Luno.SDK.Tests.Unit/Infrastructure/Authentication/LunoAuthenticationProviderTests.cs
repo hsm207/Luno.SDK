@@ -6,103 +6,65 @@ namespace Luno.SDK.Tests.Unit.Infrastructure.Authentication;
 
 public class LunoAuthenticationProviderTests
 {
-    [Fact(DisplayName = "Given no credentials and explicit required request, When authenticating, Then throw LunoAuthenticationException")]
-    public async Task AuthenticateRequestAsync_NoCredentialsAndExplicitRequired_Throws()
+    [Theory(DisplayName = "Private endpoints always authenticate, even if user opts out")]
+    [InlineData("GET", "{+baseurl}/api/1/balance{?assets*}")]
+    [InlineData("POST", "{+baseurl}/api/1/postorder")]
+    [InlineData("GET", "{+baseurl}/api/1/listorders{?closed,created_before,pair}")]
+    public async Task PrivateEndpoint_AlwaysAuthenticates_RegardlessOfUserPreference(string method, string urlTemplate)
     {
-        // Arrange
-        var options = new LunoClientOptions();
-        var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/ticker") };
-        request.AddRequestOptions(new[] { new LunoAuthenticationOption { RequiresAuthentication = true } });
+        var provider = new LunoAuthenticationProvider(new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" });
+        var request = new RequestInformation { HttpMethod = Enum.Parse<Method>(method), UrlTemplate = urlTemplate };
+        request.AddRequestOptions(new[] { new LunoAuthenticationOption { AuthenticatePublicEndpoints = false } });
 
-        // Act & Assert
-        await Assert.ThrowsAsync<LunoAuthenticationException>(() => provider.AuthenticateRequestAsync(request));
-    }
-
-    [Theory(DisplayName = "Given no credentials and mandatory private endpoint, When authenticating, Then throw LunoAuthenticationException")]
-    [InlineData("/api/1/balance")]
-    [InlineData("/api/1/orders")]
-    [InlineData("/api/1/postorder")]
-    [InlineData("/api/1/funding_address")]
-    [InlineData("/api/exchange/1/candles")] // Candles require auth in Luno
-    public async Task AuthenticateRequestAsync_NoCredentialsAndMandatoryPrivate_Throws(string path)
-    {
-        // Arrange
-        var options = new LunoClientOptions();
-        var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri($"https://api.luno.com{path}") };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<LunoAuthenticationException>(() => provider.AuthenticateRequestAsync(request));
-    }
-
-    [Fact(DisplayName = "Given credentials and explicit required request, When authenticating, Then attach Authorization header")]
-    public async Task AuthenticateRequestAsync_CredentialsAndExplicitRequired_AttachesHeader()
-    {
-        // Arrange
-        var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };
-        var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/ticker") };
-        request.AddRequestOptions(new[] { new LunoAuthenticationOption { RequiresAuthentication = true } });
-
-        // Act
         await provider.AuthenticateRequestAsync(request);
 
-        // Assert
         Assert.True(request.Headers.ContainsKey("Authorization"));
-        var authHeader = request.Headers["Authorization"].First();
-        Assert.Equal("Basic dXNlcjpwYXNz", authHeader);
     }
 
-    [Fact(DisplayName = "Given credentials and explicit opt-out, When authenticating, Then do not attach Authorization header")]
-    public async Task AuthenticateRequestAsync_CredentialsAndExplicitOptOut_SkipsAuth()
+    [Theory(DisplayName = "Public endpoints do not send API keys by default (Least Privilege)")]
+    [InlineData("GET", "{+baseurl}/api/1/tickers{?pair}")]
+    [InlineData("GET", "{+baseurl}/api/1/orderbook?pair={pair}")]
+    [InlineData("GET", "{+baseurl}/api/exchange/1/markets{?pair}")]
+    public async Task PublicEndpoint_DoesNotAuthenticate_ByDefault(string method, string urlTemplate)
     {
-        // Arrange
-        var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };
-        var provider = new LunoAuthenticationProvider(options);
-        // Even if it's a mandatory private endpoint, if explicit opt-out is passed, we skip it
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/balance") };
-        request.AddRequestOptions(new[] { new LunoAuthenticationOption { RequiresAuthentication = false } });
+        var provider = new LunoAuthenticationProvider(new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" });
+        var request = new RequestInformation { HttpMethod = Enum.Parse<Method>(method), UrlTemplate = urlTemplate };
 
-        // Act
         await provider.AuthenticateRequestAsync(request);
 
-        // Assert
         Assert.False(request.Headers.ContainsKey("Authorization"));
     }
 
-    [Fact(DisplayName = "Given credentials and public endpoint, When authenticating, Then auto-optimize by attaching Authorization header")]
-    public async Task AuthenticateRequestAsync_CredentialsAndPublicEndpoint_AttachesHeader()
+    [Fact(DisplayName = "Public endpoints authenticate when user explicitly opts in (e.g., for higher rate limits)")]
+    public async Task PublicEndpoint_Authenticates_WhenUserExplicitlyOptsIn()
     {
-        // Arrange
-        var options = new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" };
-        var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/tickers") }; // No auth option
+        var provider = new LunoAuthenticationProvider(new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" });
+        var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/tickers{?pair}" };
+        request.AddRequestOptions(new[] { new LunoAuthenticationOption { AuthenticatePublicEndpoints = true } });
 
-        // Act
         await provider.AuthenticateRequestAsync(request);
 
-        // Assert
         Assert.True(request.Headers.ContainsKey("Authorization"));
-        var authHeader = request.Headers["Authorization"].First();
-        Assert.Equal("Basic dXNlcjpwYXNz", authHeader);
     }
 
-    [Fact(DisplayName = "Given an existing Authorization header, When authenticating, Then return early without overwriting")]
-    public async Task AuthenticateRequestAsync_ExistingAuthHeader_ReturnsEarly()
+    [Fact(DisplayName = "Private endpoint without API keys throws LunoAuthenticationException")]
+    public async Task PrivateEndpoint_WithoutKeys_Throws()
     {
-        // Arrange
-        var options = new LunoClientOptions { ApiKeyId = "new_user", ApiKeySecret = "new_pass" };
-        var provider = new LunoAuthenticationProvider(options);
-        var request = new RequestInformation { URI = new Uri("https://api.luno.com/api/1/ticker") };
-        request.Headers.Add("Authorization", "Bearer custom_token_from_user");
+        var provider = new LunoAuthenticationProvider(new LunoClientOptions());
+        var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/balance{?assets*}" };
 
-        // Act
+        await Assert.ThrowsAsync<LunoAuthenticationException>(() => provider.AuthenticateRequestAsync(request));
+    }
+
+    [Fact(DisplayName = "Existing Authorization header is never overwritten")]
+    public async Task ExistingAuthHeader_IsPreserved()
+    {
+        var provider = new LunoAuthenticationProvider(new LunoClientOptions { ApiKeyId = "user", ApiKeySecret = "pass" });
+        var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/balance{?assets*}" };
+        request.Headers.Add("Authorization", "Bearer external_token");
+
         await provider.AuthenticateRequestAsync(request);
 
-        // Assert
-        Assert.True(request.Headers.ContainsKey("Authorization"));
-        var authHeader = request.Headers["Authorization"].First();
-        Assert.Equal("Bearer custom_token_from_user", authHeader);
+        Assert.Equal("Bearer external_token", request.Headers["Authorization"].First());
     }
 }
