@@ -8,8 +8,11 @@ namespace Luno.SDK.Infrastructure.Authentication;
 public class LunoAuthenticationOption : IRequestOption
 {
     /// <summary>
-    /// Gets or sets a value indicating whether the request requires authentication.
-    /// Default is true.
+    /// Gets or sets a value indicating whether API keys should be sent to public endpoints.
+    /// When true, credentials are included even for endpoints that don't require authentication,
+    /// which Luno rewards with higher rate limits.
+    /// Private endpoints always authenticate regardless of this setting.
+    /// Default is false (Least Privilege).
     /// </summary>
-    public bool RequiresAuthentication { get; set; } = true;
+    public bool AuthenticatePublicEndpoints { get; set; }
 }
