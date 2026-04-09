@@ -60,6 +60,7 @@ public static class LunoServiceExtensions
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(2)
         })
+        .RedactLoggedHeaders(new[] { "Authorization" })
         .AddStandardResilienceHandler();
 
         services.TryAddSingleton<IRequestAdapter>(sp => 
