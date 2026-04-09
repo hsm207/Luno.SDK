@@ -10,7 +10,7 @@ namespace Luno.SDK.Analyzers.Tests
 {
     public class LunoSecurityLoggingAnalyzerTests : GovernanceTestBase
     {
-        [Fact]
+        [Fact(DisplayName = "Given a standard string, When passed to ILogger.LogInformation, Then no diagnostics should be reported")]
         public async Task Log_StandardString_ShouldPass() => await $$"""
             using Microsoft.Extensions.Logging;
             {{DummyInfrastructure}}
@@ -20,7 +20,7 @@ namespace Luno.SDK.Analyzers.Tests
             }
             """.ShouldPass();
 
-        [Fact]
+        [Fact(DisplayName = "Given a RequestInformation object, When passed to ILogger.LogInformation, Then a security violation should be reported")]
         public async Task Log_RequestInformation_ShouldFail() => await $$"""
             using Microsoft.Extensions.Logging;
             using Microsoft.Kiota.Abstractions;
@@ -33,7 +33,7 @@ namespace Luno.SDK.Analyzers.Tests
             }
             """.ShouldFailWith("RequestInformation");
 
-        [Fact]
+        [Fact(DisplayName = "Given a type derived from LunoCredentials, When passed to ILogger.LogInformation, Then a security violation should be reported")]
         public async Task Log_DerivedCredentials_ShouldFail() => await $$"""
             using Microsoft.Extensions.Logging;
             using Luno.SDK;
@@ -48,7 +48,7 @@ namespace Luno.SDK.Analyzers.Tests
             }
             """.ShouldFailWith("LunoCredentials");
 
-        [Fact]
+        [Fact(DisplayName = "Given a type implementing ILunoCredentialProvider, When passed to ILogger.LogInformation, Then a security violation should be reported")]
         public async Task Log_ProviderImplementation_ShouldFail() => await $$"""
             using Microsoft.Extensions.Logging;
             using Luno.SDK;
@@ -63,7 +63,7 @@ namespace Luno.SDK.Analyzers.Tests
             }
             """.ShouldFailWith("ILunoCredentialProvider");
 
-        [Fact]
+        [Fact(DisplayName = "Given a LunoCredentials object, When passed to ILogger<T>.Log, Then a security violation should be reported")]
         public async Task Log_GenericLogger_ShouldFail() => await $$"""
             using Microsoft.Extensions.Logging;
             using Luno.SDK;
