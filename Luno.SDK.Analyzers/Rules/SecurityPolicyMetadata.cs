@@ -16,7 +16,7 @@ namespace Luno.SDK.Analyzers.Rules
         public INamedTypeSymbol? LunoCredentials { get; set; }
         public INamedTypeSymbol? ILunoCredentialProvider { get; set; }
 
-        public bool IsActive => ILogger != null && RequestInformation != null;
+        public bool IsActive => ILogger != null; // Only require ILogger to be active
 
         /// <summary>
         /// A 'field' backed property tracking the engagement level of the governance rules.

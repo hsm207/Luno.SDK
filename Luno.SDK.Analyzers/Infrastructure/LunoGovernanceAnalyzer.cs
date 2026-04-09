@@ -22,7 +22,7 @@ namespace Luno.SDK.Analyzers.Infrastructure
             context.RegisterCompilationStartAction(ctx =>
             {
                 var metadata = SymbolResolver.Resolve(ctx.Compilation);
-                if (!metadata.IsActive) return;
+                if (!metadata.IsActive) return; // Now only requires ILogger
 
                 // Subscribe to invocation operations
                 ctx.RegisterOperationAction(opCtx =>
