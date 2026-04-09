@@ -74,8 +74,9 @@ var market = await client.Market.GetMarketsAsync(new[] { "XBTMYR" }, opt =>
 
 ---
 
-## In-Memory Credential Custody
-Because the Luno API mandates Basic Authentication, the SDK must eventually build the `"Basic dXNlci..."` string and attach it to the HTTP request. This managed string will inevitably enter the .NET Garbage Collector pool (Gen 0).
+### Secure In-Memory Credential Custody
+
+The SDK adopts a specialized posture to minimize the lifespan of credentials in memory: the SDK constructs the `"Basic dXNlci..."` string and attaches it to the HTTP request. This managed string will inevitably enter the .NET Garbage Collector pool (Gen 0).
 
 The SDK explicitly adopts a "minimize exposure" posture rather than claiming absolute memory encryption:
 1.  **Dependency Inverted Custody**: The SDK does not enforce how credentials are stored. It relies on the lightweight `ILunoCredentialProvider` interface.
@@ -110,7 +111,7 @@ var options = new LunoClientOptions().WithCredentials("Api-Key-Id", "Api-Key-Sec
 
 ### Telemetry & Logging Safety
 
-The Luno SDK takes an aggressive "Sober Posture" toward observability. To prevent sensitive authentication material from leaking into infrastructure logs (e.g., Application Insights, Elastic, or console logs):
+The Luno SDK maintains a strict security posture regarding observability. To prevent sensitive authentication material from leaking into infrastructure logs (e.g., Application Insights, Elastic, or console logs):
 
 1. **Header Redaction**: The SDK explicitly redacts the `Authorization` header in the internal `IHttpClientFactory` logging pipeline. Even under `Trace` logging levels, the header value is replaced with `*`.
 2. **Behavior Metadata**: Metadata collected by `TelemetryPipelineBehavior` is strictly limited to non-sensitive operation names and latencies.
