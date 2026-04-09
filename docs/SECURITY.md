@@ -71,3 +71,40 @@ var market = await client.Market.GetMarketsAsync(new[] { "XBTMYR" }, opt =>
     opt.AuthenticatePublicEndpoint = true;
 });
 ```
+
+---
+
+## In-Memory Credential Custody (The "Sober Posture")
+
+Because the Luno API mandates Basic Authentication, the SDK must eventually build the `"Basic dXNlci..."` string and attach it to the HTTP request. This managed string will inevitably enter the .NET Garbage Collector pool (Gen 0).
+
+The SDK explicitly adopts a "minimize exposure" posture rather than claiming absolute memory encryption:
+1.  **Dependency Inverted Custody**: The SDK does not enforce how credentials are stored. It relies on the lightweight `ILunoCredentialProvider` interface.
+2.  **Late Materialization**: The Authentication pipeline delays fetching credentials and combining them until the absolute last millisecond before the request is issued.
+3.  **Explicit Zeroization**: Intermediate memory buffers (`Span<byte>`, `char[]`) used to combine the Key and Secret are rigorously wiped using `CryptographicOperations.ZeroMemory()`.
+
+### Building Secure Providers
+
+If memory dump exposure is a primary threat model for your application, you must implement a robust `ILunoCredentialProvider`.
+
+**Windows Environments**:
+We strongly recommend implementing a provider wrapped around Windows DPAPI (`ProtectedMemory`) or the Windows Credential Manager.
+
+**Linux / Container Environments**:
+Pass credentials in via Environment Variables or orchestrator secret mounts (e.g., Kubernetes Secrets), loading them on demand within the provider.
+
+> [!WARNING]
+> **Avoid Caching Secrets**
+> Do not hold the raw `LunoCredentials` struct in a singleton or static field inside your provider. Yield it fresh when `GetCredentialsAsync()` is invoked. 
+
+### Development / Convenience Mode
+
+For ease of setup, you can inject credentials directly into the client options using native .NET configurations:
+
+```csharp
+var options = new LunoClientOptions().WithCredentials("Api-Key-Id", "Api-Key-Secret");
+```
+
+> [!CAUTION]
+> **Least Hardened Posture**
+> Using `.WithCredentials()` causes the underlying plain text strings to be held indefinitely on the Large Object Heap (if options are injected as a Singleton). This is highly convenient for configuration and UI apps, but renders the credentials fully visible in a memory dump.
