@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
 using System.Threading.Tasks;
 using Xunit;
+using Luno.SDK.Analyzers.Infrastructure;
 
 namespace Luno.SDK.Analyzers.Tests
 {
@@ -129,7 +130,7 @@ public class TestClass
     {
         public static Task VerifyAnalyzerAsync(string source, string? expectedArgument = null)
         {
-            var test = new CSharpAnalyzerTest<LunoSecurityLoggingAnalyzer, XUnitVerifier>
+            var test = new CSharpAnalyzerTest<LunoGovernanceAnalyzer, XUnitVerifier>
             {
                 TestCode = source,
             };
@@ -145,6 +146,6 @@ public class TestClass
         }
 
         public static DiagnosticResult Diagnostic()
-            => Microsoft.CodeAnalysis.CSharp.Testing.XUnit.AnalyzerVerifier<LunoSecurityLoggingAnalyzer>.Diagnostic();
+            => Microsoft.CodeAnalysis.CSharp.Testing.XUnit.AnalyzerVerifier<LunoGovernanceAnalyzer>.Diagnostic();
     }
 }
