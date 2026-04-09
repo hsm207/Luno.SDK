@@ -6,4 +6,6 @@
   <Project Path="Luno.SDK.Infrastructure/Luno.SDK.Infrastructure.csproj" />
   <Project Path="Luno.SDK.Tests.Unit/Luno.SDK.Tests.Unit.csproj" />
   <Project Path="Luno.SDK.Tests.Integration/Luno.SDK.Tests.Integration.csproj" />
+  <Project Path="Luno.SDK.Analyzers/Luno.SDK.Analyzers.csproj" />
+  <Project Path="Luno.SDK.Analyzers.Tests/Luno.SDK.Analyzers.Tests.csproj" />
 </Solution>
