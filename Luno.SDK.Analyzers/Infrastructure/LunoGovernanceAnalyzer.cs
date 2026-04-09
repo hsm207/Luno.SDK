@@ -7,47 +7,33 @@ namespace Luno.SDK.Analyzers.Infrastructure
 {
     /// <summary>
     /// The primary orchestration entry point for Luno SDK Governance rules.
-    /// Acts as a humble bridge between the Roslyn compiler and the Rule Engine.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class LunoGovernanceAnalyzer : DiagnosticAnalyzer
     {
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics 
-            => ImmutableArray.Create(RuleDefinitions.ProhibitedLoggingRule);
+            => ImmutableArray.CreateRange(RuleDefinitions.AllRules);
 
         public override void Initialize(AnalysisContext context)
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
 
-            context.RegisterCompilationStartAction(startContext =>
+            context.RegisterCompilationStartAction(ctx =>
             {
-                // Resolve metadata once per compilation for maximum performance
-                var metadata = SymbolResolver.Resolve(startContext.Compilation);
+                var metadata = SymbolResolver.Resolve(ctx.Compilation);
                 if (!metadata.IsActive) return;
 
-                // Subscribe to invocation operations to enforce the governance policy
-                startContext.RegisterOperationAction(operationContext =>
+                // Subscribe to invocation operations
+                ctx.RegisterOperationAction(opCtx =>
                 {
                     SecurityLoggingRule.Enforce(
-                        operationContext.Operation, 
+                        opCtx.Operation, 
                         metadata, 
-                        (matchedType, syntax) => ReportViolation(operationContext, matchedType, syntax));
+                        (type, syntax) => opCtx.ReportDiagnostic(
+                            Diagnostic.Create(RuleDefinitions.ProhibitedLoggingRule, syntax.GetLocation(), type.Name)));
                 }, OperationKind.Invocation);
             });
-        }
-
-        /// <summary>
-        /// Humble helper to bridge domain violations to Roslyn's diagnostic reporting infrastructure.
-        /// </summary>
-        private static void ReportViolation(OperationAnalysisContext context, ITypeSymbol matchedType, SyntaxNode syntax)
-        {
-            var diagnostic = Diagnostic.Create(
-                RuleDefinitions.ProhibitedLoggingRule, 
-                syntax.GetLocation(), 
-                matchedType.Name);
-                
-            context.ReportDiagnostic(diagnostic);
         }
     }
 }
