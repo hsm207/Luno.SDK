@@ -38,11 +38,11 @@ public static class Concept03_AccountBalances
             Console.WriteLine("Loaded API credentials from User Secrets! 💅");
         }
 
-        var options = new LunoClientOptions
+        var options = new LunoClientOptions();
+        if (!string.IsNullOrWhiteSpace(keyId) && !string.IsNullOrWhiteSpace(keySecret))
         {
-            ApiKeyId = keyId,
-            ApiKeySecret = keySecret
-        };
+            options.WithCredentials(keyId, keySecret);
+        }
 
         var client = new LunoClient(options);
 

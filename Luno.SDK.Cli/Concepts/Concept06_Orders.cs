@@ -57,11 +57,12 @@ public static class Concept06_Orders
             Console.WriteLine("Loaded API credentials from User Secrets! 💅");
         }
 
-        return new LunoClientOptions
+        var options = new LunoClientOptions();
+        if (!string.IsNullOrWhiteSpace(keyId) && !string.IsNullOrWhiteSpace(keySecret))
         {
-            ApiKeyId = keyId,
-            ApiKeySecret = keySecret
-        };
+            options.WithCredentials(keyId, keySecret);
+        }
+        return options;
     }
 
     private static async Task DemonstrateLimitOrderLifecycleAsync(ILunoClient client)

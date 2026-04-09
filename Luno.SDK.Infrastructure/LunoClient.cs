@@ -54,8 +54,7 @@ public class LunoClient : ILunoClient
         {
             if (options != null)
             {
-                opt.ApiKeyId = options.ApiKeyId;
-                opt.ApiKeySecret = options.ApiKeySecret;
+                opt.Credentials = options.Credentials;
                 opt.BaseUrl = options.BaseUrl;
                 opt.UserAgent = options.UserAgent;
                 opt.LoggerFactory = options.LoggerFactory;

@@ -25,12 +25,11 @@ public class LunoAccountClientTests : IDisposable
 
     private LunoClient CreateClient(string? apiKeyId = null, string? apiKeySecret = null)
     {
-        var options = new LunoClientOptions
+        var options = new LunoClientOptions { BaseUrl = _server.Url! };
+        if (!string.IsNullOrWhiteSpace(apiKeyId) && !string.IsNullOrWhiteSpace(apiKeySecret))
         {
-            BaseUrl = _server.Url!,
-            ApiKeyId = apiKeyId,
-            ApiKeySecret = apiKeySecret
-        };
+            options.WithCredentials(apiKeyId, apiKeySecret);
+        }
         return new LunoClient(options);
     }
 

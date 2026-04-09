@@ -27,12 +27,8 @@ public class LunoTradingClientTests : IDisposable
 
     private ILunoClient CreateClient()
     {
-        var options = new LunoClientOptions 
-        { 
-            BaseUrl = _server.Url!,
-            ApiKeyId = "dummy_key",
-            ApiKeySecret = "dummy_secret"
-        };
+        var options = new LunoClientOptions { BaseUrl = _server.Url! }
+            .WithCredentials("dummy_key", "dummy_secret");
         return new LunoClient(options);
     }
 

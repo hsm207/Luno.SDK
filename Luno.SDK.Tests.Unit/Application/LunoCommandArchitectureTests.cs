@@ -32,8 +32,7 @@ public class LunoCommandArchitectureTests
     {
         _services = new ServiceCollection();
         _services.AddLunoClient(opt => {
-            opt.ApiKeyId = "key";
-            opt.ApiKeySecret = "secret";
+            opt.WithCredentials("key", "secret");
         });
         
         // Setup mocks for required infrastructure dependencies
