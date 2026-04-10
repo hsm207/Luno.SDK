@@ -112,7 +112,7 @@ public static class Concept06_Orders
         Console.WriteLine($"[STATE] Current Pending Count: {pendingOrders.Count}");
     }
 
-    private static async Task<OrderList> ListPendingOrdersAsync(ILunoClient client)
+    private static async Task<IReadOnlyList<OrderDetailsResponse>> ListPendingOrdersAsync(ILunoClient client)
     {
         return await client.Trading.ListOrdersAsync(new ListOrdersQuery
         {
@@ -152,7 +152,7 @@ public static class Concept06_Orders
             ?? throw new InvalidOperationException($"Market info for {pair} not found.");
     }
 
-    private static async Task<OrderSizeQuote> CalculateAndPrintQuoteAsync(
+    private static async Task<OrderQuote> CalculateAndPrintQuoteAsync(
         ILunoClient client,
         MarketInfo market)
     {
@@ -172,7 +172,7 @@ public static class Concept06_Orders
         return quote;
     }
 
-    private static void PrintQuote(OrderSizeQuote quote, MarketInfo market)
+    private static void PrintQuote(OrderQuote quote, MarketInfo market)
     {
         string volumeFormat = $"N{market.VolumeScale}";
         string priceFormat = $"N{market.PriceScale}";
@@ -188,7 +188,7 @@ public static class Concept06_Orders
     }
 
     private static PostLimitOrderCommand BuildPostOrderCommand(
-        OrderSizeQuote quote,
+        OrderQuote quote,
         long baseAccountId,
         long counterAccountId)
     {
