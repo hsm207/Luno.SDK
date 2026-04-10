@@ -27,7 +27,7 @@ public class LunoMarketClient(LunoApiClient api, ILunoRequestDispatcher requests
             req.QueryParameters.Pair = pairs;
             req.Options.Add(new LunoTelemetryOptions("GetMarketTickers"));
         }, ct);
-        
+
         foreach (var dto in response!.Tickers!)
         {
             yield return Luno.SDK.Infrastructure.Market.MarketMapper.MapToEntity(dto);

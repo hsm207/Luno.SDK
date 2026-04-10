@@ -29,6 +29,6 @@ public interface ICommandHandler<in TRequest, TResponse> : ICommandHandlerBase<T
     Task<TResponse> HandleAsync(TRequest request, CancellationToken ct = default);
 
     /// <inheritdoc />
-    Task<TResponse> ICommandHandlerBase<TResponse>.HandleAsync(object request, CancellationToken ct) 
+    Task<TResponse> ICommandHandlerBase<TResponse>.HandleAsync(object request, CancellationToken ct)
         => HandleAsync((TRequest)request, ct);
 }

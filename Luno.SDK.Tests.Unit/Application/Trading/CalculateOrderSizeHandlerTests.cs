@@ -28,19 +28,19 @@ public class CalculateOrderSizeHandlerTests
         _marketMock.Setup(m => m.FetchMarketsAsync(It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<MarketInfo>
             {
-                new MarketInfo 
-                { 
-                    Pair = pair, 
-                    BaseCurrency = "XBT", 
-                    CounterCurrency = "MYR", 
-                    MinVolume = minVol, 
-                    MaxVolume = maxVol, 
-                    MinPrice = 0.01m, 
-                    MaxPrice = maxPrice, 
-                    VolumeScale = volScale, 
-                    PriceScale = priceScale, 
-                    Status = status, 
-                    FeeScale = 2 
+                new MarketInfo
+                {
+                    Pair = pair,
+                    BaseCurrency = "XBT",
+                    CounterCurrency = "MYR",
+                    MinVolume = minVol,
+                    MaxVolume = maxVol,
+                    MinPrice = 0.01m,
+                    MaxPrice = maxPrice,
+                    VolumeScale = volScale,
+                    PriceScale = priceScale,
+                    Status = status,
+                    FeeScale = 2
                 }
             });
     }
@@ -48,7 +48,7 @@ public class CalculateOrderSizeHandlerTests
     private void SetupTicker(string pair, decimal ask, decimal bid)
     {
         _marketMock.Setup(m => m.FetchTickerAsync(pair, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Ticker(pair, ask, bid, Math.Round((ask+bid)/2, 2), 1000m, MarketStatus.Active, DateTimeOffset.UtcNow));
+            .ReturnsAsync(new Ticker(pair, ask, bid, Math.Round((ask + bid) / 2, 2), 1000m, MarketStatus.Active, DateTimeOffset.UtcNow));
     }
 
     [Fact(DisplayName = "Given Market-Relative Buy, When calculated, Then select Ask and round DOWN to save quote")]
@@ -96,7 +96,7 @@ public class CalculateOrderSizeHandlerTests
         // Assert
         Assert.Equal(200000.00m, result.Price);
         Assert.Equal(0.000500m, result.Volume);
-        
+
         // Ensure ticker is not called
         _marketMock.Verify(m => m.FetchTickerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }

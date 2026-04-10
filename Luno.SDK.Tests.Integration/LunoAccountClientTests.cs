@@ -139,7 +139,7 @@ public class LunoAccountClientTests : IDisposable
         // Assert
         var logs = _server.LogEntries;
         var request = logs.First().RequestMessage;
-        
+
         // High-fidelity verification of the boundary handshake
         // We verify that both assets are present as separate parameters (exploded)
         // Note: WireMock URL string will contain the raw query string.

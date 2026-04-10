@@ -21,7 +21,7 @@ public static class Concept05_TickerWrapping
         // 1. Setup DI with a custom behavior
         var services = new ServiceCollection();
         services.AddLunoClient();
-        
+
         // Register our logging behavior for the ticker query
         services.AddTransient<IPipelineBehavior<GetTickerQuery, TickerResponse>, TickerLoggingBehavior>();
 
@@ -50,8 +50,8 @@ public static class Concept05_TickerWrapping
     private class TickerLoggingBehavior : IPipelineBehavior<GetTickerQuery, TickerResponse>
     {
         public async Task<TickerResponse> Handle(
-            GetTickerQuery request, 
-            RequestHandlerDelegate<TickerResponse> next, 
+            GetTickerQuery request,
+            RequestHandlerDelegate<TickerResponse> next,
             CancellationToken ct)
         {
             var startTime = DateTime.UtcNow;
@@ -61,10 +61,10 @@ public static class Concept05_TickerWrapping
             {
                 // Call the next step in the pipeline (could be another behavior or the actual handler)
                 var response = await next();
-                
+
                 var duration = DateTime.UtcNow - startTime;
                 Console.WriteLine($"[PIPELINE] <<< Finished request in {duration.TotalMilliseconds}ms");
-                
+
                 return response;
             }
             catch (Exception ex)

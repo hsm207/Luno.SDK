@@ -99,20 +99,20 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
 
     private static Order MapGetOrderResponse(Generated.Models.GetOrder2Response r)
     {
-        var orderId           = ParseStringMandatory(r.OrderId, "order_id");
-        var side              = MapSide(r.Side);
-        var status            = MapStatus(r.Status);
-        var pair              = ParseStringMandatory(r.Pair, "pair");
-        var creationTimestamp  = ParseLongMandatory(r.CreationTimestamp, "creation_timestamp");
-        var baseAccountId     = (long?)r.BaseAccountId;
-        var counterAccountId  = (long?)r.CounterAccountId;
-        var clientOrderId     = r.ClientOrderId;
+        var orderId = ParseStringMandatory(r.OrderId, "order_id");
+        var side = MapSide(r.Side);
+        var status = MapStatus(r.Status);
+        var pair = ParseStringMandatory(r.Pair, "pair");
+        var creationTimestamp = ParseLongMandatory(r.CreationTimestamp, "creation_timestamp");
+        var baseAccountId = (long?)r.BaseAccountId;
+        var counterAccountId = (long?)r.CounterAccountId;
+        var clientOrderId = r.ClientOrderId;
         var completedTimestamp = r.CompletedTimestamp;
         var expirationTimestamp = r.ExpirationTimestamp;
-        var filledBase        = TryParseDecimal(r.Base);
-        var filledCounter     = TryParseDecimal(r.Counter);
-        var feeBase           = TryParseDecimal(r.FeeBase);
-        var feeCounter        = TryParseDecimal(r.FeeCounter);
+        var filledBase = TryParseDecimal(r.Base);
+        var filledCounter = TryParseDecimal(r.Counter);
+        var feeBase = TryParseDecimal(r.FeeBase);
+        var feeCounter = TryParseDecimal(r.FeeCounter);
 
         var type = MapOrderType(r.Type);
 
@@ -158,20 +158,20 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
 
     private static Order MapOrderV2(Generated.Models.OrderV2 r)
     {
-        var orderId            = ParseStringMandatory(r.OrderId, "order_id");
-        var side               = MapSideV2(r.Side);
-        var status             = MapStatusV2(r.Status);
-        var pair               = ParseStringMandatory(r.Pair, "pair");
-        var creationTimestamp   = (long?)r.CreationTimestamp ?? throw new LunoMappingException("Mandatory field 'creation_timestamp' is missing in API response.");
-        var baseAccountId      = (long?)r.BaseAccountId;
-        var counterAccountId   = (long?)r.CounterAccountId;
-        var clientOrderId      = r.ClientOrderId;
-        var completedTimestamp  = (long?)r.CompletedTimestamp;
+        var orderId = ParseStringMandatory(r.OrderId, "order_id");
+        var side = MapSideV2(r.Side);
+        var status = MapStatusV2(r.Status);
+        var pair = ParseStringMandatory(r.Pair, "pair");
+        var creationTimestamp = (long?)r.CreationTimestamp ?? throw new LunoMappingException("Mandatory field 'creation_timestamp' is missing in API response.");
+        var baseAccountId = (long?)r.BaseAccountId;
+        var counterAccountId = (long?)r.CounterAccountId;
+        var clientOrderId = r.ClientOrderId;
+        var completedTimestamp = (long?)r.CompletedTimestamp;
         var expirationTimestamp = (long?)r.ExpirationTimestamp;
-        var filledBase         = TryParseDecimal(r.Base);
-        var filledCounter      = TryParseDecimal(r.Counter);
-        var feeBase            = TryParseDecimal(r.FeeBase);
-        var feeCounter         = TryParseDecimal(r.FeeCounter);
+        var filledBase = TryParseDecimal(r.Base);
+        var filledCounter = TryParseDecimal(r.Counter);
+        var feeBase = TryParseDecimal(r.FeeBase);
+        var feeCounter = TryParseDecimal(r.FeeCounter);
 
         var type = MapOrderTypeV2(r.Type);
 
@@ -220,16 +220,16 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
     private static OrderStatus MapStatus(Generated.Models.GetOrder2Response_status? status) =>
         status switch
         {
-            Generated.Models.GetOrder2Response_status.AWAITING  => OrderStatus.Awaiting,
-            Generated.Models.GetOrder2Response_status.PENDING   => OrderStatus.Pending,
-            Generated.Models.GetOrder2Response_status.COMPLETE  => OrderStatus.Complete,
+            Generated.Models.GetOrder2Response_status.AWAITING => OrderStatus.Awaiting,
+            Generated.Models.GetOrder2Response_status.PENDING => OrderStatus.Pending,
+            Generated.Models.GetOrder2Response_status.COMPLETE => OrderStatus.Complete,
             _ => throw new LunoMappingException($"Unmapped or null order status '{status}'.", nameof(Generated.Models.GetOrder2Response_status)),
         };
 
     private static OrderSide MapSide(Generated.Models.GetOrder2Response_side? side) =>
         side switch
         {
-            Generated.Models.GetOrder2Response_side.BUY  => OrderSide.Buy,
+            Generated.Models.GetOrder2Response_side.BUY => OrderSide.Buy,
             Generated.Models.GetOrder2Response_side.SELL => OrderSide.Sell,
             _ => throw new LunoMappingException($"Unmapped or null order side '{side}'.", nameof(Generated.Models.GetOrder2Response_side)),
         };
@@ -237,8 +237,8 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
     private static OrderType MapOrderType(Generated.Models.GetOrder2Response_type? type) =>
         type switch
         {
-            Generated.Models.GetOrder2Response_type.LIMIT     => OrderType.Limit,
-            Generated.Models.GetOrder2Response_type.MARKET    => OrderType.Market,
+            Generated.Models.GetOrder2Response_type.LIMIT => OrderType.Limit,
+            Generated.Models.GetOrder2Response_type.MARKET => OrderType.Market,
             Generated.Models.GetOrder2Response_type.STOP_LIMIT => OrderType.StopLimit,
             _ => throw new LunoMappingException($"Unmapped or null order type '{type}'.", nameof(Generated.Models.GetOrder2Response_type)),
         };
@@ -256,16 +256,16 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
     private static OrderStatus MapStatusV2(Generated.Models.OrderV2_status? status) =>
         status switch
         {
-            Generated.Models.OrderV2_status.AWAITING  => OrderStatus.Awaiting,
-            Generated.Models.OrderV2_status.PENDING   => OrderStatus.Pending,
-            Generated.Models.OrderV2_status.COMPLETE  => OrderStatus.Complete,
+            Generated.Models.OrderV2_status.AWAITING => OrderStatus.Awaiting,
+            Generated.Models.OrderV2_status.PENDING => OrderStatus.Pending,
+            Generated.Models.OrderV2_status.COMPLETE => OrderStatus.Complete,
             _ => throw new LunoMappingException($"Unmapped or null order status '{status}'.", nameof(Generated.Models.OrderV2_status)),
         };
 
     private static OrderSide MapSideV2(Generated.Models.OrderV2_side? side) =>
         side switch
         {
-            Generated.Models.OrderV2_side.BUY  => OrderSide.Buy,
+            Generated.Models.OrderV2_side.BUY => OrderSide.Buy,
             Generated.Models.OrderV2_side.SELL => OrderSide.Sell,
             _ => throw new LunoMappingException($"Unmapped or null order side '{side}'.", nameof(Generated.Models.OrderV2_side)),
         };
@@ -273,8 +273,8 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
     private static OrderType MapOrderTypeV2(Generated.Models.OrderV2_type? type) =>
         type switch
         {
-            Generated.Models.OrderV2_type.LIMIT     => OrderType.Limit,
-            Generated.Models.OrderV2_type.MARKET    => OrderType.Market,
+            Generated.Models.OrderV2_type.LIMIT => OrderType.Limit,
+            Generated.Models.OrderV2_type.MARKET => OrderType.Market,
             Generated.Models.OrderV2_type.STOP_LIMIT => OrderType.StopLimit,
             _ => throw new LunoMappingException($"Unmapped or null order type '{type}'.", nameof(Generated.Models.OrderV2_type)),
         };
@@ -295,8 +295,8 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
             "GTC" => TimeInForce.GTC,
             "IOC" => TimeInForce.IOC,
             "FOK" => TimeInForce.FOK,
-            null  => TimeInForce.GTC, // Default for orders that don't specify (e.g. older orders)
-            _     => throw new LunoMappingException($"Unmapped time in force '{tif}'."),
+            null => TimeInForce.GTC, // Default for orders that don't specify (e.g. older orders)
+            _ => throw new LunoMappingException($"Unmapped time in force '{tif}'."),
         };
 
     // ── Post mappers (Domain → Kiota) ────────────────────────────────────────────
@@ -304,18 +304,18 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
     private static PostTypeQueryParameterType MapPostSide(OrderSide side) =>
         side switch
         {
-            OrderSide.BuySide  => PostTypeQueryParameterType.BID,
+            OrderSide.BuySide => PostTypeQueryParameterType.BID,
             OrderSide.SellSide => PostTypeQueryParameterType.ASK,
-            _                  => throw new ArgumentOutOfRangeException(nameof(side), $"Unexpected order side type: {side.GetType().Name}")
+            _ => throw new ArgumentOutOfRangeException(nameof(side), $"Unexpected order side type: {side.GetType().Name}")
         };
 
     private static PostStop_directionQueryParameterType MapStopDirection(StopDirection direction) =>
         direction switch
         {
             StopDirection.RelativeLastTradeDirection => PostStop_directionQueryParameterType.RELATIVE_LAST_TRADE,
-            StopDirection.AboveDirection             => PostStop_directionQueryParameterType.ABOVE,
-            StopDirection.BelowDirection             => PostStop_directionQueryParameterType.BELOW,
-            _                                        => throw new ArgumentOutOfRangeException(nameof(direction), $"Unexpected stop direction type: {direction.GetType().Name}")
+            StopDirection.AboveDirection => PostStop_directionQueryParameterType.ABOVE,
+            StopDirection.BelowDirection => PostStop_directionQueryParameterType.BELOW,
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), $"Unexpected stop direction type: {direction.GetType().Name}")
         };
 
     private static PostTime_in_forceQueryParameterType MapTimeInForce(TimeInForce tif) =>
@@ -324,7 +324,7 @@ internal class LunoTradingClient(LunoApiClient api, ILunoRequestDispatcher reque
             TimeInForce.GtcType => PostTime_in_forceQueryParameterType.GTC,
             TimeInForce.IocType => PostTime_in_forceQueryParameterType.IOC,
             TimeInForce.FokType => PostTime_in_forceQueryParameterType.FOK,
-            _                   => throw new ArgumentOutOfRangeException(nameof(tif), $"Unexpected time-in-force type: {tif.GetType().Name}")
+            _ => throw new ArgumentOutOfRangeException(nameof(tif), $"Unexpected time-in-force type: {tif.GetType().Name}")
         };
 
     // ── Parse helpers ────────────────────────────────────────────────────────────

@@ -25,7 +25,7 @@ public class LunoTradingClientTests
     {
         _tradingClientMock = new Mock<ILunoTradingClient>();
         _tradingOpsMock = new Mock<ILunoTradingOperations>();
-        
+
         // Setup a mocked resolver that returns our mock handlers
         var resolver = new Mock<Func<Type, object?>>();
         resolver.Setup(x => x(typeof(ICommandHandler<PostLimitOrderCommand, OrderResponse>)))

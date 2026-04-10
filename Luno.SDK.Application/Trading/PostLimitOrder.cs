@@ -66,19 +66,19 @@ internal class PostLimitOrderHandler(ILunoTradingOperations tradingClient) : ICo
         // 2. Map directly to the boundary DTO
         var request = new LimitOrderRequest
         {
-            Pair             = command.Pair,
-            Side             = command.Side,
-            Volume           = command.Volume,
-            Price            = command.Price,
-            BaseAccountId    = command.BaseAccountId,
+            Pair = command.Pair,
+            Side = command.Side,
+            Volume = command.Volume,
+            Price = command.Price,
+            BaseAccountId = command.BaseAccountId,
             CounterAccountId = command.CounterAccountId,
-            ClientOrderId    = command.ClientOrderId,
-            TimeInForce      = command.TimeInForce,
-            PostOnly         = command.PostOnly,
-            StopPrice        = command.StopPrice,
-            StopDirection    = command.StopDirection,
-            Timestamp        = command.Timestamp,
-            TTL              = command.TTL,
+            ClientOrderId = command.ClientOrderId,
+            TimeInForce = command.TimeInForce,
+            PostOnly = command.PostOnly,
+            StopPrice = command.StopPrice,
+            StopDirection = command.StopDirection,
+            Timestamp = command.Timestamp,
+            TTL = command.TTL,
         };
 
         // 3. Post the order. Let LunoIdempotencyException propagate when no ClientOrderId was given.

@@ -17,7 +17,7 @@ public static class Concept01_MarketData
     public static async Task RunAsync()
     {
         Console.WriteLine("\n=== Concept 01: Market Data ===");
-        
+
         // 1. Initialize the standalone client
         var luno = new LunoClient();
 

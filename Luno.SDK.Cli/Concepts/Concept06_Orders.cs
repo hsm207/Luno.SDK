@@ -281,10 +281,10 @@ public static class Concept06_Orders
         var (color, label, resolution) = ex switch
         {
             LunoAuthenticationException => (ConsoleColor.Yellow, "[Local Configuration Error]", null),
-            LunoUnauthorizedException   => (ConsoleColor.Red,    "[Server Rejection: Invalid Credentials]", null),
-            LunoForbiddenException      => (ConsoleColor.Red,    "[Permission Denied]", "Note: Ensure your API key has 'Perm_W_Trade' enabled."),
-            LunoSecurityException       => (ConsoleColor.Cyan,   "[Security Boundary Violated]", "Resolution: This is a pre-flight SDK check. You must explicitly set 'AuthorizeWriteOperation = true' for this call."),
-            _                           => (Console.ForegroundColor, "[Unexpected Error]", null)
+            LunoUnauthorizedException => (ConsoleColor.Red, "[Server Rejection: Invalid Credentials]", null),
+            LunoForbiddenException => (ConsoleColor.Red, "[Permission Denied]", "Note: Ensure your API key has 'Perm_W_Trade' enabled."),
+            LunoSecurityException => (ConsoleColor.Cyan, "[Security Boundary Violated]", "Resolution: This is a pre-flight SDK check. You must explicitly set 'AuthorizeWriteOperation = true' for this call."),
+            _ => (Console.ForegroundColor, "[Unexpected Error]", null)
         };
 
         Console.ForegroundColor = color;

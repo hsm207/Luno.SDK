@@ -11,7 +11,7 @@ public record LunoRequestOptions
     /// Default is false (Privacy/Security mode).
     /// </summary>
     public bool AuthenticatePublicEndpoint { get; init; }
- 
+
     /// <summary>
     /// Gets or sets a value indicating whether the developer explicitly authorizes a write operation.
     /// Mandatory for all POST/PUT/DELETE requests identified as write operations.

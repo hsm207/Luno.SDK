@@ -82,8 +82,8 @@ internal static class TradingMappingExtensions
         {
             OrderId = order.OrderId,
             CreationTimestamp = DateTimeOffset.FromUnixTimeMilliseconds(order.CreationTimestamp),
-            ExpirationTimestamp = order.ExpirationTimestamp.HasValue 
-                ? DateTimeOffset.FromUnixTimeMilliseconds(order.ExpirationTimestamp.Value) 
+            ExpirationTimestamp = order.ExpirationTimestamp.HasValue
+                ? DateTimeOffset.FromUnixTimeMilliseconds(order.ExpirationTimestamp.Value)
                 : null,
             State = order.Status,
             Pair = order.Pair,

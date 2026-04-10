@@ -24,14 +24,14 @@ public class PostLimitOrderHandlerTests
         TimeInForce? tif = null) =>
         new()
         {
-            Pair             = "XBTZAR",
-            Side             = side ?? OrderSide.Buy,
-            Volume           = volume,
-            Price            = price,
-            BaseAccountId    = 1,
+            Pair = "XBTZAR",
+            Side = side ?? OrderSide.Buy,
+            Volume = volume,
+            Price = price,
+            BaseAccountId = 1,
             CounterAccountId = 2,
-            ClientOrderId    = clientOrderId,
-            TimeInForce      = tif ?? TimeInForce.GTC
+            ClientOrderId = clientOrderId,
+            TimeInForce = tif ?? TimeInForce.GTC
         };
 
     private static LimitOrder BuildExistingOrder(

@@ -26,7 +26,7 @@ public static class Concept07_RealTimeQuote
             const decimal targetSpend = 100.00m;
 
             Console.WriteLine($"\n📡 Fetching live market context for {pair}...");
-            
+
             // Parallel fetch for speed ⚡
             var tickerTask = client.Market.GetTickerAsync(new GetTickerQuery(pair));
             var marketTask = client.Market.GetMarketsAsync(new GetMarketsQuery { Pairs = new[] { pair } });

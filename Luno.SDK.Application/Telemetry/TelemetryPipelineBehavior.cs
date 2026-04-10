@@ -32,7 +32,7 @@ public class TelemetryPipelineBehavior<TRequest, TResponse>(ILunoTelemetry telem
         try
         {
             var response = await next();
-            
+
             RecordSuccess(sw, activity);
             return response;
         }

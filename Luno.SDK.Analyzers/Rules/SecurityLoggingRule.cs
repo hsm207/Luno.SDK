@@ -19,7 +19,7 @@ namespace Luno.SDK.Analyzers.Rules
             foreach (var argument in invocation.Arguments)
             {
                 var value = argument.Value.Unwrap();
-                
+
                 if (value is IArrayCreationOperation array && array.Initializer != null)
                 {
                     foreach (var element in array.Initializer.ElementValues)

@@ -17,7 +17,7 @@ namespace Luno.SDK.Analyzers.Infrastructure
                 ILogger = GetType(compilation, "Microsoft.Extensions.Logging.ILogger"),
                 ILoggerOfT = GetType(compilation, "Microsoft.Extensions.Logging.ILogger`1"),
                 LoggerExtensions = GetType(compilation, "Microsoft.Extensions.Logging.LoggerExtensions"),
-                
+
                 RequestInformation = GetType(compilation, "Microsoft.Kiota.Abstractions.RequestInformation"),
                 LunoCredentials = GetType(compilation, "Luno.SDK.LunoCredentials"),
                 ILunoCredentialProvider = GetType(compilation, "Luno.SDK.ILunoCredentialProvider")

@@ -118,7 +118,7 @@ public class LunoErrorCodeMappingTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync(expectedExceptionType, () => errorAdapter.SendNoContentAsync(requestInfo));
-        
+
         if (exception is LunoApiException lunoEx)
         {
             Assert.Equal(errorCode, lunoEx.ErrorCode);
@@ -129,9 +129,9 @@ public class LunoErrorCodeMappingTests
     public async Task HandleException_WithRetryAfterHeader_PopulatesRateLimitException()
     {
         // Arrange
-        var apiEx = new TestApiException 
-        { 
-            Code = "ErrTooManyRequests", 
+        var apiEx = new TestApiException
+        {
+            Code = "ErrTooManyRequests",
             ResponseStatusCode = 429,
             ResponseHeaders = new Dictionary<string, IEnumerable<string>>
             {

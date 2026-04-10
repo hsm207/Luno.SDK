@@ -81,8 +81,8 @@ public static class LunoTradingExtensions
     /// </summary>
     public static PostLimitOrderCommand ToCommand(
         this OrderQuote quote,
-        long baseAccountId, 
-        long counterAccountId, 
+        long baseAccountId,
+        long counterAccountId,
         string? clientOrderId = null,
         TimeInForce? timeInForce = null,
         bool postOnly = false,

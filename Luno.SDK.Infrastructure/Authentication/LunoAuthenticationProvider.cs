@@ -73,7 +73,7 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         }
 
         var credentials = await _credentialProvider.GetCredentialsAsync(cancellationToken);
-        
+
         if (string.IsNullOrWhiteSpace(credentials.ApiKeyId) || string.IsNullOrWhiteSpace(credentials.ApiKeySecret))
         {
             throw new LunoAuthenticationException("The configured credential provider returned empty keys.");
@@ -87,7 +87,7 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         int len = credentials.ApiKeyId.Length + 1 + credentials.ApiKeySecret.Length;
         char[] charBuffer = System.Buffers.ArrayPool<char>.Shared.Rent(len);
         byte[] byteBuffer = System.Buffers.ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetMaxByteCount(len));
-        
+
         try
         {
             credentials.ApiKeyId.CopyTo(0, charBuffer, 0, credentials.ApiKeyId.Length);

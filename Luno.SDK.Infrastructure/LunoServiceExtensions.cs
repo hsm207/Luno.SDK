@@ -40,7 +40,7 @@ public static class LunoServiceExtensions
         configureOptions?.Invoke(options);
 
         services.AddSingleton(options);
-        
+
         // 1. Core Abstractions & Telemetry
         services.TryAddSingleton<LunoTelemetry>();
         services.TryAddSingleton<ILunoTelemetry>(sp => sp.GetRequiredService<LunoTelemetry>());
@@ -48,7 +48,7 @@ public static class LunoServiceExtensions
 
         // 2. Request Adapter Pipeline (Kiota)
         services.TryAddSingleton<IAuthenticationProvider, LunoAuthenticationProvider>();
-        
+
         // Register the Kiota Request Adapter using IHttpClientFactory for proper lifecycle management
         services.AddHttpClient("Luno.SDK", (sp, client) =>
         {
@@ -63,13 +63,13 @@ public static class LunoServiceExtensions
         .RedactLoggedHeaders(new[] { "Authorization" })
         .AddStandardResilienceHandler();
 
-        services.TryAddSingleton<IRequestAdapter>(sp => 
+        services.TryAddSingleton<IRequestAdapter>(sp =>
         {
             var auth = sp.GetRequiredService<IAuthenticationProvider>();
             var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger<LunoTelemetryAdapter>();
             var telemetry = sp.GetRequiredService<LunoTelemetry>();
             var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-            
+
             var httpClient = httpClientFactory.CreateClient("Luno.SDK");
 
             var baseAdapter = new HttpClientRequestAdapter(auth, httpClient: httpClient);
@@ -84,7 +84,7 @@ public static class LunoServiceExtensions
         services.TryAddSingleton<ILunoRequestDispatcher>(sp => new LunoRequestDispatcher(type => sp.GetService(type)));
         RegisterCommandHandlers(services);
         RegisterStreamHandlers(services);
-        
+
         // Register the global telemetry behaviors for all request handlers.
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TelemetryPipelineBehavior<,>));
         services.AddTransient(typeof(IStreamPipelineBehavior<,>), typeof(TelemetryStreamPipelineBehavior<,>));

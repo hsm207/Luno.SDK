@@ -148,7 +148,7 @@ public class LunoMarketClientTests : IDisposable
     {
         // Arrange
         var pairs = new[] { "XBTMYR", "ETHMYR" };
-        
+
         // We broadly match the path to avoid 404s if param order/format varies slightly,
         // then verify the exact boundary handshake in the Assert phase.
         _server.Given(Request.Create()
@@ -195,12 +195,12 @@ public class LunoMarketClientTests : IDisposable
 
         // Assert
         Assert.NotEmpty(results);
-        
+
         // High-fidelity verification of the outgoing request
         var logs = _server.LogEntries;
         Assert.NotEmpty(logs);
         var request = logs.First().RequestMessage;
-        
+
         // Verify exploded pair parameters
         Assert.Contains("pair=XBTMYR", request.Url);
         Assert.Contains("pair=ETHMYR", request.Url);
@@ -255,9 +255,9 @@ public class LunoMarketClientTests : IDisposable
             {
                 // Should throw on first iteration
             }
-            });
+        });
 
-            Assert.Contains("Failed to parse decimal value", ex.Message);
+        Assert.Contains("Failed to parse decimal value", ex.Message);
     }
 
     [Fact(DisplayName = "Given multiple pairs, When fetching markets, Then verify exploded query strings AND high-fidelity mapping.")]

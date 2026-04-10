@@ -60,7 +60,7 @@ internal static class MarketMapper
     public static MarketInfo MapToEntity(GeneratedMarketInfo dto)
     {
         var minVolume = ParseDecimal(dto.MinVolume);
-        
+
         if (minVolume <= 0)
         {
             throw new LunoDataException($"Minimum volume must be greater than zero, got {minVolume}");
@@ -108,10 +108,10 @@ internal static class MarketMapper
     /// </summary>
     public static MarketStatus MapStatus(GeneratedStatus? status) => status switch
     {
-        GeneratedStatus.ACTIVE   => MarketStatus.Active,
+        GeneratedStatus.ACTIVE => MarketStatus.Active,
         GeneratedStatus.POSTONLY => MarketStatus.PostOnly,
         GeneratedStatus.DISABLED => MarketStatus.Disabled,
-        GeneratedStatus.UNKNOWN  => MarketStatus.Unknown,
+        GeneratedStatus.UNKNOWN => MarketStatus.Unknown,
         _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedStatus)),
     };
 
@@ -120,10 +120,10 @@ internal static class MarketMapper
     /// </summary>
     public static MarketStatus MapStatus(GeneratedGetTickerStatus? status) => status switch
     {
-        GeneratedGetTickerStatus.ACTIVE   => MarketStatus.Active,
-        GeneratedGetTickerStatus.POSTONLY  => MarketStatus.PostOnly,
-        GeneratedGetTickerStatus.DISABLED  => MarketStatus.Disabled,
-        GeneratedGetTickerStatus.UNKNOWN   => MarketStatus.Unknown,
+        GeneratedGetTickerStatus.ACTIVE => MarketStatus.Active,
+        GeneratedGetTickerStatus.POSTONLY => MarketStatus.PostOnly,
+        GeneratedGetTickerStatus.DISABLED => MarketStatus.Disabled,
+        GeneratedGetTickerStatus.UNKNOWN => MarketStatus.Unknown,
         _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedGetTickerStatus)),
     };
 
@@ -132,10 +132,10 @@ internal static class MarketMapper
     /// </summary>
     public static MarketStatus MapStatus(GeneratedMarketInfoStatus? status) => status switch
     {
-        GeneratedMarketInfoStatus.ACTIVE   => MarketStatus.Active,
+        GeneratedMarketInfoStatus.ACTIVE => MarketStatus.Active,
         GeneratedMarketInfoStatus.POST_ONLY => MarketStatus.PostOnly,
         GeneratedMarketInfoStatus.SUSPENDED => MarketStatus.Suspended,
-        GeneratedMarketInfoStatus.UNKNOWN  => MarketStatus.Unknown,
+        GeneratedMarketInfoStatus.UNKNOWN => MarketStatus.Unknown,
         _ => throw new LunoMappingException($"Unmapped or null market status '{status}'.", nameof(GeneratedMarketInfoStatus)),
     };
 }

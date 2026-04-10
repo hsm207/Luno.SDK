@@ -158,7 +158,13 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, TimeInForce = TimeInForce.GTC
+            Pair = "XBTMYR",
+            Side = OrderSide.Buy,
+            Volume = 0.001m,
+            Price = 250000m,
+            BaseAccountId = 1,
+            CounterAccountId = 2,
+            TimeInForce = TimeInForce.GTC
         };
 
         // Act
@@ -192,14 +198,14 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", 
-            Side = side, 
-            Volume = 0.001m, 
-            Price = 250000m, 
-            BaseAccountId = 1, 
-            CounterAccountId = 2, 
-            TimeInForce = tif, 
-            StopPrice = stopDir != null ? 100m : null, 
+            Pair = "XBTMYR",
+            Side = side,
+            Volume = 0.001m,
+            Price = 250000m,
+            BaseAccountId = 1,
+            CounterAccountId = 2,
+            TimeInForce = tif,
+            StopPrice = stopDir != null ? 100m : null,
             StopDirection = stopDir
         };
 
@@ -236,7 +242,7 @@ public class LunoTradingClientTests : IDisposable
         // Arrange
         var clientOrderId = "CL123";
         var orderId = "BX123";
-        
+
         // Mock the GET order call to return status COMPLETE
         _server.Given(Request.Create()
                 .WithPath("/api/exchange/3/order")
@@ -245,10 +251,10 @@ public class LunoTradingClientTests : IDisposable
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
-                .WithBodyAsJson(new 
-                { 
-                    order_id = orderId, 
-                    status = "COMPLETE", 
+                .WithBodyAsJson(new
+                {
+                    order_id = orderId,
+                    status = "COMPLETE",
                     client_order_id = clientOrderId,
                     base_account_id = 1,
                     side = "BUY",
@@ -267,7 +273,7 @@ public class LunoTradingClientTests : IDisposable
         // Assert
         Assert.Equal(orderId, result.OrderId);
         Assert.True(result.Success);
-        
+
         // Verify that /api/1/stoporder was NOT called
         var stopRequests = _server.FindLogEntries(Request.Create().WithPath("/api/1/stoporder"));
         Assert.Empty(stopRequests);
@@ -333,7 +339,13 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 1m, Price = 10m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+            Pair = "XBTMYR",
+            Side = OrderSide.Buy,
+            Volume = 1m,
+            Price = 10m,
+            BaseAccountId = 1,
+            CounterAccountId = 2,
+            ClientOrderId = clientId
         };
 
         // Act & Assert
@@ -376,7 +388,13 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+            Pair = "XBTMYR",
+            Side = OrderSide.Buy,
+            Volume = 0.001m,
+            Price = 250000m,
+            BaseAccountId = 1,
+            CounterAccountId = 2,
+            ClientOrderId = clientId
         };
 
         // Act & Assert
@@ -420,7 +438,13 @@ public class LunoTradingClientTests : IDisposable
         var client = CreateClient();
         var command = new PostLimitOrderCommand
         {
-            Pair = "XBTMYR", Side = OrderSide.Buy, Volume = 0.001m, Price = 250000m, BaseAccountId = 1, CounterAccountId = 2, ClientOrderId = clientId
+            Pair = "XBTMYR",
+            Side = OrderSide.Buy,
+            Volume = 0.001m,
+            Price = 250000m,
+            BaseAccountId = 1,
+            CounterAccountId = 2,
+            ClientOrderId = clientId
         };
 
         // Act & Assert
@@ -435,15 +459,15 @@ public class LunoTradingClientTests : IDisposable
     public async Task GetOrderAsync_StatusMappings_MapsCorrectly(string apiStatus, OrderStatus expectedStatus)
     {
         var orderId = "BX123_STATUS";
-        
+
         _server.Given(Request.Create().WithPath("/api/exchange/3/order").WithParam("id", orderId).UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
-                .WithBodyAsJson(new 
-                { 
-                    order_id = orderId, 
-                    status = apiStatus, 
+                .WithBodyAsJson(new
+                {
+                    order_id = orderId,
+                    status = apiStatus,
                     base_account_id = 1,
                     side = "BUY",
                     type = "LIMIT",
@@ -454,7 +478,7 @@ public class LunoTradingClientTests : IDisposable
                 }));
 
         var client = CreateClient();
-        
+
         // Expose public method to call the interface lookup (via Trading.GetOrderAsync is not directly exposed as Command, so we cast to test infra)
         var infraClient = (ILunoTradingOperations)client.Trading;
         var result = await infraClient.FetchOrderAsync(orderId: orderId);

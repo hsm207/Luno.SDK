@@ -132,7 +132,7 @@ public class LunoAuthenticationProviderTests
         Assert.Equal(0, trackingProvider.InvocationCount); // Pre-flight
         await provider.AuthenticateRequestAsync(request);
         Assert.Equal(1, trackingProvider.InvocationCount); // Hit exactly once
-        
+
         Assert.True(request.Headers.ContainsKey("Authorization"));
     }
 
@@ -149,7 +149,7 @@ public class LunoAuthenticationProviderTests
         Assert.Equal(0, trackingProvider.InvocationCount); // Pre-flight
         await provider.AuthenticateRequestAsync(request);
         Assert.Equal(1, trackingProvider.InvocationCount); // Hit exactly once
-        
+
         Assert.True(request.Headers.ContainsKey("Authorization"));
     }
 

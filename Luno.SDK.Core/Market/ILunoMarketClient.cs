@@ -17,7 +17,7 @@ internal interface ILunoMarketOperations
     /// <param name="ct">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns>An <see cref="IAsyncEnumerable{T}"/> of <see cref="Ticker"/>.</returns>
     IAsyncEnumerable<Ticker> FetchTickersAsync(string[]? pairs = null, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Asynchronously fetches a market ticker for a specific pair.
     /// </summary>

@@ -11,7 +11,7 @@ namespace Luno.SDK.Analyzers.Rules
         public INamedTypeSymbol? ILogger { get; set; }
         public INamedTypeSymbol? ILoggerOfT { get; set; }
         public INamedTypeSymbol? LoggerExtensions { get; set; }
-        
+
         public INamedTypeSymbol? RequestInformation { get; set; }
         public INamedTypeSymbol? LunoCredentials { get; set; }
         public INamedTypeSymbol? ILunoCredentialProvider { get; set; }
@@ -22,10 +22,10 @@ namespace Luno.SDK.Analyzers.Rules
         /// Gets or sets the activation status based on resolved symbols.
         /// </summary>
         private int _checkCount;
-        public int CheckCount 
-        { 
-            get => _checkCount; 
-            private set => _checkCount = value; 
+        public int CheckCount
+        {
+            get => _checkCount;
+            private set => _checkCount = value;
         }
 
         public bool IsProhibited(ITypeSymbol? type)

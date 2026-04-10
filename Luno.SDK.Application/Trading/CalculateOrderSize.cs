@@ -38,7 +38,7 @@ internal class CalculateOrderSizeHandler : ICommandHandler<CalculateOrderSizeQue
     {
         var markets = await _marketOperations.FetchMarketsAsync(new[] { query.Pair }, ct).ConfigureAwait(false);
         var marketInfo = markets?.FirstOrDefault();
-        
+
         if (marketInfo == null || !marketInfo.IsTradable())
         {
             throw new LunoMarketStateException($"Market {query.Pair} is not active or available for trading.");

@@ -46,7 +46,7 @@ internal class StopOrderHandler(ILunoTradingOperations tradingClient) : ICommand
         {
             // High-level Policy: Lookup the order to get the exchange-assigned ID if not known.
             var order = await tradingClient.FetchOrderAsync(clientOrderId: command.ClientOrderId, ct: ct).ConfigureAwait(false);
-            
+
             // Optimization: If the order is already complete (Filled or Cancelled), we satisfy the user's intent immediately.
             if (order.IsClosed)
             {

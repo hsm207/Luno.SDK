@@ -59,12 +59,15 @@ public class MarketMapperTests
     public void MapToEntity_TimestampIsNull_ThrowsLunoMappingException()
     {
         // Arrange
-        var dto = new GeneratedTicker 
-        { 
-            Pair = "XBTZAR", 
-            Status = GeneratedStatus.ACTIVE, 
+        var dto = new GeneratedTicker
+        {
+            Pair = "XBTZAR",
+            Status = GeneratedStatus.ACTIVE,
             Timestamp = null,
-            Ask = "1", Bid = "1", LastTrade = "1", Rolling24HourVolume = "1"
+            Ask = "1",
+            Bid = "1",
+            LastTrade = "1",
+            Rolling24HourVolume = "1"
         };
 
         // Act & Assert
@@ -143,12 +146,15 @@ public class MarketMapperTests
     public void MapToEntity_GetTickerResponseTimestampIsNull_ThrowsLunoMappingException()
     {
         // Arrange
-        var dto = new GeneratedGetTickerResponse 
-        { 
-            Pair = "XBTZAR", 
-            Status = GeneratedGetTickerStatus.ACTIVE, 
+        var dto = new GeneratedGetTickerResponse
+        {
+            Pair = "XBTZAR",
+            Status = GeneratedGetTickerStatus.ACTIVE,
             Timestamp = null,
-            Ask = "1", Bid = "1", LastTrade = "1", Rolling24HourVolume = "1"
+            Ask = "1",
+            Bid = "1",
+            LastTrade = "1",
+            Rolling24HourVolume = "1"
         };
 
         // Act & Assert
@@ -280,9 +286,15 @@ public class MarketMapperTests
         // Arrange
         var dto = new GeneratedMarketInfo
         {
-            MarketId = "XBTZAR", BaseCurrency = "XBT", CounterCurrency = "ZAR",
-            MinVolume = "1", MaxVolume = "100", VolumeScale = 4,
-            MinPrice = "1", MaxPrice = "1000000", FeeScale = 8,
+            MarketId = "XBTZAR",
+            BaseCurrency = "XBT",
+            CounterCurrency = "ZAR",
+            MinVolume = "1",
+            MaxVolume = "100",
+            VolumeScale = 4,
+            MinPrice = "1",
+            MaxPrice = "1000000",
+            FeeScale = 8,
             TradingStatus = GeneratedMarketInfoStatus.ACTIVE,
             PriceScale = 99 // Chaos!
         };
@@ -299,9 +311,15 @@ public class MarketMapperTests
         // Arrange
         var dto = new GeneratedMarketInfo
         {
-            MarketId = "XBTZAR", BaseCurrency = "XBT", CounterCurrency = "ZAR",
-            MinVolume = "1", MaxVolume = "100", PriceScale = 2,
-            MinPrice = "1", MaxPrice = "1000000", FeeScale = 8,
+            MarketId = "XBTZAR",
+            BaseCurrency = "XBT",
+            CounterCurrency = "ZAR",
+            MinVolume = "1",
+            MaxVolume = "100",
+            PriceScale = 2,
+            MinPrice = "1",
+            MaxPrice = "1000000",
+            FeeScale = 8,
             TradingStatus = GeneratedMarketInfoStatus.ACTIVE,
             VolumeScale = -1 // Chaos! Volume should not be negative
         };
@@ -318,9 +336,15 @@ public class MarketMapperTests
         // Arrange
         var dto = new GeneratedMarketInfo
         {
-            MarketId = "XBTZAR", BaseCurrency = "XBT", CounterCurrency = "ZAR",
-            MinVolume = "1", MaxVolume = "100", PriceScale = 2, VolumeScale = 4,
-            MinPrice = "1", MaxPrice = "1000000",
+            MarketId = "XBTZAR",
+            BaseCurrency = "XBT",
+            CounterCurrency = "ZAR",
+            MinVolume = "1",
+            MaxVolume = "100",
+            PriceScale = 2,
+            VolumeScale = 4,
+            MinPrice = "1",
+            MaxPrice = "1000000",
             TradingStatus = GeneratedMarketInfoStatus.ACTIVE,
             FeeScale = 7 // Chaos! Luno uses 8 for everything.
         };

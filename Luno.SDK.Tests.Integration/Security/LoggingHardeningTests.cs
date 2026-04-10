@@ -20,9 +20,9 @@ public class LoggingHardeningTests(ITestOutputHelper output)
         // Setup
         var logSink = new StringBuilder();
         var services = new ServiceCollection();
-        
+
         // 1. Configure logging to capture System.Net.Http at Trace level
-        services.AddLogging(builder => 
+        services.AddLogging(builder =>
         {
             builder.AddProvider(new MemoryLoggerProvider(logSink));
             builder.AddFilter("System.Net.Http", LogLevel.Trace);
@@ -32,8 +32,9 @@ public class LoggingHardeningTests(ITestOutputHelper output)
         // 2. Configure Luno Client with dummy credentials
         const string testKey = "so_exposed_it_hurts";
         const string testSecret = "my_dirty_little_secret";
-        
-        services.AddLunoClient(opt => {
+
+        services.AddLunoClient(opt =>
+        {
             opt.WithCredentials(testKey, testSecret);
         });
 
@@ -41,12 +42,12 @@ public class LoggingHardeningTests(ITestOutputHelper output)
         var client = sp.GetRequiredService<ILunoClient>();
 
         // Act
-        try 
+        try
         {
             await client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery());
-        } 
-        catch 
-        { 
+        }
+        catch
+        {
             // We don't care about network failure, only the logs generated during construction
         }
 
@@ -56,9 +57,9 @@ public class LoggingHardeningTests(ITestOutputHelper output)
 
         // Assert
         var expectedSecretPayload = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{testKey}:{testSecret}"));
-        
+
         bool isSecretExposed = logOutput.Contains(expectedSecretPayload);
-        
+
         if (isSecretExposed)
         {
             output.WriteLine("❌ SECURITY FAIL: The Authorization header is fully exposed in the logs!");

@@ -11,7 +11,7 @@ namespace Luno.SDK.Analyzers.Infrastructure
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class LunoGovernanceAnalyzer : DiagnosticAnalyzer
     {
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics 
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.CreateRange(RuleDefinitions.AllRules);
 
         public override void Initialize(AnalysisContext context)
@@ -28,8 +28,8 @@ namespace Luno.SDK.Analyzers.Infrastructure
                 ctx.RegisterOperationAction(opCtx =>
                 {
                     SecurityLoggingRule.Enforce(
-                        opCtx.Operation, 
-                        metadata, 
+                        opCtx.Operation,
+                        metadata,
                         (type, syntax) => opCtx.ReportDiagnostic(
                             Diagnostic.Create(RuleDefinitions.ProhibitedLoggingRule, syntax.GetLocation(), type.Name)));
                 }, OperationKind.Invocation);

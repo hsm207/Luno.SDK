@@ -85,7 +85,7 @@ public class LunoClient : ILunoClient
         ILunoTradingClient trading)
     {
         _telemetry = telemetry;
-        
+
         // In hosted mode, we use the provided instances
         _market = new Lazy<ILunoMarketClient>(() => market);
         _accounts = new Lazy<ILunoAccountClient>(() => accounts);

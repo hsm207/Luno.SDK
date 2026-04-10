@@ -9,7 +9,7 @@ public record TradingAmount(decimal Value, TradingUnit Unit)
     /// Creates a trading amount expressed in the Base currency.
     /// </summary>
     /// <param name="value">The decimal value to spend/trade in Base.</param>
-    public static TradingAmount InBase(decimal value) 
+    public static TradingAmount InBase(decimal value)
     {
         if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), "Trading amount must be strictly greater than 0.");
         return new(value, TradingUnit.Base);
