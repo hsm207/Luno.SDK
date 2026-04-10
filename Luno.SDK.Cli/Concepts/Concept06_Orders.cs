@@ -99,10 +99,13 @@ public static class Concept06_Orders
 
         // 4. Post the Order with Idempotency
         string clientOrderId = Guid.NewGuid().ToString();
-        var command = quote.ToCommand(baseId, counterId, clientOrderId);
+        var authorizedCommand = quote.ToCommand(baseId, counterId, clientOrderId) with
+        {
+            Options = new LunoRequestOptions { AuthorizeWriteOperation = true }
+        };
 
         Console.WriteLine("\n📡 Action: Placing Limit Order (requires explicit write intent)...");
-        var response = await client.Trading.PostLimitOrderAsync(command with { Options = command.Options with { AuthorizeWriteOperation = true } });
+        var response = await client.Trading.PostLimitOrderAsync(authorizedCommand);
         Console.WriteLine($"[POST] Success! OrderId: {response.OrderId}");
 
         // 5. Verify via Listing
@@ -113,12 +116,17 @@ public static class Concept06_Orders
 
         // 6. Test Idempotency Reconciliation
         Console.WriteLine("\n📡 Idempotency: Resending same command (requires explicit write intent)...");
-        var duplicateResponse = await client.Trading.PostLimitOrderAsync(command with { Options = command.Options with { AuthorizeWriteOperation = true } });
+        var duplicateResponse = await client.Trading.PostLimitOrderAsync(authorizedCommand);
         Console.WriteLine($"[IDEMPOTENCY] Reconciled to same OrderId: {duplicateResponse.OrderId == response.OrderId}");
 
         // 7. Cancel the order
         Console.WriteLine("\n📡 Cleanup: Cancelling Order (requires explicit write intent)...");
-        await client.Trading.StopOrderAsync(new StopOrderCommand { OrderId = response.OrderId, Options = new LunoRequestOptions { AuthorizeWriteOperation = true } });
+        var stopCommand = new StopOrderCommand 
+        { 
+            OrderId = response.OrderId, 
+            Options = new LunoRequestOptions { AuthorizeWriteOperation = true } 
+        };
+        await client.Trading.StopOrderAsync(stopCommand);
         Console.WriteLine("[STOP] Stop request dispatched.");
 
         // 8. Final Verification
