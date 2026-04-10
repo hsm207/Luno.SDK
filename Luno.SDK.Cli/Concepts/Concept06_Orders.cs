@@ -88,7 +88,6 @@ public static class Concept06_Orders
             AtPrice: TradingPrice.InQuote(market.MinPrice)
         ));
 
-        // Format according to market constraints for perfect UX 💅
         string volFmt = $"N{market.VolumeScale}";
         string priceFmt = $"N{market.PriceScale}";
         string sideAction = quote.Side == OrderSide.Buy ? "BUY" : "SELL";
