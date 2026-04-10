@@ -241,12 +241,12 @@ We introduced a **Command Dispatcher** that acts as an orchestration hub.
 4.  **Heterogeneous Returns**: The dispatcher was designed to support both `Task<T>` and `IAsyncEnumerable<T>` by removing the explicit `Task` wrapper from the handler interface, allowing it to be part of the generic `TResponse`.
 
 ### Lesson: Design for Extensibility
-By routing all application logic through the dispatcher, we've created a "Hook" where we can later add:
+By routing all application logic through the dispatcher, we've created an interception point where we can later add:
 -   **Logging/Tracing**: Automatically log every command.
 -   **Resilience**: Wrap every handler in a Polly policy.
 -   **Validation**: Run global guard clauses before dispatching.
 
-This is architectural self-care! 🧘‍♀️
+This structure allows cross-cutting concerns to be added without modifying individual handlers.
 
 ### What Was Wrong
 We had `ILunoMarketClient.GetTickersAsync()` returning raw entities (Core), and an extension `GetTickersAsync()` returning DTOs (Application). Because C# prefers instance methods over extensions with the same signature, the "raw" one stole the call, leading to type mismatches.
@@ -284,4 +284,4 @@ Split into focused, single-purpose files:
 - `IPipelineBehavior.cs`
 - `ICommandHandler.cs`
 
-This improves IntelliSense relevance, project navigability, and prevents the "moral decay" of an architecture that starts allowing unrelated code into a generic container. 🛡️✨
+This improves IntelliSense relevance, project navigability, and prevents the gradual degradation of component boundaries that occurs in generic abstraction files.

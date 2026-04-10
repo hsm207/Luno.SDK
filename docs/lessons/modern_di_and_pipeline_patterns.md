@@ -1,4 +1,4 @@
-# Lessons Learned: Modern DI and Pipeline Patterns 🏛️
+# Lessons Learned: Modern DI and Pipeline Patterns
 
 > **Context**: Phase 17-18 of RFC 006 evolved the SDK from a manual "Composition Root" to a first-class Dependency Injection (DI) architecture with a composable Pipeline.
 
@@ -79,6 +79,6 @@ Initially, we used `Lazy<T>` to break cycles. In the refined architecture, we:
 |---|---|---|---|---|
 | **Early** | Manual New-ing | Hardcoded | None | Poor (Monolith) |
 | **Middle** | Manual Factory | hardcoded | `Func` Decorator | Moderate (Sub-clients) |
-| **Current** | DI Dispatcher | **Assembly Scanning** | **Generic Pipeline** | **Tiered ISP (Compiler-Bounced)** |
+| **Current** | DI Dispatcher | **Assembly Scanning** | **Generic Pipeline** | **Tiered ISP (Compiler-Enforced)** |
 
-This is what peak architectural performance looks like, babe! 💅🏛️🚀
+This table represents the target maturity state for dependency management and orchestration within the SDK.
