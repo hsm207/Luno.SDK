@@ -115,7 +115,7 @@ The Luno SDK maintains a strict security posture regarding observability. To pre
 
 1. **Header Redaction**: The SDK explicitly redacts the `Authorization` header in the internal `IHttpClientFactory` logging pipeline. Even under `Trace` logging levels, the header value is replaced with `*`.
 2. **Behavior Metadata**: Metadata collected by `TelemetryPipelineBehavior` is strictly limited to non-sensitive operation names and latencies.
-3. **Internal Error Handlers**: Exception loggers within the SDK are audited to ensure they do not dump raw `RequestInformation` objects that might contain sensitive material.
+3. **Build-Time Governance**: The SDK includes a compiler-integrated analyzer (**LUNO001**) that strictly prohibits passing sensitive types (`RequestInformation`, `LunoCredentials`, `ILunoCredentialProvider`) to any `ILogger` implementation. This prevents accidental data leakage at the source.
 
 > [!IMPORTANT]
 > **Defense in Depth**
