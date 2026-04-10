@@ -99,13 +99,13 @@ public static class Concept06_Orders
 
         // 4. Post the Order with Idempotency
         string clientOrderId = Guid.NewGuid().ToString();
-        var authorizedCommand = quote.ToCommand(baseId, counterId, clientOrderId) with
+        var postOrderCommand = quote.ToCommand(baseId, counterId, clientOrderId) with
         {
             Options = new LunoRequestOptions { AuthorizeWriteOperation = true }
         };
 
         Console.WriteLine("\n📡 Action: Placing Limit Order (requires explicit write intent)...");
-        var response = await client.Trading.PostLimitOrderAsync(authorizedCommand);
+        var response = await client.Trading.PostLimitOrderAsync(postOrderCommand);
         Console.WriteLine($"[POST] Success! OrderId: {response.OrderId}");
 
         // 5. Verify via Listing
@@ -116,7 +116,7 @@ public static class Concept06_Orders
 
         // 6. Test Idempotency Reconciliation
         Console.WriteLine("\n📡 Idempotency: Resending same command (requires explicit write intent)...");
-        var duplicateResponse = await client.Trading.PostLimitOrderAsync(authorizedCommand);
+        var duplicateResponse = await client.Trading.PostLimitOrderAsync(postOrderCommand);
         Console.WriteLine($"[IDEMPOTENCY] Reconciled to same OrderId: {duplicateResponse.OrderId == response.OrderId}");
 
         // 7. Cancel the order
