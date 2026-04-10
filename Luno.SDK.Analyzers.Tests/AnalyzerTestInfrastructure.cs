@@ -8,8 +8,7 @@ using Luno.SDK.Analyzers.Rules;
 namespace Luno.SDK.Analyzers.Tests
 {
     /// <summary>
-    /// The 'Humble' testing infrastructure that orchestrates the Roslyn compilation.
-    /// isolates the complexity of analyzer verification from the security scenarios.
+    /// Infrastructure engine for orchestrating Microsoft.CodeAnalysis.Testing.
     /// </summary>
     public static class VerifyCS
     {

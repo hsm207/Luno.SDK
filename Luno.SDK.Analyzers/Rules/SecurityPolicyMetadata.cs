@@ -4,7 +4,7 @@ namespace Luno.SDK.Analyzers.Rules
 {
     /// <summary>
     /// Metadata container representing the prohibited symbols.
-    /// leverages the C# 14 'field' keyword for ultra-lean property logic.
+    /// Used by rules to identify sensitive types and members.
     /// </summary>
     public sealed class SecurityPolicyMetadata
     {
@@ -16,10 +16,10 @@ namespace Luno.SDK.Analyzers.Rules
         public INamedTypeSymbol? LunoCredentials { get; set; }
         public INamedTypeSymbol? ILunoCredentialProvider { get; set; }
 
-        public bool IsActive => ILogger != null; // Only require ILogger to be active
+        public bool IsActive => ILogger != null;
 
         /// <summary>
-        /// A 'field' backed property tracking the engagement level of the governance rules.
+        /// Gets or sets the activation status based on resolved symbols.
         /// </summary>
         private int _checkCount;
         public int CheckCount 

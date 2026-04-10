@@ -6,8 +6,8 @@ using System.Linq;
 namespace Luno.SDK.Analyzers.Rules
 {
     /// <summary>
-    /// Implements the high-assurance 'Zero Secret Leakage' policy for ILogger invocations.
-    /// Performs deep hierarchy traversal to identify prohibited sensitive types.
+    /// Enforces restrictions on logging sensitive types within ILogger invocations.
+    /// Performs hierarchy traversal to identify prohibited types.
     /// </summary>
     public static class SecurityLoggingRule
     {

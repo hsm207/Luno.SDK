@@ -4,8 +4,7 @@ using Xunit;
 namespace Luno.SDK.Analyzers.Tests
 {
     /// <summary>
-    /// High-integrity security scenarios for the Luno SDK Governance Framework.
-    /// Achieves architectural purity with < 50 lines per file.
+    /// Unit tests for verifying security logging diagnostic enforcement.
     /// </summary>
     public class LunoSecurityLoggingAnalyzerTests : GovernanceTestBase
     {

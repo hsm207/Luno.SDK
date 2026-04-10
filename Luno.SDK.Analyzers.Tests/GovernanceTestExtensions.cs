@@ -4,7 +4,7 @@ using Luno.SDK.Analyzers.Infrastructure;
 namespace Luno.SDK.Analyzers.Tests
 {
     /// <summary>
-    /// Fluent C# 14 extensions to keep our security tests pristine and readable.
+    /// Provides a fluent interface for validating analyzer diagnostics.
     /// </summary>
     public static class GovernanceTestExtensions
     {
