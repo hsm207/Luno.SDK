@@ -1,7 +1,7 @@
 # RFC 006: Trading Client and Order Lifecycle Management
 
-**Status:** Draft  
-**Date:** 2026-03-11
+**Status:** Implemented ✅  
+**Date:** 2026-03-16
 
 ## 1. Overview
 This RFC proposes the introduction of a new `ILunoTradingClient` to handle high-fidelity order lifecycle management. The scope includes idempotent limit order placement (`POST /api/1/postorder`) and a universal exit strategy for order cancellation (`POST /api/1/stoporder`).
@@ -196,3 +196,9 @@ The `PostLimitOrderRequest` must expose the following parameters from the `POST 
 | `StopDirection` | `stop_direction` | `StopDirection?` | Side of the trigger price to activate the order. |
 | `Timestamp` | `timestamp` | `long?` | Unix timestamp in milliseconds for request validity. |
 | `TTL` | `ttl` | `long?` | Milliseconds after timestamp for request expiration. |
+## 12. Architectural Refinement (Implemented Phase)
+During implementation, the architecture was further refined to address SOLID violations caught during auditing:
+- **Tiered ISP**: Split `ILunoTradingClient` into `ILunoTradingOperations` and `ILunoTradingClient` to decouple handlers from the orchestration dispatcher.
+- **Generic Pipeline**: Replaced manual decorators with `IPipelineBehavior<TRequest, TResponse>` for composable cross-cutting concerns (logging, validation).
+- **DI Discovery**: Transitioned from a manual factory to automatic assembly scanning via `Microsoft.Extensions.DependencyInjection`.
+- **CLI Demonstration Architecture**: The CLI implementation (`Concept06_Orders.cs`) utilizes `sealed record` types for parameter encapsulation and C# 14 switch expressions for declarative exception handling to separate local configuration errors from API rejections.

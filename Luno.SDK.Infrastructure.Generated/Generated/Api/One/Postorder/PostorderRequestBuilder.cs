@@ -87,7 +87,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Postorder
         {
             /// <summary>The base currency Account to use in the trade.</summary>
             [QueryParameter("base_account_id")]
-            public int? BaseAccountId { get; set; }
+            public long? BaseAccountId { get; set; }
             /// <summary>Client order ID.May only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 255.It will be available in read endpoints, so you can use it to reconcile Luno with your internal system.Values must be unique across all your successful order creation endpoint calls; trying to create an orderwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -100,7 +100,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Postorder
 #endif
             /// <summary>The counter currency Account to use in the trade.</summary>
             [QueryParameter("counter_account_id")]
-            public int? CounterAccountId { get; set; }
+            public long? CounterAccountId { get; set; }
             /// <summary>The currency pair to trade.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -164,10 +164,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Postorder
             public global::Luno.SDK.Infrastructure.Generated.Api.One.Postorder.PostTime_in_forceQueryParameterType? TimeInForceAsPostTimeInForceQueryParameterType { get; set; }
             /// <summary>Unix timestamp in milliseconds of when the request was created and sent.</summary>
             [QueryParameter("timestamp")]
-            public int? Timestamp { get; set; }
+            public long? Timestamp { get; set; }
             /// <summary>Specifies the number of milliseconds after timestamp the request is valid for.If `timestamp` is not specified, `ttl` will not be used.</summary>
             [QueryParameter("ttl")]
-            public int? Ttl { get; set; }
+            public long? Ttl { get; set; }
             /// <summary>&lt;code&gt;BID&lt;/code&gt; for a bid (buy) limit order&lt;br&gt;&lt;code&gt;ASK&lt;/code&gt; for an ask (sell) limit order</summary>
             [Obsolete("This property is deprecated, use TypeAsPostTypeQueryParameterType instead")]
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER

@@ -1,4 +1,5 @@
 using Luno.SDK;
+using Luno.SDK.Application.Market;
 
 namespace Luno.SDK.Cli.Concepts;
 
@@ -21,7 +22,7 @@ public static class Concept04_SingleTicker
 
         // 2. Use the fluent extension to fetch the single ticker
         // This method automatically maps the raw domain entities to application-layer DTOs.
-        var ticker = await luno.GetTickerAsync("XBTZAR");
+        var ticker = await luno.Market.GetTickerAsync(new GetTickerQuery("XBTZAR"));
 
         var statusStr = ticker.IsActive ? "ACTIVE" : "DISABLED";
         Console.WriteLine($"[{ticker.Timestamp:HH:mm:ss.fff}] [{statusStr,-8}] {ticker.Pair,-10} | Price: {ticker.Price,12:N2}");

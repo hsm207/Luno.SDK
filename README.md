@@ -2,6 +2,14 @@
 
 A modern .NET 10 SDK for the Luno API, built with Clean Architecture principles and the Microsoft Kiota toolchain.
 
+## 🛡️ Security-First Architecture
+
+This SDK employs a **Hardcore Explicit Intent** model. To prevent accidental financial loss or unauthorized state changes, all write operations (creating orders, cancelling orders, etc.) require an explicit per-request opt-in:
+
+- **Mandatory Write Intent**: POST/PUT/DELETE operations will fail pre-flight unless `AuthorizeWriteOperation = true` is set.
+- **Privacy-First Public API**: Public endpoints do not send headers unless `AuthenticatePublicEndpoint = true` is explicitly requested (to protect IP anonymity/privacy).
+- **Secure Fail-Safe**: A `LunoSecurityException` is thrown *before* request signing or network transmission if intent is missing.
+
 ## Quick Start
 
 ```csharp
@@ -15,6 +23,19 @@ await foreach (var ticker in luno.GetTickersAsync())
 {
     Console.WriteLine($"{ticker.Pair}: {ticker.Price}");
 }
+
+// Safely calculate a Limit Order to spend exactly 100 MYR on Bitcoin
+var quote = await luno.Trading.CalculateOrderSizeAsync(new CalculateOrderSizeQuery(
+    Pair: "XBTMYR",
+    Side: OrderSide.Buy,
+    Spend: TradingAmount.InQuote(100m)
+));
+
+// Map the strict mathematical quote seamlessly into a command
+var command = quote.ToCommand(baseAccountId: 12345, counterAccountId: 67890);
+
+// Explicitly authorize this specific write operation
+await luno.Trading.PostLimitOrderAsync(command, opt => opt.AuthorizeWriteOperation = true);
 ```
 
 ## Demonstration Gallery

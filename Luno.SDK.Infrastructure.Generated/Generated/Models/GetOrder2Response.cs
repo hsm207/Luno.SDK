@@ -24,7 +24,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Base { get; set; }
 #endif
         /// <summary>The base currency account</summary>
-        public int? BaseAccountId { get; set; }
+        public long? BaseAccountId { get; set; }
         /// <summary>Client Order ID has the value that was passed in when the Order was posted.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -34,7 +34,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string ClientOrderId { get; set; }
 #endif
         /// <summary>Time of order completion (Unix milliseconds)This value is set at the time of this order leaving the order book,either immediately upon posting or later on due to a trade or cancellation.Whilst the order is still pending/live it will be 0.</summary>
-        public int? CompletedTimestamp { get; set; }
+        public long? CompletedTimestamp { get; set; }
         /// <summary>Amount of counter filled, this value is always positive.Use this field and `side` to determine credit or debit of funds.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -44,11 +44,11 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Counter { get; set; }
 #endif
         /// <summary>The counter currency account</summary>
-        public int? CounterAccountId { get; set; }
+        public long? CounterAccountId { get; set; }
         /// <summary>Time of order creation (Unix milliseconds)</summary>
-        public int? CreationTimestamp { get; set; }
+        public long? CreationTimestamp { get; set; }
         /// <summary>Time of order expiration (Unix milliseconds)This value is set at the time of processing a request from you to cancel the order, otherwise it will be 0.</summary>
-        public int? ExpirationTimestamp { get; set; }
+        public long? ExpirationTimestamp { get; set; }
         /// <summary>Base amount of fees to be charged</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -147,13 +147,13 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "base", n => { Base = n.GetStringValue(); } },
-                { "base_account_id", n => { BaseAccountId = n.GetIntValue(); } },
+                { "base_account_id", n => { BaseAccountId = n.GetLongValue(); } },
                 { "client_order_id", n => { ClientOrderId = n.GetStringValue(); } },
-                { "completed_timestamp", n => { CompletedTimestamp = n.GetIntValue(); } },
+                { "completed_timestamp", n => { CompletedTimestamp = n.GetLongValue(); } },
                 { "counter", n => { Counter = n.GetStringValue(); } },
-                { "counter_account_id", n => { CounterAccountId = n.GetIntValue(); } },
-                { "creation_timestamp", n => { CreationTimestamp = n.GetIntValue(); } },
-                { "expiration_timestamp", n => { ExpirationTimestamp = n.GetIntValue(); } },
+                { "counter_account_id", n => { CounterAccountId = n.GetLongValue(); } },
+                { "creation_timestamp", n => { CreationTimestamp = n.GetLongValue(); } },
+                { "expiration_timestamp", n => { ExpirationTimestamp = n.GetLongValue(); } },
                 { "fee_base", n => { FeeBase = n.GetStringValue(); } },
                 { "fee_counter", n => { FeeCounter = n.GetStringValue(); } },
                 { "limit_price", n => { LimitPrice = n.GetStringValue(); } },
@@ -176,13 +176,13 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("base", Base);
-            writer.WriteIntValue("base_account_id", BaseAccountId);
+            writer.WriteLongValue("base_account_id", BaseAccountId);
             writer.WriteStringValue("client_order_id", ClientOrderId);
-            writer.WriteIntValue("completed_timestamp", CompletedTimestamp);
+            writer.WriteLongValue("completed_timestamp", CompletedTimestamp);
             writer.WriteStringValue("counter", Counter);
-            writer.WriteIntValue("counter_account_id", CounterAccountId);
-            writer.WriteIntValue("creation_timestamp", CreationTimestamp);
-            writer.WriteIntValue("expiration_timestamp", ExpirationTimestamp);
+            writer.WriteLongValue("counter_account_id", CounterAccountId);
+            writer.WriteLongValue("creation_timestamp", CreationTimestamp);
+            writer.WriteLongValue("expiration_timestamp", ExpirationTimestamp);
             writer.WriteStringValue("fee_base", FeeBase);
             writer.WriteStringValue("fee_counter", FeeCounter);
             writer.WriteStringValue("limit_price", LimitPrice);

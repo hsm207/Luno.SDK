@@ -1,39 +1,25 @@
-using Microsoft.Kiota.Abstractions;
 using Luno.SDK.Account;
+using Luno.SDK.Infrastructure.Generated;
 
 namespace Luno.SDK.Infrastructure.Account;
 
 /// <summary>
-/// Provides a concrete implementation of the <see cref="ILunoAccountClient"/> interface
-/// using the generated Kiota client.
+/// Provides a concrete implementation of the account clients using the generated Kiota client.
 /// </summary>
-/// <param name="requestAdapter">The decorated request adapter pipeline.</param>
-internal class LunoAccountClient(IRequestAdapter requestAdapter) : ILunoAccountClient
+public class LunoAccountClient(LunoApiClient api, ILunoRequestDispatcher requests) : ILunoAccountClient, ILunoAccountOperations
 {
-    private readonly Luno.SDK.Infrastructure.Generated.LunoApiClient _apiClient = new(requestAdapter);
+    /// <inheritdoc />
+    public ILunoRequestDispatcher Requests { get; } = requests;
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<Balance>> GetBalancesAsync(CancellationToken cancellationToken = default)
+    async Task<IReadOnlyList<Balance>> ILunoAccountOperations.FetchBalancesAsync(string[]? assets, CancellationToken ct)
     {
-        var response = await _apiClient.Api.One.Balance.GetAsync(requestConfiguration =>
+        var response = await api.Api.One.Balance.GetAsync(requestConfiguration =>
         {
+            requestConfiguration.QueryParameters.Assets = assets;
             requestConfiguration.Options.Add(new Luno.SDK.Infrastructure.Telemetry.LunoTelemetryOptions("GetBalances"));
-        }, cancellationToken).ConfigureAwait(false);
+        }, ct).ConfigureAwait(false);
 
-        if (response?.Balance == null)
-        {
-            throw new InvalidOperationException("The API response was successful but the balances array was missing or null.");
-        }
-
-        var results = new List<Balance>();
-        foreach (var balanceDto in response.Balance)
-        {
-            if (balanceDto != null)
-            {
-                results.Add(balanceDto.ToDomain());
-            }
-        }
-
-        return results;
+        return response!.Balance!.Select(b => b!.ToDomain()).ToList().AsReadOnly();
     }
 }

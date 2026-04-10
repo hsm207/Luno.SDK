@@ -24,12 +24,20 @@ public class LunoClientOptions
     public ILoggerFactory LoggerFactory { get; set; } = NullLoggerFactory.Instance;
 
     /// <summary>
-    /// Gets or sets the API Key ID for authenticated requests.
+    /// Gets or sets the credential provider used for authenticating requests.
     /// </summary>
-    public string? ApiKeyId { get; set; }
+    public ILunoCredentialProvider? Credentials { get; set; }
 
     /// <summary>
-    /// Gets or sets the API Key Secret for authenticated requests.
+    /// Configures the client to use simple in-memory credentials.
+    /// Note: This is the least memory-hardened posture as the plain text strings will reside on the heap.
     /// </summary>
-    public string? ApiKeySecret { get; set; }
+    /// <param name="apiKeyId">The API Key ID.</param>
+    /// <param name="apiKeySecret">The API Key Secret.</param>
+    /// <returns>The current options instance for fluent chaining.</returns>
+    public LunoClientOptions WithCredentials(string apiKeyId, string apiKeySecret)
+    {
+        Credentials = new Luno.SDK.Core.Authentication.BasicInMemoryCredentialProvider(apiKeyId, apiKeySecret);
+        return this;
+    }
 }

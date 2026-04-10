@@ -38,5 +38,16 @@ public class LunoSecurityException : LunoApiException
     /// <param name="innerException">The inner exception.</param>
     public LunoSecurityException(string message, string? errorCode, int? statusCode, Exception? innerException = null)
         : base(message, errorCode, statusCode, innerException) { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LunoSecurityException"/> class for write intent violations.
+    /// </summary>
+    /// <param name="httpMethod">The HTTP method of the blocked request.</param>
+    /// <param name="urlTemplate">The URL template of the blocked request.</param>
+    /// <param name="requiredPermission">The permission that was required.</param>
+    public LunoSecurityException(string httpMethod, string urlTemplate, string requiredPermission)
+        : base($"Write operation blocked. The endpoint '{httpMethod} {urlTemplate}' requires '{requiredPermission}' permission, but explicit write intent was not provided. Please set 'AuthorizeWriteOperation = true' in your request options to proceed.")
+    {
     }
+}
 

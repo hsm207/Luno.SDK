@@ -8,9 +8,13 @@ namespace Luno.SDK.Application.Market;
 /// <param name="Spread">The current bid/ask spread.</param>
 /// <param name="IsActive">Indicates if the market is currently active.</param>
 /// <param name="Timestamp">Unix timestamp in milliseconds of the tick.</param>
+/// <param name="Ask">The current lowest sell price.</param>
+/// <param name="Bid">The current highest buy price.</param>
 public record TickerResponse(
     string Pair,
     decimal Price,
+    decimal Ask,
+    decimal Bid,
     decimal Spread,
     bool IsActive,
     DateTimeOffset Timestamp

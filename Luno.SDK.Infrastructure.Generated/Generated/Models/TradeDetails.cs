@@ -32,7 +32,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string Price { get; set; }
 #endif
         /// <summary>Sequence identifies the trade within a market</summary>
-        public int? Sequence { get; set; }
+        public long? Sequence { get; set; }
         /// <summary>Volume is the amount of base traded</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -68,7 +68,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             {
                 { "pair", n => { Pair = n.GetStringValue(); } },
                 { "price", n => { Price = n.GetStringValue(); } },
-                { "sequence", n => { Sequence = n.GetIntValue(); } },
+                { "sequence", n => { Sequence = n.GetLongValue(); } },
                 { "volume", n => { Volume = n.GetStringValue(); } },
             };
         }
@@ -81,7 +81,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("pair", Pair);
             writer.WriteStringValue("price", Price);
-            writer.WriteIntValue("sequence", Sequence);
+            writer.WriteLongValue("sequence", Sequence);
             writer.WriteStringValue("volume", Volume);
             writer.WriteAdditionalData(AdditionalData);
         }

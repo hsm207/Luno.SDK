@@ -24,7 +24,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public List<global::Luno.SDK.Infrastructure.Generated.Models.Candle> Candles { get; set; }
 #endif
         /// <summary>Duration in seconds</summary>
-        public int? Duration { get; set; }
+        public long? Duration { get; set; }
         /// <summary>The pair property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -59,7 +59,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "candles", n => { Candles = n.GetCollectionOfObjectValues<global::Luno.SDK.Infrastructure.Generated.Models.Candle>(global::Luno.SDK.Infrastructure.Generated.Models.Candle.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "duration", n => { Duration = n.GetIntValue(); } },
+                { "duration", n => { Duration = n.GetLongValue(); } },
                 { "pair", n => { Pair = n.GetStringValue(); } },
             };
         }
@@ -71,7 +71,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteCollectionOfObjectValues<global::Luno.SDK.Infrastructure.Generated.Models.Candle>("candles", Candles);
-            writer.WriteIntValue("duration", Duration);
+            writer.WriteLongValue("duration", Duration);
             writer.WriteStringValue("pair", Pair);
             writer.WriteAdditionalData(AdditionalData);
         }

@@ -38,5 +38,5 @@ public class LunoClientException : LunoException
     /// <param name="innerException">The inner exception.</param>
     public LunoClientException(string message, string? errorCode, int? statusCode, Exception? innerException = null)
         : base(message, errorCode, statusCode, innerException) { }
-    }
+}
 

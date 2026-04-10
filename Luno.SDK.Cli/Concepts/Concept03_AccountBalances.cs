@@ -2,6 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Luno.SDK;
+using Luno.SDK.Application.Account;
+using System.Linq;
 
 namespace Luno.SDK.Cli.Concepts;
 
@@ -36,27 +38,34 @@ public static class Concept03_AccountBalances
             Console.WriteLine("Loaded API credentials from User Secrets! 💅");
         }
 
-        var options = new LunoClientOptions
+        var options = new LunoClientOptions();
+        if (!string.IsNullOrWhiteSpace(keyId) && !string.IsNullOrWhiteSpace(keySecret))
         {
-            ApiKeyId = keyId,
-            ApiKeySecret = keySecret
-        };
+            options.WithCredentials(keyId, keySecret);
+        }
 
         var client = new LunoClient(options);
 
         try
         {
-            Console.WriteLine("Fetching balances...");
-            // Use the application-layer extension method directly on the client!
-            var balances = await client.GetBalancesAsync();
+            // 1. Unfiltered Fetch
+            Console.WriteLine("\n--- Step 1: Fetching ALL balances (Unfiltered) ---");
+            var allBalances = await client.Accounts.GetBalancesAsync(new GetBalancesQuery());
 
-            Console.WriteLine($"Successfully retrieved {balances.Count} balances:");
-            foreach (var balance in balances)
+            Console.WriteLine($"Successfully retrieved {allBalances.Count} balances:");
+            foreach (var balance in allBalances.Where(b => b.Total > 0))
             {
-                if (balance.Total > 0)
-                {
-                    Console.WriteLine($"- {balance.Asset}: {balance.Total} (Available: {balance.Available}, Reserved: {balance.Reserved})");
-                }
+                Console.WriteLine($"- {balance.Asset}: {balance.Total} (Available: {balance.Available})");
+            }
+
+            // 2. Filtered Fetch
+            Console.WriteLine("\n--- Step 2: Fetching specific balances (Filtered: XBT, ETH) ---");
+            var filteredBalances = await client.Accounts.GetBalancesAsync(new GetBalancesQuery { Assets = new[] { "XBT", "ETH" } });
+
+            Console.WriteLine($"Successfully retrieved {filteredBalances.Count} filtered balances:");
+            foreach (var balance in filteredBalances)
+            {
+                Console.WriteLine($"- {balance.Asset}: {balance.Total} (Available: {balance.Available})");
             }
         }
         catch (LunoAuthenticationException ex)

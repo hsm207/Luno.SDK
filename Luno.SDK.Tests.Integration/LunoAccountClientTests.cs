@@ -25,12 +25,11 @@ public class LunoAccountClientTests : IDisposable
 
     private LunoClient CreateClient(string? apiKeyId = null, string? apiKeySecret = null)
     {
-        var options = new LunoClientOptions
+        var options = new LunoClientOptions { BaseUrl = _server.Url! };
+        if (!string.IsNullOrWhiteSpace(apiKeyId) && !string.IsNullOrWhiteSpace(apiKeySecret))
         {
-            BaseUrl = _server.Url!,
-            ApiKeyId = apiKeyId,
-            ApiKeySecret = apiKeySecret
-        };
+            options.WithCredentials(apiKeyId, apiKeySecret);
+        }
         return new LunoClient(options);
     }
 
@@ -61,7 +60,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act
-        var balances = await client.GetBalancesAsync(); // Uses Application Layer extension!
+        var balances = await client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()); // Uses Application Layer extension!
 
         // Assert
         Assert.NotNull(balances);
@@ -91,7 +90,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("wrong", "keys");
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoUnauthorizedException>(() => client.Accounts.GetBalancesAsync());
+        await Assert.ThrowsAsync<LunoUnauthorizedException>(() => client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()));
     }
 
     [Fact(DisplayName = "Given 403 response, When getting balances, Then translate to LunoForbiddenException")]
@@ -107,7 +106,7 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient("user", "pass");
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoForbiddenException>(() => client.Accounts.GetBalancesAsync());
+        await Assert.ThrowsAsync<LunoForbiddenException>(() => client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()));
     }
 
     [Fact(DisplayName = "Given no credentials, When getting balances, Then fail fast with LunoAuthenticationException")]
@@ -117,6 +116,34 @@ public class LunoAccountClientTests : IDisposable
         var client = CreateClient(); // No keys provided
 
         // Act & Assert
-        await Assert.ThrowsAsync<LunoAuthenticationException>(() => client.Accounts.GetBalancesAsync());
+        await Assert.ThrowsAsync<LunoAuthenticationException>(() => client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery()));
+    }
+
+    [Fact(DisplayName = "Given asset filters, When getting balances, Then send request with correct query string")]
+    public async Task GetBalancesAsync_WithAssetsFilter_SendsCorrectQueryString()
+    {
+        // Arrange
+        _server.Given(Request.Create()
+            .WithPath("/api/1/balance")
+            .UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBodyAsJson(new { balance = Array.Empty<object>() }));
+
+        var client = CreateClient("user", "pass");
+
+        // Act
+        await client.Accounts.GetBalancesAsync(new Luno.SDK.Application.Account.GetBalancesQuery { Assets = new[] { "XBT", "ETH" } });
+
+        // Assert
+        var logs = _server.LogEntries;
+        var request = logs.First().RequestMessage;
+
+        // High-fidelity verification of the boundary handshake
+        // We verify that both assets are present as separate parameters (exploded)
+        // Note: WireMock URL string will contain the raw query string.
+        Assert.Contains("assets=XBT", request.Url);
+        Assert.Contains("assets=ETH", request.Url);
     }
 }

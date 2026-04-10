@@ -32,7 +32,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string CounterCurrency { get; set; }
 #endif
         /// <summary>Fee decimal places</summary>
-        public int? FeeScale { get; set; }
+        public long? FeeScale { get; set; }
         /// <summary>Unique identifier for the market</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -74,11 +74,11 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public string MinVolume { get; set; }
 #endif
         /// <summary>Price decimal places</summary>
-        public int? PriceScale { get; set; }
+        public long? PriceScale { get; set; }
         /// <summary>Current market trading status:&lt;br&gt;&lt;code&gt;POST_ONLY&lt;/code&gt; Trading is indefinitely suspended. This state iscommonly used when new markets are being launched to give traders enoughtime to setup their orders before trading begins. When in this status,orders can only be posted as post-only.&lt;br&gt;&lt;code&gt;ACTIVE&lt;/code&gt; Trading is fully enabled.&lt;br&gt;&lt;code&gt;SUSPENDED&lt;/code&gt; Trading has been temporarily suspended due to veryhigh volatility. When in this status, orders can only be posted aspost-only.&lt;br&gt;&lt;code&gt;Unknown&lt;/code&gt; Trading status is unknown. This could indicate a temporary erroron the market and should resolve shortly.POST_ONLY MarketStatusPostOnlyACTIVE MarketStatusActiveSUSPENDED MarketStatusSuspendedUNKNOWN MarketStatusUnknown</summary>
         public global::Luno.SDK.Infrastructure.Generated.Models.MarketInfo_trading_status? TradingStatus { get; set; }
         /// <summary>Volume decimal places</summary>
-        public int? VolumeScale { get; set; }
+        public long? VolumeScale { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::Luno.SDK.Infrastructure.Generated.Models.MarketInfo"/> and sets the default values.
         /// </summary>
@@ -106,15 +106,15 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             {
                 { "base_currency", n => { BaseCurrency = n.GetStringValue(); } },
                 { "counter_currency", n => { CounterCurrency = n.GetStringValue(); } },
-                { "fee_scale", n => { FeeScale = n.GetIntValue(); } },
+                { "fee_scale", n => { FeeScale = n.GetLongValue(); } },
                 { "market_id", n => { MarketId = n.GetStringValue(); } },
                 { "max_price", n => { MaxPrice = n.GetStringValue(); } },
                 { "max_volume", n => { MaxVolume = n.GetStringValue(); } },
                 { "min_price", n => { MinPrice = n.GetStringValue(); } },
                 { "min_volume", n => { MinVolume = n.GetStringValue(); } },
-                { "price_scale", n => { PriceScale = n.GetIntValue(); } },
+                { "price_scale", n => { PriceScale = n.GetLongValue(); } },
                 { "trading_status", n => { TradingStatus = n.GetEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.MarketInfo_trading_status>(); } },
-                { "volume_scale", n => { VolumeScale = n.GetIntValue(); } },
+                { "volume_scale", n => { VolumeScale = n.GetLongValue(); } },
             };
         }
         /// <summary>
@@ -126,15 +126,15 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("base_currency", BaseCurrency);
             writer.WriteStringValue("counter_currency", CounterCurrency);
-            writer.WriteIntValue("fee_scale", FeeScale);
+            writer.WriteLongValue("fee_scale", FeeScale);
             writer.WriteStringValue("market_id", MarketId);
             writer.WriteStringValue("max_price", MaxPrice);
             writer.WriteStringValue("max_volume", MaxVolume);
             writer.WriteStringValue("min_price", MinPrice);
             writer.WriteStringValue("min_volume", MinVolume);
-            writer.WriteIntValue("price_scale", PriceScale);
+            writer.WriteLongValue("price_scale", PriceScale);
             writer.WriteEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.MarketInfo_trading_status>("trading_status", TradingStatus);
-            writer.WriteIntValue("volume_scale", VolumeScale);
+            writer.WriteLongValue("volume_scale", VolumeScale);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

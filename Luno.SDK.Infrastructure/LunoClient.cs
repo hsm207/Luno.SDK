@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Abstractions;
@@ -6,8 +7,16 @@ using Luno.SDK.Infrastructure.Account;
 using Luno.SDK.Infrastructure.Authentication;
 using Luno.SDK.Infrastructure.ErrorHandling;
 using Luno.SDK.Infrastructure.Telemetry;
+using Luno.SDK.Telemetry;
 using Luno.SDK.Market;
 using Luno.SDK.Infrastructure.Market;
+using Luno.SDK.Trading;
+using Luno.SDK.Infrastructure.Trading;
+using Luno.SDK.Application;
+using Luno.SDK.Application.Trading;
+using Luno.SDK.Application.Account;
+using Luno.SDK.Application.Market;
+using Luno.SDK.Infrastructure.Generated;
 
 namespace Luno.SDK;
 
@@ -17,23 +26,19 @@ namespace Luno.SDK;
 /// </summary>
 public class LunoClient : ILunoClient
 {
-    // High-performance process-wide connection pool
-    private static readonly SocketsHttpHandler SharedHandler = new()
-    {
-        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
-    };
-
-    private readonly LunoClientOptions _options;
     private readonly ILunoTelemetry _telemetry;
-    private readonly IRequestAdapter _requestAdapter;
     private readonly Lazy<ILunoMarketClient> _market;
     private readonly Lazy<ILunoAccountClient> _accounts;
+    private readonly Lazy<ILunoTradingClient> _trading;
 
     /// <inheritdoc />
     public ILunoMarketClient Market => _market.Value;
 
     /// <inheritdoc />
     public ILunoAccountClient Accounts => _accounts.Value;
+
+    /// <inheritdoc />
+    public ILunoTradingClient Trading => _trading.Value;
 
     /// <inheritdoc />
     public ILunoTelemetry Telemetry => _telemetry;
@@ -43,42 +48,47 @@ public class LunoClient : ILunoClient
     /// </summary>
     /// <param name="options">Optional configuration options for the client.</param>
     public LunoClient(LunoClientOptions? options = null)
-        : this(CreatePooledClient(options ?? new LunoClientOptions()), options)
     {
+        var services = new ServiceCollection();
+        services.AddLunoClient(opt =>
+        {
+            if (options != null)
+            {
+                opt.Credentials = options.Credentials;
+                opt.BaseUrl = options.BaseUrl;
+                opt.UserAgent = options.UserAgent;
+                opt.LoggerFactory = options.LoggerFactory;
+            }
+        });
+
+        // We resolve the fully-wired dependencies from the internal container
+        var sp = services.BuildServiceProvider();
+        _telemetry = sp.GetRequiredService<ILunoTelemetry>();
+        var dispatcher = sp.GetRequiredService<ILunoRequestDispatcher>();
+
+        // Setup the specialized sub-clients (lazy-resolved from the same container)
+        _market = new Lazy<ILunoMarketClient>(() => sp.GetRequiredService<ILunoMarketClient>());
+        _accounts = new Lazy<ILunoAccountClient>(() => sp.GetRequiredService<ILunoAccountClient>());
+        _trading = new Lazy<ILunoTradingClient>(() => sp.GetRequiredService<ILunoTradingClient>());
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LunoClient"/> class using the specified HTTP client and options.
+    /// Initializes a new instance of the <see cref="LunoClient"/> class using the specified dependencies.
+    /// This constructor is primarily used by the DI system via AddLunoClient.
     /// </summary>
-    /// <param name="httpClient">The HTTP client to use for requests. Lifetime must be managed by the caller.</param>
-    /// <param name="options">Optional configuration options for the client.</param>
-    public LunoClient(HttpClient httpClient, LunoClientOptions? options = null)
+    public LunoClient(
+        LunoClientOptions options,
+        ILunoTelemetry telemetry,
+        ILunoRequestDispatcher dispatcher,
+        ILunoMarketClient market,
+        ILunoAccountClient accounts,
+        ILunoTradingClient trading)
     {
-        _options = options ?? new LunoClientOptions();
+        _telemetry = telemetry;
 
-        var telemetryImpl = new LunoTelemetry();
-        _telemetry = telemetryImpl;
-
-        // Setup the centralized request adapter pipeline
-        var authProvider = new LunoAuthenticationProvider(_options);
-        var baseAdapter = new HttpClientRequestAdapter(authProvider, httpClient: httpClient);
-
-        var errorHandlingAdapter = new LunoErrorHandlingAdapter(baseAdapter);
-
-        _requestAdapter = new LunoTelemetryAdapter(
-            errorHandlingAdapter,
-            telemetryImpl,
-            _options.LoggerFactory.CreateLogger<LunoTelemetryAdapter>());
-
-        _market = new Lazy<ILunoMarketClient>(() => new LunoMarketClient(_requestAdapter));
-        _accounts = new Lazy<ILunoAccountClient>(() => new LunoAccountClient(_requestAdapter));
-    }
-
-    private static HttpClient CreatePooledClient(LunoClientOptions options)
-    {
-        return new HttpClient(SharedHandler, disposeHandler: false)
-        {
-            BaseAddress = new Uri(options.BaseUrl)
-        };
+        // In hosted mode, we use the provided instances
+        _market = new Lazy<ILunoMarketClient>(() => market);
+        _accounts = new Lazy<ILunoAccountClient>(() => accounts);
+        _trading = new Lazy<ILunoTradingClient>(() => trading);
     }
 }
