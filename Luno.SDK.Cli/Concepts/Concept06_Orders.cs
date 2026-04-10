@@ -75,8 +75,8 @@ public static class Concept06_Orders
             .AddUserSecrets<Program>()
             .Build();
 
-        string? keyId = config["Luno:ReadOnly:ApiKeyId"];
-        string? keySecret = config["Luno:ReadOnly:ApiKeySecret"];
+        string? keyId = config["Luno:Trading:ApiKeyId"] ?? config["Luno:ReadOnly:ApiKeyId"];
+        string? keySecret = config["Luno:Trading:ApiKeySecret"] ?? config["Luno:ReadOnly:ApiKeySecret"];
 
         if (string.IsNullOrWhiteSpace(keyId) || string.IsNullOrWhiteSpace(keySecret))
         {
@@ -278,29 +278,18 @@ public static class Concept06_Orders
 
     private static void HandleException(Exception ex)
     {
-        if (ex is LunoAuthenticationException)
+        var (color, label, resolution) = ex switch
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"\n[Authentication Error] {ex.Message}");
-        }
-        else if (ex is LunoForbiddenException)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"\n[Permission Denied] {ex.Message}");
-            Console.WriteLine("Note: Ensure your API key has 'Perm_W_Trade' enabled.");
-        }
-        else if (ex is LunoSecurityException)
-        {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"\n[Security Boundary Violated] {ex.Message}");
-            Console.WriteLine(
-                "Resolution: This is a pre-flight SDK check. You must explicitly set 'AuthorizeWriteOperation = true' for this call.");
-        }
-        else
-        {
-            Console.WriteLine($"\n[Unexpected Error] {ex.Message}");
-        }
+            LunoAuthenticationException => (ConsoleColor.Yellow, "[Local Configuration Error]", null),
+            LunoUnauthorizedException   => (ConsoleColor.Red,    "[Server Rejection: Invalid Credentials]", null),
+            LunoForbiddenException      => (ConsoleColor.Red,    "[Permission Denied]", "Note: Ensure your API key has 'Perm_W_Trade' enabled."),
+            LunoSecurityException       => (ConsoleColor.Cyan,   "[Security Boundary Violated]", "Resolution: This is a pre-flight SDK check. You must explicitly set 'AuthorizeWriteOperation = true' for this call."),
+            _                           => (Console.ForegroundColor, "[Unexpected Error]", null)
+        };
 
+        Console.ForegroundColor = color;
+        Console.WriteLine($"\n{label} {ex.Message}");
+        if (resolution != null) Console.WriteLine(resolution);
         Console.ResetColor();
     }
 
