@@ -1,6 +1,6 @@
 # RFC 006 Ext 04: Market Discovery and Metadata
 
-**Status:** Draft 📝  
+**Status:** Implemented ✅  
 **Date:** 2026-03-28  
 **Author(s):** Gemini CLI  
 **Base RFC:** [RFC 006: Trading Client and Order Lifecycle Management](./RFC006_TradingClientAndLimitOrderPlacement.md)

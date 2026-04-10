@@ -201,3 +201,4 @@ During implementation, the architecture was further refined to address SOLID vio
 - **Tiered ISP**: Split `ILunoTradingClient` into `ILunoTradingOperations` and `ILunoTradingClient` to decouple handlers from the orchestration dispatcher.
 - **Generic Pipeline**: Replaced manual decorators with `IPipelineBehavior<TRequest, TResponse>` for composable cross-cutting concerns (logging, validation).
 - **DI Discovery**: Transitioned from a manual factory to automatic assembly scanning via `Microsoft.Extensions.DependencyInjection`.
+- **CLI Concept Mastery**: The final CLI demonstration (`Concept06_Orders.cs`) evolved beyond a simple script into a "Gold Standard" of modular architecture. It utilized `sealed record` types for `DemoScenario` parameter encapsulation and **C# 14 Switch Expressions** with type patterns for high-precision, declarative exception reporting, cleanly separating local configuration failures from server-side rejections.

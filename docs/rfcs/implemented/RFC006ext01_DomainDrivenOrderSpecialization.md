@@ -1,6 +1,6 @@
 # RFC 006ext01: Domain-Driven Order Specialization (V2 Ready)
 
-**Status:** Draft (Revised)  
+**Status:** Implemented ✅  
 **Date:** 2026-03-16  
 **Author(s):** Gemini CLI
 

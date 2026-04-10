@@ -1,6 +1,6 @@
 # RFC 006 Ext 05: Smart Spend Utility (CalculateOrderSize)
 
-**Status:** Draft 📝  
+**Status:** Implemented ✅  
 **Date:** 2026-03-29  
 **Author(s):** Gemini CLI  
 **Base RFC:** [RFC 006: Trading Client and Order Lifecycle Management](./RFC006_TradingClientAndLimitOrderPlacement.md)
@@ -244,3 +244,7 @@ public static PostLimitOrderCommand ToCommand(
 - **Verification Strategy:** 100% test coverage on `CalculateOrderSizeHandler`.
 - **TDD Mandate:** Activate `tdd-tester` to verify rounding logic for all edge cases (e.g., repeating decimals like 1/3). Zero mocking of `MarketInfo` mapping logic.
 - **Documentation:** README updated with the "Spend 100 MYR" example.
+
+## 11. Addendum: Implementation Refinements (Native AOT & Telemetry)
+During execution, the original assumption of using a unified generic `IPipelineBehavior` (to log the inputs/outputs of this orchestration) was challenged. It was discovered that intercepting both scalar `Task<T>` and streaming `IAsyncEnumerable<T>` responses within the same pipeline required `dynamic` dispatch, which fatally compromised **Native AOT compatibility**.
+To preserve architectural purity and AOT support, the implementation evolved to **strictly segregate** pipeline behaviors into `IPipelineBehavior<TRequest, TResponse>` and `IStreamPipelineBehavior<TRequest, TResponse>`. This ensured the `CalculateOrderSizeHandler` could be heavily instrumented and safely executed without relying on reflection or dynamic runtime evaluation.
