@@ -53,6 +53,7 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         {
             throw new LunoSecurityException(
                 request.HttpMethod.ToString(),
+                request.URI.ToString(),
                 request.UrlTemplate ?? string.Empty,
                 requiredPermission);
         }
@@ -69,7 +70,7 @@ public class LunoAuthenticationProvider : IAuthenticationProvider
         {
             var reason = requiredPermission != null ? $"Mandatory Permission Required: {requiredPermission}" : "Explicitly Requested by User";
             throw new LunoAuthenticationException(
-                $"This request ({request.HttpMethod} {request.UrlTemplate}) requires authentication ({reason}), but no ICredentialProvider was configured.");
+                $"This request ({request.HttpMethod} {request.URI}) requires authentication ({reason}), but no ICredentialProvider was configured.");
         }
 
         var credentials = await _credentialProvider.GetCredentialsAsync(cancellationToken);
