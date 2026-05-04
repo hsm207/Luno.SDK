@@ -12,6 +12,26 @@ namespace Luno.SDK;
 public class LunoSecurityException : LunoApiException
 {
     /// <summary>
+    /// The HTTP method of the request that triggered the security violation.
+    /// </summary>
+    public string? HttpMethod { get; }
+
+    /// <summary>
+    /// The generic URL template of the request (e.g., "{+baseurl}/api/1/balance").
+    /// </summary>
+    public string? UrlTemplate { get; }
+
+    /// <summary>
+    /// The actual, resolved URI of the request.
+    /// </summary>
+    public string? URI { get; }
+
+    /// <summary>
+    /// The permission that was required but missing.
+    /// </summary>
+    public string? RequiredPermission { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="LunoSecurityException"/> class.
     /// </summary>
     public LunoSecurityException() : base() { }
@@ -43,11 +63,16 @@ public class LunoSecurityException : LunoApiException
     /// Initializes a new instance of the <see cref="LunoSecurityException"/> class for write intent violations.
     /// </summary>
     /// <param name="httpMethod">The HTTP method of the blocked request.</param>
-    /// <param name="urlTemplate">The URL template of the blocked request.</param>
+    /// <param name="uri">The actual URI of the blocked request.</param>
+    /// <param name="urlTemplate">The generic URL template of the blocked request.</param>
     /// <param name="requiredPermission">The permission that was required.</param>
-    public LunoSecurityException(string httpMethod, string urlTemplate, string requiredPermission)
-        : base($"Write operation blocked. The endpoint '{httpMethod} {urlTemplate}' requires '{requiredPermission}' permission, but explicit write intent was not provided. Please set 'AuthorizeWriteOperation = true' in your request options to proceed.")
+    public LunoSecurityException(string httpMethod, string uri, string urlTemplate, string requiredPermission)
+        : base($"Write operation blocked. The endpoint '{httpMethod} {uri}' requires '{requiredPermission}' permission, but explicit write intent was not provided. Please set 'AuthorizeWriteOperation = true' in your request options to proceed.")
     {
+        HttpMethod = httpMethod;
+        URI = uri;
+        UrlTemplate = urlTemplate;
+        RequiredPermission = requiredPermission;
     }
 }
 
