@@ -14,6 +14,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Enum.Parse<Method>(method), UrlTemplate = urlTemplate };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
         using var scope = LunoSecurityContext.Set(new LunoRequestOptions { AuthenticatePublicEndpoint = false });
         await provider.AuthenticateRequestAsync(request);
 
@@ -28,6 +29,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Enum.Parse<Method>(method), UrlTemplate = urlTemplate };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
 
         await provider.AuthenticateRequestAsync(request);
 
@@ -39,6 +41,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/tickers{?pair}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
         using var scope = LunoSecurityContext.Set(new LunoRequestOptions { AuthenticatePublicEndpoint = true });
         await provider.AuthenticateRequestAsync(request);
 
@@ -50,6 +53,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions());
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/balance{?assets*}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
 
         await Assert.ThrowsAsync<LunoAuthenticationException>(() => provider.AuthenticateRequestAsync(request));
     }
@@ -59,6 +63,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/balance{?assets*}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
         request.Headers.Add("Authorization", "Bearer external_token");
 
         await provider.AuthenticateRequestAsync(request);
@@ -71,8 +76,10 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Method.POST, UrlTemplate = "{+baseurl}/api/1/postorder" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
 
         var ex = await Assert.ThrowsAsync<LunoSecurityException>(() => provider.AuthenticateRequestAsync(request));
+        Assert.Equal("{+baseurl}/api/1/postorder", ex.UrlTemplate);
         Assert.Contains("requires 'Perm_W_Orders' permission", ex.Message);
         Assert.Contains("set 'AuthorizeWriteOperation = true'", ex.Message);
     }
@@ -82,6 +89,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Method.POST, UrlTemplate = "{+baseurl}/api/1/postorder" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
         using var scope = LunoSecurityContext.Set(new LunoRequestOptions { AuthorizeWriteOperation = true });
         await provider.AuthenticateRequestAsync(request);
 
@@ -93,6 +101,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Method.POST, UrlTemplate = "{+baseurl}/api/1/postorder" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
         using var scope = LunoSecurityContext.Set(new LunoRequestOptions { AuthenticatePublicEndpoint = true }); // WRONG FLAG
         await Assert.ThrowsAsync<LunoSecurityException>(() => provider.AuthenticateRequestAsync(request));
     }
@@ -102,6 +111,7 @@ public class LunoAuthenticationProviderTests
     {
         var provider = new LunoAuthenticationProvider(new LunoClientOptions().WithCredentials("user", "pass"));
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/balance{?assets*}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
         using var scope = LunoSecurityContext.Set(new LunoRequestOptions { AuthorizeWriteOperation = true }); // UNNECESSARY BUT ALLOWED
         await provider.AuthenticateRequestAsync(request);
 
@@ -115,6 +125,7 @@ public class LunoAuthenticationProviderTests
         var options = new LunoClientOptions { Credentials = trackingProvider };
         var provider = new LunoAuthenticationProvider(options);
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/tickers{?pair}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
 
         await provider.AuthenticateRequestAsync(request);
 
@@ -128,6 +139,7 @@ public class LunoAuthenticationProviderTests
         var options = new LunoClientOptions { Credentials = trackingProvider };
         var provider = new LunoAuthenticationProvider(options);
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/balance{?assets*}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
 
         Assert.Equal(0, trackingProvider.InvocationCount); // Pre-flight
         await provider.AuthenticateRequestAsync(request);
@@ -143,6 +155,7 @@ public class LunoAuthenticationProviderTests
         var options = new LunoClientOptions { Credentials = trackingProvider };
         var provider = new LunoAuthenticationProvider(options);
         var request = new RequestInformation { HttpMethod = Method.GET, UrlTemplate = "{+baseurl}/api/1/tickers{?pair}" };
+        request.PathParameters.Add("baseurl", "https://api.luno.com");
 
         using var scope = LunoSecurityContext.Set(new LunoRequestOptions { AuthenticatePublicEndpoint = true });
 
