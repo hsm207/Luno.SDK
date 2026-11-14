@@ -36,6 +36,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "example": "TRANSACTIONAL",
+            "x-go-name": "AccountType",
+            "description": "The type to use for this account (if not provided, defaults to\nTRANSACTIONAL).",
+            "name": "account_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TRANSACTIONAL",
+                "SPOT"
+              ]
+            }
           }
         ],
         "responses": {
@@ -197,7 +211,7 @@
     },
     "/api/1/address/validate": {
       "post": {
-        "description": "Validate receive addresses, to which a customer wishes to make cryptocurrency sends, are verified under covering\nregulatory requirements for the customer such as travel rules.\n\nPermissions required: <code>Perm_W_Send</code>",
+        "description": "Validates a counterparty against regulatory requirements such as travel rules. With type \"send\" (the\ndefault), this screens and registers the counterparty's address as the destination of an\noutgoing send. With type \"receive\", this submits originator identity information to resolve a quarantined deposit;\nA 200 response confirms the validation request has been received.\n\nPermissions required: <code>Perm_W_Send</code>",
         "tags": [
           "Address"
         ],
@@ -207,10 +221,9 @@
           {
             "example": "1AbbJJzevwFFVBKvZRtQHHFgrJyYTKaMw2",
             "x-go-name": "Address",
-            "description": "Destination address or email address.\n\n<b>Note</b>:\n<ul>\n<li>Ethereum addresses must be\n<a href=\"https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md\" target=\"_blank\" rel=\"nofollow\">checksummed</a>.</li>\n<li>Ethereum validations of email addresses are not supported.</li>\n</ul>",
+            "description": "Destination address or email address.\n\nRequired for <code>send</code> requests.\n\n<b>Note</b>:\n<ul>\n<li>Ethereum addresses must be\n<a href=\"https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md\" target=\"_blank\" rel=\"nofollow\">checksummed</a>.</li>\n<li>Ethereum validations of email addresses are not supported.</li>\n</ul>",
             "name": "address",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -218,10 +231,9 @@
           {
             "example": "XBT",
             "x-go-name": "Currency",
-            "description": "Currency is the currency associated with the address.",
+            "description": "Currency is the currency associated with the address.\n\nApplies to <code>send</code> requests only.",
             "name": "currency",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -229,7 +241,7 @@
           {
             "example": "MyNamedAddress",
             "x-go-name": "AddressName",
-            "description": "AddressName is the optional name under which to store the address as in the address book.",
+            "description": "AddressName is the optional name under which to store the address as in the address book.\n\nApplies to <code>send</code> requests only.",
             "name": "address_name",
             "in": "query",
             "schema": {
@@ -239,7 +251,7 @@
           {
             "example": true,
             "x-go-name": "HasDestinationTag",
-            "description": "Optional boolean flag indicating that a XRP destination tag is provided (even if zero).",
+            "description": "Optional boolean flag indicating that a XRP destination tag is provided (even if zero).\nRequired when currency is XRP.\n\nApplies to <code>send</code> requests only.",
             "name": "has_destination_tag",
             "in": "query",
             "schema": {
@@ -249,7 +261,7 @@
           {
             "example": 12345,
             "x-go-name": "DestinationTag",
-            "description": "Optional XRP destination tag. Note that HasDestinationTag must be true if this value is provided.",
+            "description": "Optional XRP destination tag. Note that HasDestinationTag must be true if this value is provided.\nRequired when currency is XRP.\n\nApplies to <code>send</code> requests only.",
             "name": "destination_tag",
             "in": "query",
             "schema": {
@@ -260,7 +272,7 @@
           {
             "example": "Test:TEST-test ?;lsbjaciuq12712837519*T*&$^572",
             "x-go-name": "Memo",
-            "description": "Optional memo string used to provide account information for ATOM, etc. where it holds \"account\" information\nfor a generic address.",
+            "description": "Optional memo string used to provide account information for ATOM, etc. where it holds \"account\" information\nfor a generic address. Required for currencies that use memo-based addressing.\n\nApplies to <code>send</code> requests only.",
             "name": "memo",
             "in": "query",
             "schema": {
@@ -269,7 +281,7 @@
           },
           {
             "x-go-name": "IsSelfSend",
-            "description": "IsSelfSend to indicate that the address belongs to the customer.\nIf this field is true then the remaining omitempty fields should not\nbe populated.",
+            "description": "IsSelfSend to indicate that the address belongs to the customer.\nIf this field is true then the remaining optional fields should not\nbe populated.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "is_self_send",
             "in": "query",
             "schema": {
@@ -278,7 +290,7 @@
           },
           {
             "x-go-name": "IsPrivateWallet",
-            "description": "IsPrivateWallet indicates if the address is for private wallet and not held at an exchange.",
+            "description": "IsPrivateWallet indicates if the address is for private wallet and not held at an exchange.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "is_private_wallet",
             "in": "query",
             "schema": {
@@ -288,8 +300,18 @@
           {
             "example": "John Smith's Wallet or Luno or MX Exchange",
             "x-go-name": "WalletName",
-            "description": "PrivateWalletName is the name of the private wallet",
+            "description": "PrivateWalletName is the name of the private wallet. Required when <code>is_private_wallet</code> is\ntrue, depending on your account's compliance requirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "wallet_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "example": "Luno",
+            "x-go-name": "ExchangeName",
+            "description": "ExchangeName is the name of the exchange that the funds were sent from.\n\nApplies to <code>receive</code> requests only. Required when <code>is_private_wallet</code> is false.",
+            "name": "exchange_name",
             "in": "query",
             "schema": {
               "type": "string"
@@ -298,7 +320,7 @@
           {
             "example": "John Smith",
             "x-go-name": "BeneficiaryName",
-            "description": "BeneficiaryName is the name of the beneficial owner if is it is a private address",
+            "description": "BeneficiaryName is the name of the counterparty if is it is a private address.\nRequired when is_legal_entity is false, depending on your account's compliance\nrequirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "beneficiary_name",
             "in": "query",
             "schema": {
@@ -307,7 +329,7 @@
           },
           {
             "x-go-name": "IsLegalEntity",
-            "description": "IsLegalEntity indicates if the address is for a legal entity and not a private beneficiary.\nIf this field is true then the fields BeneficiaryName, Nationality & DateOfBirth should be empty but the\nfields InstitutionName and Country should be populated.\nIf this field is false and IsSelfSend is false (or empty) then the field InstitutionName should be empty but the\nfields BeneficiaryName, Nationality & DateOfBirth and Country should be populated.",
+            "description": "IsLegalEntity indicates if the address is for a legal entity and not a private counterparty.\nIf this field is true then the fields BeneficiaryName, Nationality & DateOfBirth should be empty but the\nfields InstitutionName and Country should be populated.\nIf this field is false and IsSelfSend is false (or empty) then the field InstitutionName should be empty but the\nfields BeneficiaryName, Nationality & DateOfBirth and Country should be populated.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "is_legal_entity",
             "in": "query",
             "schema": {
@@ -317,7 +339,7 @@
           {
             "example": "Some Co Ltd",
             "x-go-name": "InstitutionName",
-            "description": "InstitutionName is the name of the beneficial owner if is it is a legal entities address",
+            "description": "InstitutionName is the name of the counterparty if is it is a legal entities address.\nRequired when is_legal_entity is true, depending on your account's compliance\nrequirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "institution_name",
             "in": "query",
             "schema": {
@@ -325,9 +347,9 @@
             }
           },
           {
-            "example": "MYS",
+            "example": "MY",
             "x-go-name": "Country",
-            "description": "Country is the ISO 3166-1 country code of the beneficial owner of the address",
+            "description": "Country is the ISO 3166-1 country code of the counterparty. Required\ndepending on your account's compliance requirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "country",
             "in": "query",
             "schema": {
@@ -335,9 +357,9 @@
             }
           },
           {
-            "example": "1970-01-01",
+            "example": "Unit 3, 1 Street, Area, City, Region, Country",
             "x-go-name": "PhysicalAddress",
-            "description": "PhysicalAddress is the legal physical address of the beneficial owner of the crypto address",
+            "description": "PhysicalAddress is the legal physical address of the counterparty's crypto\naddress. Required depending on your account's compliance requirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "physical_address",
             "in": "query",
             "schema": {
@@ -345,9 +367,9 @@
             }
           },
           {
-            "example": "MYS",
+            "example": "MY",
             "x-go-name": "Nationality",
-            "description": "Nationality ISO 3166-1 country code of the nationality of the (non-institutional) beneficial owner of the address",
+            "description": "Nationality ISO 3166-1 country code of the nationality of the (non-institutional)\ncounterparty. Required when <code>is_legal_entity</code> is false, depending on\nyour account's compliance requirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "nationality",
             "in": "query",
             "schema": {
@@ -357,11 +379,36 @@
           {
             "example": "1970-01-01",
             "x-go-name": "DateOfBirth",
-            "description": "DateOfBirth is the date of birth of the (non-institutional) beneficial owner of the address in the form \"YYYY-MM-DD\"",
+            "description": "DateOfBirth is the date of birth of the (non-institutional) counterparty\nin the form \"YYYY-MM-DD\". Required when <code>is_legal_entity</code> is false, depending on\nyour account's compliance requirements.\n\nApplies to both <code>send</code> and <code>receive</code> requests.",
             "name": "date_of_birth",
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "example": "receive",
+            "x-go-name": "Type",
+            "description": "Type is the optional input for the direction of the payment, send or receive.\n\n<code>send</code> screens and registers the counterparty's address as the destination of an outgoing send (the default).\n\n<code>receive</code> submits originator identity information to resolve a quarantined deposit.",
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "send",
+                "receive"
+              ]
+            }
+          },
+          {
+            "example": 6120938172318,
+            "x-go-name": "PaymentID",
+            "description": "PaymentID is the Luno payment id of a transaction that has been quarantined.\n\nThis field is required only for <code>receive</code> validation requests.\n\nPaymentID is discoverable through the `List pending transactions` request.",
+            "name": "payment_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
             }
           }
         ],
@@ -402,6 +449,32 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "example": "TRANSACTIONAL",
+            "x-go-name": "AccountType",
+            "description": "Only return balances for wallets of these types (if not provided, all\naccount types are returned). To filter by multiple types, pass the\nparameter multiple times, e.g. `account_type=SPOT&account_type=SPOT_MARGIN`.",
+            "name": "account_type",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "TRANSACTIONAL",
+                  "SPOT",
+                  "SPOT_MARGIN",
+                  "SAVINGS",
+                  "BUNDLE",
+                  "STAKING",
+                  "EARN",
+                  "PREDICTION",
+                  "EXTERNAL_TOKENISING"
+                ],
+                "type": "string"
+              }
+            }
           }
         ],
         "responses": {
@@ -428,8 +501,9 @@
         "operationId": "ListBeneficiaries",
         "parameters": [
           {
-            "example": "John* or *Smith or *John*",
+            "example": "John Smith",
             "x-go-name": "BankRecipient",
+            "description": "Bank Recipient name of the beneficiary. The wildcard character * can be used. Example: John* or *Smith or *John*",
             "name": "bank_recipient",
             "in": "query",
             "schema": {
@@ -745,7 +819,7 @@
           {
             "example": 1530865703508,
             "x-go-name": "CreatedBefore",
-            "description": "Filter to orders created before this timestamp (Unix milliseconds)",
+            "description": "Filter to orders created before this timestamp (Unix milliseconds)\n\nformat: timestamp",
             "name": "created_before",
             "in": "query",
             "schema": {
@@ -765,6 +839,17 @@
               "minimum": 1,
               "maximum": 1000,
               "default": 100
+            }
+          },
+          {
+            "example": false,
+            "x-go-name": "MarginOnly",
+            "description": "Filter to only orders placed using spot margin wallets.",
+            "name": "margin_only",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -988,11 +1073,12 @@
           {
             "example": "mkt-53960812",
             "x-go-name": "ClientOrderID",
-            "description": "Client order ID.\nMay only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 255.\nIt will be available in read endpoints, so you can use it to reconcile Luno with your internal system.\nValues must be unique across all your successful order creation endpoint calls; trying to create an order\nwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.",
+            "description": "Client order ID.\nMay only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 100.\nIt will be available in read endpoints, so you can use it to reconcile Luno with your internal system.\nValues must be unique across all your successful order creation endpoint calls; trying to create an order\nwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.",
             "name": "client_order_id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 100
             }
           }
         ],
@@ -1281,11 +1367,12 @@
           {
             "example": "lmt-53960812",
             "x-go-name": "ClientOrderID",
-            "description": "Client order ID.\nMay only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 255.\nIt will be available in read endpoints, so you can use it to reconcile Luno with your internal system.\nValues must be unique across all your successful order creation endpoint calls; trying to create an order\nwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.",
+            "description": "Client order ID.\nMay only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 100.\nIt will be available in read endpoints, so you can use it to reconcile Luno with your internal system.\nValues must be unique across all your successful order creation endpoint calls; trying to create an order\nwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.",
             "name": "client_order_id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 100
             }
           }
         ],
@@ -1736,7 +1823,36 @@
           "Users"
         ],
         "summary": "Linked Users",
-        "operationId": "Linked",
+        "operationId": "LinkedUsers",
+        "parameters": [
+          {
+            "example": 100,
+            "x-go-name": "Offset",
+            "description": "Page through records",
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "example": 986,
+            "x-go-name": "Limit",
+            "description": "Limit to this many users.",
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1992,13 +2108,13 @@
           },
           {
             "x-go-name": "Since",
-            "description": "Filter to candles starting on or after this timestamp (Unix milliseconds).\nOnly up to 1000 of the earliest candles are returned.",
+            "description": "Filter to candles starting on or after this timestamp (Unix milliseconds).\nOnly up to 1000 of the earliest candles are returned.\n\nformat: timestamp",
             "name": "since",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "timestamp"
+              "format": "int64"
             }
           },
           {
@@ -2021,6 +2137,80 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetCandlesResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/apiError"
+          }
+        }
+      }
+    },
+    "/api/exchange/1/convert": {
+      "post": {
+        "description": "Instantly convert between two currencies. Only conversions between ZAR and ZARU are supported. Conversions will be done at a 1:1 rate.\n\nPermissions required: <code>MP_Transfers</code>",
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Convert",
+        "operationId": "Convert",
+        "parameters": [
+          {
+            "example": "100.00",
+            "x-go-name": "Amount",
+            "description": "Amount to convert from the source account. Must be positive.",
+            "name": "amount",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "amount"
+            }
+          },
+          {
+            "example": 12345,
+            "x-go-name": "SourceAccountID",
+            "description": "The account to convert funds from.",
+            "name": "source_account_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "example": 12346,
+            "x-go-name": "TargetAccountID",
+            "description": "The account to receive the converted funds.",
+            "name": "target_account_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "example": "convert-abc123",
+            "x-go-name": "IdempotencyKey",
+            "description": "A unique key to prevent duplicate conversions. If a conversion with the same key\nalready exists and completed successfully, the original result is returned.\nUse a new key to retry a failed conversion.",
+            "name": "idempotency_key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvertResponse"
                 }
               }
             }
@@ -2203,7 +2393,7 @@
           {
             "example": 1530865703508,
             "x-go-name": "Before",
-            "description": "Filter to moves requested before this timestamp (Unix milliseconds)",
+            "description": "Filter to moves requested before this timestamp (Unix milliseconds)\n\nformat: timestamp",
             "name": "before",
             "in": "query",
             "schema": {
@@ -2280,7 +2470,7 @@
           {
             "example": 1530865703508,
             "x-go-name": "Before",
-            "description": "Filter to transfers created before this timestamp (Unix milliseconds).\nThe default value (0) will return the latest transfers on the account.",
+            "description": "Filter to transfers created before this timestamp (Unix milliseconds).\nThe default value (0) will return the latest transfers on the account.\n\nformat: timestamp",
             "name": "before",
             "in": "query",
             "schema": {
@@ -2340,7 +2530,7 @@
           {
             "example": 1530865703508,
             "x-go-name": "CreatedBefore",
-            "description": "Filter to orders created before this timestamp (Unix milliseconds)",
+            "description": "Filter to orders created before this timestamp (Unix milliseconds)\n\nformat: timestamp",
             "name": "created_before",
             "in": "query",
             "schema": {
@@ -2468,7 +2658,7 @@
   },
   "tags": [
     {
-      "description": "Some API calls require your application to authenticate itself. This is done using an API key associated with your account. You can create an API key by visiting <a href=\"/wallet/settings/api_keys\">the API Keys section</a> on the settings page.\n\nAn API key consists of a <code>key id</code> and a <code>key secret</code>. For example, <code>cnz2yjswbv3jd</code> (key id) and <code>0hydMZDb9HRR3Qq-iqALwZtXLkbLR4fWxtDZvkB9h4I</code> (key secret).\n\nAPI requests are authenticated using HTTP basic authentication with the key id as the username and the key secret as the password. A missing, incorrect or revoked key causes error 401 to be returned.</p> <p>Each API key is granted a set of permissions when it is created. The key can only be used to call the permitted API functions.\n\n<h3>Permissions</h3>\n\nThe following is a list of the possible permissions.\n\n<ul>\n  <li><code>Perm_R_Balance = 1</code> (View balance)</li>\n  <li><code>Perm_R_Transactions = 2</code> (View transactions)</li>\n  <li><code>Perm_W_Send = 4</code> (Send to any address)</li>\n  <li><code>Perm_R_Addresses = 8</code> (View addresses)</li>\n  <li><code>Perm_W_Addresses = 16</code> (Create addresses)</li>\n  <li><code>Perm_R_Orders = 32</code> (View orders)</li>\n  <li><code>Perm_W_Orders = 64</code> (Create orders)</li>\n  <li><code>Perm_R_Withdrawals = 128</code> (View withdrawals)</li>\n  <li><code>Perm_W_Withdrawals = 256</code> (Create withdrawals)</li>\n  <li><code>Perm_W_ClientDebit = 8192</code> (Debit accounts)</li>\n  <li><code>Perm_W_ClientCredit = 16384</code> (Credit accounts)</li>\n  <li><code>Perm_R_Beneficiaries = 32768</code> (View beneficiaries)</li>\n  <li><code>Perm_W_Beneficiaries = 65536</code> (Create and delete beneficiaries)</li>\n  <li><code>Perm_R_Transfers = 131072</code> (Create and delete beneficiaries)</li>\n</ul>\n\nA set of permissions is represented as the bitwise OR of each permission in the set. For example the set of permissions required to view balances and orders is <code>Perm_R_Balance | Perm_R_Orders = 33</code>.\n\nWhen API keys are created, users can select permission sets that automatically include various permissions for their key.  These are listed below.\n\n<table>\n<thead>\n<tr>\n<td>Permission Set</td>\n<td>Included Permissions</td>\n</tr>\n</thead>\n<tbody>\n<tr>\n  <td>\n    Read-only access\n  </td>\n  <td>\n    View Balance\n    <br />View transactions\n    <br />Send to any address\n    <br />View orders\n    <br />View withdrawals\n    <br />View beneficiaries\n    <br />View transfers\n  </td>\n</tr>\n<tr>\n  <td>\n    Trading access\n  </td>\n  <td>\n    View Balance\n    <br />View transactions\n    <br />Send to any address\n    <br />View orders\n    <br />View withdrawals\n    <br />View beneficiaries\n    <br />Create orders\n  </td>\n</tr>\n</tbody>\n</table>\n",
+      "description": "Some API calls require your application to authenticate itself. This is done using an API key associated with your account. You can create an API key by visiting <a href=\"/wallet/settings/api_keys\">the API Keys section</a> on the settings page.\n\nAn API key consists of a <code>key id</code> and a <code>key secret</code>. For example, <code>cnz2yjswbv3jd</code> (key id) and <code>0hydMZDb9HRR3Qq-iqALwZtXLkbLR4fWxtDZvkB9h4I</code> (key secret).\n\nAPI requests are authenticated using HTTP basic authentication with the key id as the username and the key secret as the password. A missing, incorrect or revoked key causes error 401 to be returned.</p> <p>Each API key is granted a set of permissions when it is created. The key can only be used to call the permitted API functions.\n\n<h3>Permissions</h3>\n\nThe following is a list of the possible permissions.\n\n<ul>\n  <li><code>Perm_R_Balance = 1</code> (View balance)</li>\n  <li><code>Perm_R_Transactions = 2</code> (View transactions)</li>\n  <li><code>Perm_W_Send = 4</code> (Send to any address)</li>\n  <li><code>Perm_R_Addresses = 8</code> (View addresses)</li>\n  <li><code>Perm_W_Addresses = 16</code> (Create addresses)</li>\n  <li><code>Perm_R_Orders = 32</code> (View orders)</li>\n  <li><code>Perm_W_Orders = 64</code> (Create orders)</li>\n  <li><code>Perm_R_Withdrawals = 128</code> (View withdrawals)</li>\n  <li><code>Perm_W_Withdrawals = 256</code> (Create withdrawals)</li>\n  <li><code>Perm_R_UserInfo = 2048</code> (View profile information)</li>\n  <li><code>Perm_W_UserInfo = 4096</code> (Update profile information)</li>\n  <li><code>Perm_W_ClientDebit = 8192</code> (Debit accounts)</li>\n  <li><code>Perm_W_ClientCredit = 16384</code> (Credit accounts)</li>\n  <li><code>Perm_R_Beneficiaries = 32768</code> (View beneficiaries)</li>\n  <li><code>Perm_W_Beneficiaries = 65536</code> (Create and delete beneficiaries)</li>\n  <li><code>Perm_R_Transfers = 131072</code> (View transfers)</li>\n  <li><code>Perm_W_Transfers = 262144</code> (Create transfers)</li>\n  <li><code>Perm_R_Staking = 524288</code> (View staking)</li>\n  <li><code>Perm_W_Staking = 1048576</code> (Create staking)</li>\n</ul>\n\nA set of permissions is represented as the bitwise OR of each permission in the set. For example the set of permissions required to view balances and orders is <code>Perm_R_Balance | Perm_R_Orders = 33</code>.\n\nWhen API keys are created, users can select permission sets that automatically include various permissions for their key.  These are listed below.\n\n<table>\n<thead>\n<tr>\n<td>Permission Set</td>\n<td>Included Permissions</td>\n</tr>\n</thead>\n<tbody>\n<tr>\n  <td>\n    Read-only access\n  </td>\n  <td>\n    View Balance\n    <br />View transactions\n    <br />View addresses\n    <br />View orders\n    <br />View withdrawals\n    <br />View beneficiaries\n    <br />View transfers\n    <br />View staking\n  </td>\n</tr>\n<tr>\n  <td>\n    Trading access\n  </td>\n  <td>\n    View Balance\n    <br />View transactions\n    <br />View addresses\n    <br />View orders\n    <br />View withdrawals\n    <br />View beneficiaries\n    <br />View transfers\n    <br />View staking\n    <br />Create orders\n  </td>\n</tr>\n</tbody>\n</table>\n",
       "name": "Authentication"
     },
     {
@@ -2512,7 +2702,7 @@
       "name": "Receive"
     },
     {
-      "description": "Users are able to pre-validate receive addresses under travel rules for cryptocurrency sends from their account.\n",
+      "description": "Validates a counterparty against Travel Rule requirements before a send or receive. For an outgoing send (type: \"send\", the default), this registers the beneficiary's address. For a receive (type: \"receive\"), this submits originator information to resolve a quarantined deposit.\n",
       "name": "Address"
     },
     {
@@ -2532,11 +2722,11 @@
       "name": "Streaming API"
     },
     {
-      "description": "This section describes the error codes in more detail.\n<ul>\n<li><code>ErrAccountLimit</code> You can't add another wallet with this currency</li>\n<li><code>ErrAccountNotFound</code> Cannot find that account</li>\n<li><code>ErrAccountsNotDifferent</code> Debit and credit accounts must be different</li>\n<li><code>ErrActiveCryptoRequestExists</code> Send request pending. Please try again after it has completed.</li>\n<li><code>ErrAddressCreateRateLimitReached</code> Receive address create rate limit reached. Please try again later.</li>\n<li><code>ErrAddressLimitReached</code> Receive address limit reached.</li>\n<li><code>ErrAmountTooBig</code> The specified amount is higher than the maximum allowed.</li>\n<li><code>ErrAmountTooSmall</code> The specified amount is lower than the minimum allowed.</li>\n<li><code>ErrApiKeyRevoked</code> Your API key has been revoked.</li>\n<li><code>ErrBeneficiaryNotFound</code> Beneficiary not Found</li>\n<li><code>ErrBlockedSendsCurrency</code> Sends are currently disabled for this currency</li>\n<li><code>ErrCannotStopUnknownOrNonPendingOrder</code> Cannot stop unknown or non-pending order.</li>\n<li><code>ErrCannotTradeWhileQuoteActive</code> Cannot trade while you have any active quotes.</li>\n<li><code>ErrCounterDenominationNotAllowed</code> Amount contains too many decimal places</li>\n<li><code>ErrCreditAccountNotTransactional</code> The specified credit-account must be transactional</li>\n<li><code>ErrCustomRefNotAllowed</code> Custom reference not allowed</li>\n<li><code>ErrDeadlineExceeded</code> Could not complete before the deadline</li>\n<li><code>ErrDebitAccountNotTransactional</code> Debit account not transactional</li>\n<li><code>ErrDescriptionTooLong</code> Your transaction reference is too long. The maximum length is 256 characters.</li>\n<li><code>ErrDifferentCurrencies</code> Debit and credit accounts have different currencies</li>\n<li><code>ErrDisallowedTarget</code> Given address not allowed.</li>\n<li><code>ErrDuplicateClientMoveID</code> Duplicate client move id</li>\n<li><code>ErrDuplicateClientOrderID</code> Duplicate client order id</li>\n<li><code>ErrDuplicateExternalID</code> A withdrawal with an identical external id already exists.</li>\n<li><code>ErrERC20AddressAlreadyAssigned</code> You can only create 1 ERC-20 receive address per token</li>\n<li><code>ErrERC20AssignNonDefault</code> You can only assign ERC-20 receive addresses to your default account</li>\n<li><code>ErrFundsMoveNotFound</code> Funds move not found</li>\n<li><code>ErrIncompatibleBeneficiary</code> Beneficiary is incompatible with the requested withdrawal.</li>\n<li><code>ErrIncorrectPin</code> Invalid pin specified</li>\n<li><code>ErrInsufficientBalance</code> Insufficient balance.</li>\n<li><code>ErrInsufficientFunds</code> Account has insufficient funds</li>\n<li><code>ErrInsufficientPerms</code> You do not have the required permissions to perform this action</li>\n<li><code>ErrInternal</code> Something went wrong. We're looking into it.</li>\n<li><code>ErrInvalidAccount</code> Account is invalid</li>\n<li><code>ErrInvalidAccountID</code> Invalid account ID specified</li>\n<li><code>ErrInvalidAccountNumber</code> Account number is invalid</li>\n<li><code>ErrInvalidAmount</code> Invalid amount specified</li>\n<li><code>ErrInvalidArguments</code> If any request parameters have invalid values this error will be returned. This error should also include a list of the offending fields to help identify and fix any issues.</li>\n<li><code>ErrInvalidBaseVolume</code> Invalid base volume for sell order.</li>\n<li><code>ErrInvalidBranchCode</code> Bank branch code is invalid.</li>\n<li><code>ErrInvalidClientOrderId</code> Invalid client order id</li>\n<li><code>ErrInvalidCounterVolume</code> Invalid counter volume for buy order.</li>\n<li><code>ErrInvalidCurrency</code> Invalid currency specified</li>\n<li><code>ErrInvalidDetails</code> Bank account details invalid</li>\n<li><code>ErrInvalidMarketPair</code> Market pair is invalid</li>\n<li><code>ErrInvalidOrderRef</code> Order reference is invalid</li>\n<li><code>ErrInvalidOrderSide</code> Order side is invalid</li>\n<li><code>ErrInvalidParameters</code> Invalid parameters</li>\n<li><code>ErrInvalidPrice</code> Invalid order price.</li>\n<li><code>ErrInvalidRequestType</code> Invalid withdrawal request type specified.</li>\n<li><code>ErrInvalidSourceAccount</code> Invalid source account</li>\n<li><code>ErrInvalidStopDirection</code> Stop direction is invalid.</li>\n<li><code>ErrInvalidStopPrice</code> Invalid order stop price.</li>\n<li><code>ErrInvalidVolume</code> Invalid order volume.</li>\n<li><code>ErrLimitOutOfRange</code> List limit is out of allowed range</li>\n<li><code>ErrMarketNotAllowed</code> This market is not enabled for you.</li>\n<li><code>ErrMarketUnavailable</code> Market not available</li>\n<li><code>ErrMaxActiveFiatRequestsExists</code> Too many withdrawals in progress. Cancel one or try again later.</li>\n<li><code>ErrNoAddressesAssigned</code> No funding addresses linked to default account</li>\n<li><code>ErrNoTradesToInferStopDirection</code> Could not place Stop Limit Order, no trades to determine direction</li>\n<li><code>ErrNotEnoughLiquidity</code> Market order price would vary too much from the market rate - use a limit order instead</li>\n<li><code>ErrNotFound</code> No result found</li>\n<li><code>ErrOrderCanceled</code> Your post-only order was cancelled before trading</li>\n<li><code>ErrOrderNotFound</code> Cannot find that order</li>\n<li><code>ErrPostOnlyMode</code> Market is in post-only mode</li>\n<li><code>ErrPostOnlyNotAllowed</code> IOC and FOK time-in-force types are not supported as post-only orders</li>\n<li><code>ErrPriceDenominationNotAllowed</code> Price contains too many decimal places</li>\n<li><code>ErrPriceTooHigh</code> Price is above the maximum</li>\n<li><code>ErrPriceTooLow</code> Price is below the minimum</li>\n<li><code>ErrRejectedBeneficiary</code> Cannot request withdrawal to rejected beneficiary.</li>\n<li><code>ErrRequestTypeDoesNotSupportFastWithdrawals</code> The specified request type does not support fast withdrawals.</li>\n<li><code>ErrStopPriceTooHigh</code> Stop price is too high.</li>\n<li><code>ErrStopPriceTooLow</code> Stop price is too low.</li>\n<li><code>ErrTooManyRequests</code> You are exceeding the allowed request rate limit</li>\n<li><code>ErrTooManyRowsRequested</code> Too many rows requested</li>\n<li><code>ErrTravelRule</code> Please ensure that you've initiated a once-off crypto send for this specific wallet address via the website or mobile app and included relevant Travel Rule information before trying again via the send API. <a href=\"/help/articles/421340781836897\" target=\"_blank\">Click here</a> for more information on the Travel Rule.</li>\n<li><code>ErrUnauthorised</code> You are not authorised to access this route</li>\n<li><code>ErrUnderMaintenance</code> The market is currently undergoing maintenance</li>\n<li><code>ErrUpdateRequired</code> Luno app update required</li>\n<li><code>ErrUserBlockedForCancelWithdrawal</code> User blocked from cancelling withdrawals</li>\n<li><code>ErrUserNotVerifiedForCurrency</code> You are not verified for this currency</li>\n<li><code>ErrValueTooHigh</code> Order value too high</li>\n<li><code>ErrVerificationLevelTooLow</code> You must verify your identity using the Luno app before you can send crypto.</li>\n<li><code>ErrVolumeDenominationNotAllowed</code> Volume contains too many decimal places</li>\n<li><code>ErrVolumeTooHigh</code> Volume is above the maximum</li>\n<li><code>ErrVolumeTooLow</code> Volume is below the minimum</li>\n<li><code>ErrWithdrawalBlocked</code> To increase your withdraw limit add more information to your profile in settings.</li>\n<li><code>ErrWithdrawalNotFound</code> Cannot find that withdrawal</li></ul>",
+      "description": "This section describes the error codes in more detail.\n<ul>\n<li><code>ErrAccountInLiquidation</code> Account is being liquidated.</li>\n<li><code>ErrAccountIsMigrating</code> Account migration in progress</li>\n<li><code>ErrAccountLimit</code> You can't add another wallet with this currency</li>\n<li><code>ErrAccountNotFound</code> Cannot find that account</li>\n<li><code>ErrAccountRowLimit</code> Account row count exceeds limit</li>\n<li><code>ErrAccountsNotDifferent</code> Debit and credit accounts must be different</li>\n<li><code>ErrActiveCryptoRequestExists</code> Send request pending. Please try again after it has completed.</li>\n<li><code>ErrAddressCreateRateLimitReached</code> Receive address create rate limit reached. Please try again later.</li>\n<li><code>ErrAddressLimitReached</code> Receive address limit reached.</li>\n<li><code>ErrAmountTooBig</code> The specified amount is higher than the maximum allowed.</li>\n<li><code>ErrAmountTooSmall</code> The specified amount is lower than the minimum allowed.</li>\n<li><code>ErrApiKeyRevoked</code> Your API key has been revoked.</li>\n<li><code>ErrBeneficiaryNotFound</code> Beneficiary not Found</li>\n<li><code>ErrBeneficiaryScreeningRejected</code> This withdrawal cannot be completed.</li>\n<li><code>ErrBlockedSendsCurrency</code> Sends or receives are currently disabled for this currency</li>\n<li><code>ErrBorrowerLimitReached</code> Borrowing limit reached for this asset.</li>\n<li><code>ErrCannotModifyStopPrice</code> Stop price cannot be modified.</li>\n<li><code>ErrCannotStopUnknownOrNonPendingOrder</code> Cannot stop unknown or non-pending order.</li>\n<li><code>ErrCannotTradeWhileQuoteActive</code> Cannot trade while you have any active quotes.</li>\n<li><code>ErrConvertPairNotSupported</code> The requested pair is not supported for conversion.</li>\n<li><code>ErrConvertRateLimited</code> You have exceeded the conversion rate limit for this pair. Please try again later.</li>\n<li><code>ErrCounterDenominationNotAllowed</code> Amount contains too many decimal places</li>\n<li><code>ErrCreditAccountTypeNotSupported</code> Account type not supported for credit</li>\n<li><code>ErrCrossAccountTypeTradeNotAllowed</code> Cannot trade between wallet types. Use matching wallets</li>\n<li><code>ErrCustomRefNotAllowed</code> Custom reference not allowed</li>\n<li><code>ErrDeadlineExceeded</code> Could not complete before the deadline</li>\n<li><code>ErrDebitAccountTypeNotSupported</code> Account type not supported for debit</li>\n<li><code>ErrDescriptionTooLong</code> Your transaction reference is too long. The maximum length is 256 characters.</li>\n<li><code>ErrDifferentCurrencies</code> Debit and credit accounts have different currencies</li>\n<li><code>ErrDisallowedTarget</code> Given address not allowed.</li>\n<li><code>ErrDuplicateClientMoveID</code> Duplicate client move id</li>\n<li><code>ErrDuplicateClientOrderID</code> Duplicate client order id</li>\n<li><code>ErrDuplicateClientRepaymentID</code> Duplicate client repayment id</li>\n<li><code>ErrDuplicateExternalID</code> A withdrawal with an identical external id already exists.</li>\n<li><code>ErrERC20AddressAlreadyAssigned</code> You can only create 1 ERC-20 receive address per token</li>\n<li><code>ErrERC20NonTransactionalAccount</code> ERC-20 receive addresses are only available on transactional accounts</li>\n<li><code>ErrExpiryTimeInPast</code> Expiry time is in the past.</li>\n<li><code>ErrFundsMoveNotFound</code> Funds move not found</li>\n<li><code>ErrIdempotencyKeyConflict</code> A request with this idempotency_key has already been processed.</li>\n<li><code>ErrIdempotencyKeyRequestMismatch</code> A request with this idempotency_key has a mismatched request</li>\n<li><code>ErrIncompatibleBeneficiary</code> Beneficiary is incompatible with the requested withdrawal.</li>\n<li><code>ErrIncorrectPin</code> Invalid pin specified</li>\n<li><code>ErrInsufficientBalance</code> Insufficient balance.</li>\n<li><code>ErrInsufficientFunds</code> Account has insufficient funds</li>\n<li><code>ErrInsufficientPerms</code> You do not have the required permissions to perform this action</li>\n<li><code>ErrInternal</code> Something went wrong. We're looking into it.</li>\n<li><code>ErrInvalidAccount</code> Account is invalid</li>\n<li><code>ErrInvalidAccountID</code> Invalid account ID specified</li>\n<li><code>ErrInvalidAccountNumber</code> Account number is invalid</li>\n<li><code>ErrInvalidAccountType</code> Account type is invalid</li>\n<li><code>ErrInvalidAmount</code> Invalid amount specified</li>\n<li><code>ErrInvalidArguments</code> If any request parameters have invalid values this error will be returned. This error should also include a list of the offending fields to help identify and fix any issues.</li>\n<li><code>ErrInvalidBaseVolume</code> Invalid base volume for sell order.</li>\n<li><code>ErrInvalidBranchCode</code> Bank branch code is invalid.</li>\n<li><code>ErrInvalidClientOrderId</code> Invalid client order id</li>\n<li><code>ErrInvalidClientRepaymentID</code> Invalid client repayment id</li>\n<li><code>ErrInvalidCostOrderQuantity</code> Invalid order cost.</li>\n<li><code>ErrInvalidCounterVolume</code> Invalid counter volume for buy order.</li>\n<li><code>ErrInvalidCurrency</code> Invalid currency specified</li>\n<li><code>ErrInvalidCursor</code> Invalid cursor</li>\n<li><code>ErrInvalidDetails</code> Bank account details invalid</li>\n<li><code>ErrInvalidEventType</code> Invalid event_type</li>\n<li><code>ErrInvalidMarketPair</code> Market pair is invalid</li>\n<li><code>ErrInvalidOrderRef</code> Order reference is invalid</li>\n<li><code>ErrInvalidOrderSide</code> Order side is invalid</li>\n<li><code>ErrInvalidOrderTypeForGoodTillTime</code> This time in force requires a limit order.</li>\n<li><code>ErrInvalidOrderTypeForPostOnly</code> Post-only orders must be limit orders.</li>\n<li><code>ErrInvalidParameters</code> Invalid parameters</li>\n<li><code>ErrInvalidPrice</code> Invalid order price.</li>\n<li><code>ErrInvalidRequestType</code> Invalid withdrawal request type specified.</li>\n<li><code>ErrInvalidSourceAccount</code> Invalid source account</li>\n<li><code>ErrInvalidStopDirection</code> Stop direction is invalid.</li>\n<li><code>ErrInvalidStopPrice</code> Invalid order stop price.</li>\n<li><code>ErrInvalidTimeInForceForPostOnly</code> Post-only orders cannot use this time in force.</li>\n<li><code>ErrInvalidVolume</code> Invalid order volume.</li>\n<li><code>ErrInvalidWalletType</code> Invalid wallet type</li>\n<li><code>ErrLeverageExceedsInstrumentMaximum</code> Leverage exceeds the maximum for this market.</li>\n<li><code>ErrLeverageRequiresSpotMarginWallet</code> Leverage requires spot margin accounts.</li>\n<li><code>ErrLimitOutOfRange</code> List limit is out of allowed range</li>\n<li><code>ErrMarginAssetNotFound</code> Cannot find that margin asset</li>\n<li><code>ErrMarginServiceUnavailable</code> Margin service temporarily unavailable, try again shortly</li>\n<li><code>ErrMarginValuationMissing</code> No margin account summary available yet</li>\n<li><code>ErrMarketNotAllowed</code> This market is not enabled for you.</li>\n<li><code>ErrMarketUnavailable</code> Market not available</li>\n<li><code>ErrMaxActiveFiatRequestsExists</code> Too many withdrawals in progress. Cancel one or try again later.</li>\n<li><code>ErrMissingAutoRepay</code> auto_repay is required.</li>\n<li><code>ErrMissingIdempotencyKey</code> idempotency_key is required.</li>\n<li><code>ErrNoAddressesAssigned</code> No funding addresses linked to default account</li>\n<li><code>ErrNoTradesToInferStopDirection</code> Could not place Stop Limit Order, no trades to determine direction</li>\n<li><code>ErrNotEnoughLiquidity</code> Market order price would vary too much from the market rate - use a limit order instead</li>\n<li><code>ErrNotFound</code> No result found</li>\n<li><code>ErrOnlySpotWalletsAllowed</code> Only trading wallets are available for this market</li>\n<li><code>ErrOpenSpotMarginLoan</code> Account has an open spot margin loan</li>\n<li><code>ErrOrderAttributeNotModifiable</code> This attribute cannot be modified.</li>\n<li><code>ErrOrderCanceled</code> Your post-only order was cancelled before trading</li>\n<li><code>ErrOrderNotFound</code> Cannot find that order</li>\n<li><code>ErrPostOnlyMode</code> Market is in post-only mode</li>\n<li><code>ErrPostOnlyNotAllowed</code> IOC and FOK time-in-force types are not supported as post-only orders</li>\n<li><code>ErrPriceDenominationNotAllowed</code> Price contains too many decimal places</li>\n<li><code>ErrPriceTooHigh</code> Price is above the maximum</li>\n<li><code>ErrPriceTooLow</code> Price is below the minimum</li>\n<li><code>ErrRejectedBeneficiary</code> Cannot request withdrawal to rejected beneficiary.</li>\n<li><code>ErrRequestTypeDoesNotSupportFastWithdrawals</code> The specified request type does not support fast withdrawals.</li>\n<li><code>ErrSelfMatch</code> Your order would have matched one of your own orders and was cancelled.</li>\n<li><code>ErrServiceUnavailable</code> Temporarily unavailable. Please try again shortly.</li>\n<li><code>ErrSpotMarginAccountInLiquidation</code> Your account is under active liquidation and cannot process manual repayments right now.</li>\n<li><code>ErrSpotMarginGloballyDisabled</code> Spot margin is temporarily unavailable.</li>\n<li><code>ErrSpotMarginLoanNotFound</code> Cannot find that loan</li>\n<li><code>ErrSpotMarginNotEnabled</code> Spot margin is not enabled for your account.</li>\n<li><code>ErrSpotMarginNotSupportedForInstrument</code> Spot margin is not supported for this market.</li>\n<li><code>ErrSpotMarginWalletRequiresLeverage</code> Spot margin accounts require leverage.</li>\n<li><code>ErrStopPriceTooHigh</code> Stop price is too high.</li>\n<li><code>ErrStopPriceTooLow</code> Stop price is too low.</li>\n<li><code>ErrTooManyRequests</code> You are exceeding the allowed request rate limit</li>\n<li><code>ErrTooManyRowsRequested</code> Too many rows requested</li>\n<li><code>ErrTransferInProgress</code> A transfer from your margin wallet is in progress. Please try again once it has completed.</li>\n<li><code>ErrTravelRule</code> Please ensure that you've initiated a once-off crypto send for this specific wallet address via the website or mobile app and included relevant Travel Rule information before trying again via the send API. <a href=\"/help/articles/421340781836897\" target=\"_blank\">Click here</a> for more information on the Travel Rule.</li>\n<li><code>ErrUnableToProvisionLoan</code> Unable to provision loan, please try again.</li>\n<li><code>ErrUnauthorised</code> You are not authorised to access this route</li>\n<li><code>ErrUnderMaintenance</code> The market is currently undergoing maintenance</li>\n<li><code>ErrUnsupportedWalletType</code> Deposit addresses can only be created for transactional wallets</li>\n<li><code>ErrUpdateRequired</code> Luno app update required</li>\n<li><code>ErrUserBlockedForCancelWithdrawal</code> User blocked from cancelling withdrawals</li>\n<li><code>ErrUserNotVerifiedForCurrency</code> You are not verified for this currency</li>\n<li><code>ErrValueTooHigh</code> Order value too high</li>\n<li><code>ErrVenueRejected</code> Order rejected by the venue.</li>\n<li><code>ErrVerificationLevelTooLow</code> You must verify your identity using the Luno app before you can send crypto.</li>\n<li><code>ErrVolumeDenominationNotAllowed</code> Volume contains too many decimal places</li>\n<li><code>ErrVolumeTooHigh</code> Volume is above the maximum</li>\n<li><code>ErrVolumeTooLow</code> Volume is below the minimum</li>\n<li><code>ErrWithdrawalBlocked</code> To increase your withdraw limit add more information to your profile in settings.</li>\n<li><code>ErrWithdrawalNotFound</code> Cannot find that withdrawal</li></ul>",
       "name": "Error Codes"
     },
     {
-      "description": "<ul>\n  <li>\n    <strong>2026-01-07:</strong>\n    <ul>\n      <li>Add optional <code>source_account_id</code> parameter to <code>POST /api/1/withdrawals</code></li>\n    </ul>\n  </li>\n  <li>\n      <strong>2025-03-11:</strong>\n      <ul>\n        <li>Added <code>GET /api/1/send/networks</code> endpoint</li>\n        <li>Added network id to <code>GET /api/1/funding_address</code></li>\n        <li>Added network id to <code>POST /api/1/funding_address</code></li>\n        <li>Added network id to <code>GET /api/1/send</code></li>\n        <li>Added network id to <code>GET /api/1/send</code></li>\n      </ul>\n    </li>\n  <li>\n    <strong>2025-02-03:</strong>\n    <ul>\n      <li>Added <code>GET /api/1/users/list</code> endpoint</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-08-06:</strong>\n    <ul>\n      <li>Set integer timestamp fields format as <code>timestamp</code></li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-07-17:</strong>\n    <ul>\n      <li>Alter documentation to indicate that unix timestamp fields are integer instead of string</li>\n      <li>Add account_id field to Create receive address call</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-06-26:</strong>\n      <ul>\n        <li>Added <code>account_id</code> to <code>/api/1/send</code> endpoint</li>\n      </ul>\n  </li>\n  <li>\n    <strong>2024-05-21:</strong>\n    <ul>\n      <li>Add UNKNOWN status to Ticker model</li>\n      <li>Add UNKNOWN status to MarketInfo model</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-05-09:</strong>\n    <ul>\n      <li>Added bank_recipient query parameter to ListBeneficiaries\n    </ul>\n  </li>\n  <li>\n    <strong>2024-04-26:</strong>\n    <ul>\n      <li>Added <code>DELETE /api/1/beneficiaries/:id</code> endpoint\n    </ul>\n  </li>\n  <li>\n    <strong>2024-04-24:</strong>\n    <ul>\n      <li>Added <code>POST /api/1/beneficiaries</code> endpoint\n    </ul>\n  </li>\n  <li>\n    <strong>2024-02-21:</strong>\n    <ul>\n      <li>Added <code>transfer_id</code> field to the <code>Withdrawal</code> response object\n    </ul>\n  </li>\n  <li>\n    <strong>2023-12-04:</strong>\n    <ul>\n      <li>Added <code>base_account_id</code> and <code>counter_account_id</code> fields to the <code>OrderV2</code> object\n    </ul>\n  </li>\n  <li><strong>2022-06-23:</strong>\n    <ul>\n      <li>Added <code>client_order_id</code> in Balance Stream section</li>\n      <li>Added \"time_in_force\" parameter to <code>POST /api/1/postorder</code> endpoint</li>\n      <li>Added \"time_in_force\" to <code>GET orders/:id</code> responses</li>\n      <li>Added \"time_in_force\" to <code>GET listorders</code> responses</li>\n      <li>Updated Market documentation to reflect <code>GET /api/exchange/1/candles</code> call is authenticated</li>\n    </ul>\n  </li>\n  <li><strong>2021-12-22:</strong> Added Balance Stream section.</li>\n  <li><strong>2021-10-29:</strong> Added User Stream section.</li>\n  <li><strong>2021-10-22:</strong> Add support for 1m candles for the <code>GET /api/exchange/1/candles</code> endpoint.</li>\n  <li><strong>2021-08-04:</strong> Add <strong>Error Codes</strong> section along with restrictions to users in jurisdiction with money travel rules.</li>\n  <li><strong>2021-02-18:</strong> Add <code>GET /api/exchange/1/transfers</code> to list deposits and withdrawals.</li>\n  <li><strong>2020-08-20:</strong> Removed Lightning API section.</li>\n  <li><strong>2020-06-22:</strong> Updated domain to api.luno.com</li>\n  <li><strong>2020-02-24:</strong> Added optional <code>destination_tag</code> and <code>has_destination_tag</code> parameter to <code>POST /api/1/send</code> to support XRP sends. Please note, not specifying <code>has_destination_tag</code> parameters to <code>POST /api/1/send</code> to support XRP sends with destination tags. Please see https://xrpl.org/source-and-destination-tags.html to learn more about XRP destination tags.\n  <li><strong>2020-02-12:</strong> Added <code>PUT /api/1/accounts/:id/name</code> to allow updating of an account name.</li>\n  <li><strong>2019-11-21:</strong> Added <code>GET /api/1/beneficiaries</code> to allow listing of bank beneficiaries.</li>\n  <li><strong>2018-07-16:</strong> Added aggregated order book API. Rate limits for market data have been increased to 1 per second. Market data may be cached for up to 1 second.</li>\n  <li><strong>2018-06-29:</strong> Add <code>post_only</code> parameter to <code>POST /api/1/postorder</code>.</li>\n  <li><strong>2018-06-15:</strong> Update PHP and Python SDK URLs.</li>\n  <li><strong>2018-06-13:</strong> Added <code>timestamp</code> to the orderbook streamer response.</li>\n  <li><strong>2018-06-08:</strong> Update Go SDK URL.</li>\n  <li><strong>2017-12-23:</strong> Added <code>maker_order_id</code> and <code>taker_order_id</code> to streaming trade updates. Deprecated <code>order_id</code>.</li>\n  <li><strong>2017-10-31:</strong> OAuth2 is no longer available for new applications.</li>\n  <li><strong>2017-10-16:</strong> Updated <code>/api/1/trades</code> to only return <code>BID</code> or <code>ASK</code> types and it may now lag behind latest data.</li>\n  <li><strong>2017-07-02:</strong> Updated websocket server to wss://ws.luno.com.</li>\n  <li><strong>2017-03-02:</strong> Added <code>/api/1/fee_info</code> which returns your fees and 30 day trading volume.</li>\n  <li><strong>2016-11-21:</strong> The <code>/api/1/trades</code> now returns at most 100 results per call.</li>\n  <li><strong>2016-11-01:</strong> Removed 50 receive address create limit on <code>POST /api/1/funding_address</code> to allow unlimited receive addresses per account. Address creation is rate limited to 1 per hour, allowing for bursts of up to 10 consecutive calls.</li>\n  <li><strong>2016-08-10:</strong> Added <code>GET /api/1/listtrades</code> to allow listing of recent trades. Please note that trades will soon be removed from the response of <code>GET /api/1/listorders</code> <code>GET /api/1/orders/:id</code>.</li>\n  <li><strong>2016-08-05:</strong> Added beta Streaming API section</li>\n  <li><strong>2016-07-25:</strong> Added optional <code>beneficiary_id</code> parameter to <code>POST /api/1/withdrawals</code>.</li>\n  <li><strong>2016-05-29:</strong> Error code 429 may be returned when exceeding rate limits. This will become the default as of 2016-07-01.</li>\n  <li><strong>2016-04-04:</strong> Added <code>completed_timestamp</code> field to <code>GET /api/1/listorders</code> and <code>GET /api/1/orders/:id</code> responses.</li>\n  <li><strong>2016-02-05:</strong> Added optional <code>since</code> parameter to <code>GET /api/1/trades</code> and added <code>is_buy</code> field to the response.</li>\n  <li><strong>2015-09-14:</strong> Added <code>POST /api/1/marketorder</code> to allow placing of market orders.</li>\n  <li><strong>2015-07-29:</strong> Added <code>Perm_R_Beneficiaries</code> and <code>Perm_W_Beneficiaries</code> permissions. You will have to generate a new API key if you require these permissions.</li>\n  <li><strong>2015-06-08:</strong> Renamed <code>GET /api/1/withdrawals/</code> to <code>GET /api/1/withdrawals</code> and <code>POST /api/1/withdrawals/</code> to <code>POST /api/1/withdrawals</code> to be more consistent with other endpoints. The old URLs are now deprecated.</li>\n  <li><strong>2015-05-28:</strong> Added <code>POST accounts</code> for creating additional accounts in specified currencies.</li>\n  <li><strong>2015-05-07:</strong> Added the \"Name\" field to the \"Balance\" response</li>\n  <li><strong>2015-04-25:</strong>\n    <ul>\n      <li>Added the \"Accounts\" section.</li>\n      <li>Added the account transactions and pending transactions calls.</li>\n      <li>Added the \"Permissions\" section.</li>\n      <li>Documented which permissions are required for each call.</li>\n      <li>Updated description of the \"send\" call. A pin is no longer required.</li>\n      <li>Added \"name\" parameter to <code>POST /api/1/funding_address.</code></li>\n    </ul>\n  </li>\n  <li><strong>2015-03-27:</strong> Return a list of trades for an order on <code>GET orders/:id</code> if the order has any trades.</li>\n  <li><strong>2015-01-30:</strong> Clarified the interpretation of <code>base</code>, <code>counter</code>, <code>base_fee</code> and <code>counter_fee</code> in the <code>list_orders</code> response in the case where <code>counter_fee</code> is nonzero for buy orders and where <code>base_fee</code> is nonzero for sell orders.</li>\n  <li><strong>2014-12-17:</strong> The amount parameter for withdrawal requests now excludes the withdrawal fee.</li>\n  <li><strong>2014-12-12:</strong>\n    <ul>\n      <li>Added the new Quotes API.</li>\n      <li>The <code>transactions</code> beta call has been deprecated.</li>\n    </ul>\n  </li>\n  <li><strong>2014-12-04:</strong> The <code>balance</code> method can now be called with no arguments to return all account balances.</li>\n  <li><strong>2014-08-26:</strong>\n    <ul>\n      <li>Added Send API call.</li>\n      <li>Added OAuth2 API.</li>\n    </ul>\n  </li>\n  <li><strong>2014-06-10:</strong> Orders placed through the API are no longer subject to different limits than those placed through the website.</li>\n  <li><strong>2014-06-02:</strong>\n    <ul>\n      <li>You can now create multiple API keys with different permissions (e.g. read-only, read/write).</li>\n      <li>Added calls to list, create, get and cancel withdrawal requests.</li>\n      <li>Added link to Android client library.</li>\n    </ul>\n  </li>\n  <li><strong>2014-05-29:</strong>\n    <ul>\n      <li>The preferred host name for API calls has changed to <code>api.mybitx.com</code>.</li>\n      <li>Added experimental call to retrieve transactions list.</li>\n      <li>Added call to allocate new receive addresses.</li>\n      <li>Receive address call now returns the amount received by that address.</li>\n      <li>You can now request <code>listorders</code> to return only the list of open orders.</li>\n    </ul>\n  </li>\n  <li><strong>2014-04-15:</strong> Previously orders created through the API would expire after 24 hours. Now, orders created through the API do not expire. The behaviour is now the same as for orders placed through the website.</li>\n  <li><strong>2014-01-25:</strong>\n    <ul>\n      <li>A new <code>funding_address</code> call has been added to get the bitcoin address you need to fund your trade account balance.</li>\n    </ul>\n  </li>\n  <li><strong>2014-01-21:</strong>\n    <ul>\n      <li>The API has been extended to support multiple asset pairs.</li>\n      <li>A new <code>balance</code> call has been added to query the trading account balance.</li>\n      <li>All URLs have been renamed from <code>/api/1/BTCZAR/x</code> to <code>/api/1/x?pair=XBTZAR</code>. The old URLs are now deprecated.</li>\n      <li>getlimits: This call has been deprecated. Please use the new <code>balance</code> call instead.</li>\n      <li>ticker: The <code>currency</code> field is now deprecated.</li>\n      <li>orderbook: The <code>currency</code> field is now deprecated.</li>\n      <li>trades: The <code>currency</code> field is now deprecated.</li>\n      <li>listorders: The <code>btc</code>, <code>zar</code>, <code>fee_btc</code> and <code>fee_zar</code> fields are now deprecated. Please use <code>base</code>, <code>counter</code>, <code>fee_base</code>, <code>fee_counter</code> fields instead.</li>\n      <li>The embedded market indicator has been removed since nobody is using it.</li>\n      <li>All deprecated features will continue to work for two months.</li>\n    </ul>\n  </li>\n  <li><strong>2014-01-06:</strong>\n    <ul>\n      <li>listorders: Added fee_btc and fee_zar fields.</li>\n      <li>listorders: Removed SETTLEMENT state (it's no longer relevant).</li>\n      <li>ticker: Removed mtgox_price (use Mt Gox's API directly instead).</li>\n    </ul>\n  </li>\n</ul>\n",
+      "description": "<ul>\n  <li>\n    <strong>2026-10-21:</strong>\n    <ul>\n      <li>Added <code>UNAVAILABLE</code> as a possible <code>trading_status</code> value on <code>GET /api/exchange/1/markets</code>, returned when a market exists but is not available for trading (for example during maintenance). Clients should treat any value other than <code>ACTIVE</code> as not tradable</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2026-10-01:</strong>\n    <ul>\n      <li>Reduced the maximum length of <code>client_order_id</code> on <code>POST /api/1/postorder</code> and <code>POST /api/1/marketorder</code> from 255 to 100 characters</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2026-09-28:</strong>\n    <ul>\n      <li>Added optional payment id to list pending transaction object</li>\n      <li>Adjust description of validate address for payment id</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2026-08-20:</strong>\n    <ul>\n      <li>Added optional <code>type</code> and <code>payment_id</code> parameters to <code>POST /api/1/address/validate</code></li>\n    </ul>\n  </li>\n  <li>\n    <strong>2026-08-13:</strong>\n    <ul>\n      <li>Added <code>account_type</code> query parameter to <code>GET /api/1/balance</code></li>\n    </ul>\n  </li>\n  <li>\n    <strong>2026-05-08:</strong>\n    <ul>\n      <li>Added <code>POST /api/exchange/1/convert</code> endpoint to instantly convert between ZAR and ZARU</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2026-01-07:</strong>\n    <ul>\n      <li>Add optional <code>source_account_id</code> parameter to <code>POST /api/1/withdrawals</code></li>\n    </ul>\n  </li>\n  <li>\n      <strong>2025-03-11:</strong>\n      <ul>\n        <li>Added <code>GET /api/1/send/networks</code> endpoint</li>\n        <li>Added network id to <code>GET /api/1/funding_address</code></li>\n        <li>Added network id to <code>POST /api/1/funding_address</code></li>\n        <li>Added network id to <code>GET /api/1/send</code></li>\n        <li>Added network id to <code>GET /api/1/send</code></li>\n      </ul>\n    </li>\n  <li>\n    <strong>2025-02-03:</strong>\n    <ul>\n      <li>Added <code>GET /api/1/users/list</code> endpoint</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-08-06:</strong>\n    <ul>\n      <li>Set integer timestamp fields format as <code>timestamp</code></li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-07-17:</strong>\n    <ul>\n      <li>Alter documentation to indicate that unix timestamp fields are integer instead of string</li>\n      <li>Add account_id field to Create receive address call</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-06-26:</strong>\n      <ul>\n        <li>Added <code>account_id</code> to <code>/api/1/send</code> endpoint</li>\n      </ul>\n  </li>\n  <li>\n    <strong>2024-05-21:</strong>\n    <ul>\n      <li>Add UNKNOWN status to Ticker model</li>\n      <li>Add UNKNOWN status to MarketInfo model</li>\n    </ul>\n  </li>\n  <li>\n    <strong>2024-05-09:</strong>\n    <ul>\n      <li>Added bank_recipient query parameter to ListBeneficiaries\n    </ul>\n  </li>\n  <li>\n    <strong>2024-04-26:</strong>\n    <ul>\n      <li>Added <code>DELETE /api/1/beneficiaries/:id</code> endpoint\n    </ul>\n  </li>\n  <li>\n    <strong>2024-04-24:</strong>\n    <ul>\n      <li>Added <code>POST /api/1/beneficiaries</code> endpoint\n    </ul>\n  </li>\n  <li>\n    <strong>2024-02-21:</strong>\n    <ul>\n      <li>Added <code>transfer_id</code> field to the <code>Withdrawal</code> response object\n    </ul>\n  </li>\n  <li>\n    <strong>2023-12-04:</strong>\n    <ul>\n      <li>Added <code>base_account_id</code> and <code>counter_account_id</code> fields to the <code>OrderV2</code> object\n    </ul>\n  </li>\n  <li><strong>2022-06-23:</strong>\n    <ul>\n      <li>Added <code>client_order_id</code> in Balance Stream section</li>\n      <li>Added \"time_in_force\" parameter to <code>POST /api/1/postorder</code> endpoint</li>\n      <li>Added \"time_in_force\" to <code>GET orders/:id</code> responses</li>\n      <li>Added \"time_in_force\" to <code>GET listorders</code> responses</li>\n      <li>Updated Market documentation to reflect <code>GET /api/exchange/1/candles</code> call is authenticated</li>\n    </ul>\n  </li>\n  <li><strong>2021-12-22:</strong> Added Balance Stream section.</li>\n  <li><strong>2021-10-29:</strong> Added User Stream section.</li>\n  <li><strong>2021-10-22:</strong> Add support for 1m candles for the <code>GET /api/exchange/1/candles</code> endpoint.</li>\n  <li><strong>2021-08-04:</strong> Add <strong>Error Codes</strong> section along with restrictions to users in jurisdiction with money travel rules.</li>\n  <li><strong>2021-02-18:</strong> Add <code>GET /api/exchange/1/transfers</code> to list deposits and withdrawals.</li>\n  <li><strong>2020-08-20:</strong> Removed Lightning API section.</li>\n  <li><strong>2020-06-22:</strong> Updated domain to api.luno.com</li>\n  <li><strong>2020-02-24:</strong> Added optional <code>destination_tag</code> and <code>has_destination_tag</code> parameter to <code>POST /api/1/send</code> to support XRP sends. Please note, not specifying <code>has_destination_tag</code> parameters to <code>POST /api/1/send</code> to support XRP sends with destination tags. Please see https://xrpl.org/source-and-destination-tags.html to learn more about XRP destination tags.\n  <li><strong>2020-02-12:</strong> Added <code>PUT /api/1/accounts/:id/name</code> to allow updating of an account name.</li>\n  <li><strong>2019-11-21:</strong> Added <code>GET /api/1/beneficiaries</code> to allow listing of bank beneficiaries.</li>\n  <li><strong>2018-07-16:</strong> Added aggregated order book API. Rate limits for market data have been increased to 1 per second. Market data may be cached for up to 1 second.</li>\n  <li><strong>2018-06-29:</strong> Add <code>post_only</code> parameter to <code>POST /api/1/postorder</code>.</li>\n  <li><strong>2018-06-15:</strong> Update PHP and Python SDK URLs.</li>\n  <li><strong>2018-06-13:</strong> Added <code>timestamp</code> to the orderbook streamer response.</li>\n  <li><strong>2018-06-08:</strong> Update Go SDK URL.</li>\n  <li><strong>2017-12-23:</strong> Added <code>maker_order_id</code> and <code>taker_order_id</code> to streaming trade updates. Deprecated <code>order_id</code>.</li>\n  <li><strong>2017-10-31:</strong> OAuth2 is no longer available for new applications.</li>\n  <li><strong>2017-10-16:</strong> Updated <code>/api/1/trades</code> to only return <code>BID</code> or <code>ASK</code> types and it may now lag behind latest data.</li>\n  <li><strong>2017-07-02:</strong> Updated websocket server to wss://ws.luno.com.</li>\n  <li><strong>2017-03-02:</strong> Added <code>/api/1/fee_info</code> which returns your fees and 30 day trading volume.</li>\n  <li><strong>2016-11-21:</strong> The <code>/api/1/trades</code> now returns at most 100 results per call.</li>\n  <li><strong>2016-11-01:</strong> Removed 50 receive address create limit on <code>POST /api/1/funding_address</code> to allow unlimited receive addresses per account. Address creation is rate limited to 1 per hour, allowing for bursts of up to 10 consecutive calls.</li>\n  <li><strong>2016-08-10:</strong> Added <code>GET /api/1/listtrades</code> to allow listing of recent trades. Please note that trades will soon be removed from the response of <code>GET /api/1/listorders</code> <code>GET /api/1/orders/:id</code>.</li>\n  <li><strong>2016-08-05:</strong> Added beta Streaming API section</li>\n  <li><strong>2016-07-25:</strong> Added optional <code>beneficiary_id</code> parameter to <code>POST /api/1/withdrawals</code>.</li>\n  <li><strong>2016-05-29:</strong> Error code 429 may be returned when exceeding rate limits. This will become the default as of 2016-07-01.</li>\n  <li><strong>2016-04-04:</strong> Added <code>completed_timestamp</code> field to <code>GET /api/1/listorders</code> and <code>GET /api/1/orders/:id</code> responses.</li>\n  <li><strong>2016-02-05:</strong> Added optional <code>since</code> parameter to <code>GET /api/1/trades</code> and added <code>is_buy</code> field to the response.</li>\n  <li><strong>2015-09-14:</strong> Added <code>POST /api/1/marketorder</code> to allow placing of market orders.</li>\n  <li><strong>2015-07-29:</strong> Added <code>Perm_R_Beneficiaries</code> and <code>Perm_W_Beneficiaries</code> permissions. You will have to generate a new API key if you require these permissions.</li>\n  <li><strong>2015-06-08:</strong> Renamed <code>GET /api/1/withdrawals/</code> to <code>GET /api/1/withdrawals</code> and <code>POST /api/1/withdrawals/</code> to <code>POST /api/1/withdrawals</code> to be more consistent with other endpoints. The old URLs are now deprecated.</li>\n  <li><strong>2015-05-28:</strong> Added <code>POST accounts</code> for creating additional accounts in specified currencies.</li>\n  <li><strong>2015-05-07:</strong> Added the \"Name\" field to the \"Balance\" response</li>\n  <li><strong>2015-04-25:</strong>\n    <ul>\n      <li>Added the \"Accounts\" section.</li>\n      <li>Added the account transactions and pending transactions calls.</li>\n      <li>Added the \"Permissions\" section.</li>\n      <li>Documented which permissions are required for each call.</li>\n      <li>Updated description of the \"send\" call. A pin is no longer required.</li>\n      <li>Added \"name\" parameter to <code>POST /api/1/funding_address.</code></li>\n    </ul>\n  </li>\n  <li><strong>2015-03-27:</strong> Return a list of trades for an order on <code>GET orders/:id</code> if the order has any trades.</li>\n  <li><strong>2015-01-30:</strong> Clarified the interpretation of <code>base</code>, <code>counter</code>, <code>base_fee</code> and <code>counter_fee</code> in the <code>list_orders</code> response in the case where <code>counter_fee</code> is nonzero for buy orders and where <code>base_fee</code> is nonzero for sell orders.</li>\n  <li><strong>2014-12-17:</strong> The amount parameter for withdrawal requests now excludes the withdrawal fee.</li>\n  <li><strong>2014-12-12:</strong>\n    <ul>\n      <li>Added the new Quotes API.</li>\n      <li>The <code>transactions</code> beta call has been deprecated.</li>\n    </ul>\n  </li>\n  <li><strong>2014-12-04:</strong> The <code>balance</code> method can now be called with no arguments to return all account balances.</li>\n  <li><strong>2014-08-26:</strong>\n    <ul>\n      <li>Added Send API call.</li>\n      <li>Added OAuth2 API.</li>\n    </ul>\n  </li>\n  <li><strong>2014-06-10:</strong> Orders placed through the API are no longer subject to different limits than those placed through the website.</li>\n  <li><strong>2014-06-02:</strong>\n    <ul>\n      <li>You can now create multiple API keys with different permissions (e.g. read-only, read/write).</li>\n      <li>Added calls to list, create, get and cancel withdrawal requests.</li>\n      <li>Added link to Android client library.</li>\n    </ul>\n  </li>\n  <li><strong>2014-05-29:</strong>\n    <ul>\n      <li>The preferred host name for API calls has changed to <code>api.mybitx.com</code>.</li>\n      <li>Added experimental call to retrieve transactions list.</li>\n      <li>Added call to allocate new receive addresses.</li>\n      <li>Receive address call now returns the amount received by that address.</li>\n      <li>You can now request <code>listorders</code> to return only the list of open orders.</li>\n    </ul>\n  </li>\n  <li><strong>2014-04-15:</strong> Previously orders created through the API would expire after 24 hours. Now, orders created through the API do not expire. The behaviour is now the same as for orders placed through the website.</li>\n  <li><strong>2014-01-25:</strong>\n    <ul>\n      <li>A new <code>funding_address</code> call has been added to get the bitcoin address you need to fund your trade account balance.</li>\n    </ul>\n  </li>\n  <li><strong>2014-01-21:</strong>\n    <ul>\n      <li>The API has been extended to support multiple asset pairs.</li>\n      <li>A new <code>balance</code> call has been added to query the trading account balance.</li>\n      <li>All URLs have been renamed from <code>/api/1/BTCZAR/x</code> to <code>/api/1/x?pair=XBTZAR</code>. The old URLs are now deprecated.</li>\n      <li>getlimits: This call has been deprecated. Please use the new <code>balance</code> call instead.</li>\n      <li>ticker: The <code>currency</code> field is now deprecated.</li>\n      <li>orderbook: The <code>currency</code> field is now deprecated.</li>\n      <li>trades: The <code>currency</code> field is now deprecated.</li>\n      <li>listorders: The <code>btc</code>, <code>zar</code>, <code>fee_btc</code> and <code>fee_zar</code> fields are now deprecated. Please use <code>base</code>, <code>counter</code>, <code>fee_base</code>, <code>fee_counter</code> fields instead.</li>\n      <li>The embedded market indicator has been removed since nobody is using it.</li>\n      <li>All deprecated features will continue to work for two months.</li>\n    </ul>\n  </li>\n  <li><strong>2014-01-06:</strong>\n    <ul>\n      <li>listorders: Added fee_btc and fee_zar fields.</li>\n      <li>listorders: Removed SETTLEMENT state (it's no longer relevant).</li>\n      <li>ticker: Removed mtgox_price (use Mt Gox's API directly instead).</li>\n    </ul>\n  </li>\n</ul>\n",
       "name": "Changelog"
     }
   ],
@@ -2580,13 +2770,19 @@
             "type": "string",
             "format": "int64",
             "x-go-name": "AccountId",
-            "example": "\"237592692\""
+            "example": "237592692"
+          },
+          "account_type": {
+            "description": "The type for account",
+            "type": "string",
+            "x-go-name": "AccountType",
+            "example": "TRANSACTIONAL"
           },
           "asset": {
             "description": "Currency code for the asset held in this account.",
             "type": "string",
             "x-go-name": "Asset",
-            "example": "\"XBT\""
+            "example": "XBT"
           },
           "balance": {
             "description": "The amount available to send or trade.",
@@ -2598,7 +2794,7 @@
             "description": "The name set by the user upon creating the account.",
             "type": "string",
             "x-go-name": "Name",
-            "example": "\"Trading account\""
+            "example": "Trading account"
           },
           "reserved": {
             "description": "Amount locked by Luno and cannot be sent or traded. This could be due to\nopen orders.",
@@ -2614,7 +2810,7 @@
           }
         },
         "x-go-name": "Balance",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "AccountInfo": {
         "type": "object",
@@ -2647,7 +2843,7 @@
             "x-go-name": "Transactions"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "AddressMeta": {
         "type": "object",
@@ -2661,7 +2857,7 @@
             "x-go-name": "Value"
           }
         },
-        "x-go-package": "bitx/sharedproto/walletpb"
+        "x-go-package": "luno/pkg/sharedproto/walletpb"
       },
       "BalanceList": {
         "type": "object",
@@ -2674,13 +2870,7 @@
             "x-go-name": "Balance"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
-      },
-      "BigDecimal": {
-        "description": "A BigDecimal consists of an integer mantissa (d.i) and an exponent (d.scale).\nThe value represented by d is:\n\nd.i * 10^(-d.scale)\n\nA zero BigDecimal struct is valid and represents 0 (i = 0, scale = 0).",
-        "type": "object",
-        "title": "BigDecimal is an arbitrary precision decimal number.",
-        "x-go-package": "bitx/pkg/currency"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "CancelWithdrawalResponse": {
         "description": "CancelWithdrawalResponse response",
@@ -2745,7 +2935,7 @@
             "example": "SGD_WIRE"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "Candle": {
         "type": "object",
@@ -2787,7 +2977,49 @@
             "x-go-name": "Volume"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
+      },
+      "ConvertResponse": {
+        "description": "ConvertResponse response",
+        "type": "object",
+        "properties": {
+          "converted_amount": {
+            "description": "Amount received in the target account after conversion",
+            "type": "string",
+            "format": "amount",
+            "x-go-name": "ConvertedAmount"
+          },
+          "id": {
+            "description": "Conversion unique identifier",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "source_account_balance": {
+            "description": "Balance of the source account after the conversion",
+            "type": "string",
+            "format": "amount",
+            "x-go-name": "SourceAccountBalance"
+          },
+          "source_currency": {
+            "description": "Currency of the source account",
+            "type": "string",
+            "x-go-name": "SourceCurrency",
+            "example": "ZARU"
+          },
+          "target_account_balance": {
+            "description": "Balance of the target account after the conversion",
+            "type": "string",
+            "format": "amount",
+            "x-go-name": "TargetAccountBalance"
+          },
+          "target_currency": {
+            "description": "Currency of the target account",
+            "type": "string",
+            "x-go-name": "TargetCurrency",
+            "example": "ZAR"
+          }
+        },
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "CreateWithdrawalResponse": {
         "description": "CreateWithdrawalResponse response",
@@ -2852,7 +3084,7 @@
             "example": "SGD_WIRE"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "CryptoDetails": {
         "description": "CryptoDetails contains a transaction's cryptocurrency address\nand transaction id",
@@ -2867,14 +3099,14 @@
             "x-go-name": "TxID"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "DecimalFloat": {
         "description": "Using this type is only necessary for types that are Marshaled, not requests, that use UnmarshalJSON\nBigDecimal already handles floats *and* strings in UnmarshalJSON",
         "type": "string",
         "format": "amount",
         "title": "DecimalFloat will marshal the decimal as a floating value instead of a string, e.g. 1234.5678 vs \"1234.5678\"\nThis is how \"the Decimal type that shall not be named\" was marshaled so use this function only for legacy APIs, new JSON APIs\nshould use a string value, i.e. Marshal the BigDecimal directly",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "DetailFields": {
         "type": "object",
@@ -2887,7 +3119,7 @@
             "$ref": "#/components/schemas/TradeDetails"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "FeeInfo": {
         "type": "object",
@@ -2895,6 +3127,7 @@
           "maker_fee": {
             "description": "Deprecated: Use maker_fee_buy or maker_fee_sell",
             "type": "string",
+            "x-deprecated": true,
             "x-go-name": "MakerFee"
           },
           "maker_fee_buy": {
@@ -2910,6 +3143,7 @@
           "taker_fee": {
             "description": "Deprecated: Use taker_fee_buy or taker_fee_sell",
             "type": "string",
+            "x-deprecated": true,
             "x-go-name": "TakerFee"
           },
           "taker_fee_buy": {
@@ -2927,7 +3161,7 @@
             "x-go-name": "ThirtyDayVolume"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "FundsMove": {
         "type": "object",
@@ -2988,7 +3222,7 @@
             "x-go-name": "UpdatedAt"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetCandlesResponse": {
         "description": "GetCandlesResponse response",
@@ -3012,7 +3246,7 @@
             "x-go-name": "Pair"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetMoveResponse": {
         "description": "GetMoveResponse response for GET /1/move",
@@ -3074,7 +3308,7 @@
             "x-go-name": "UpdatedAt"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetOrder2Response": {
         "description": "GetOrder2Response response",
@@ -3139,6 +3373,13 @@
             "format": "amount",
             "x-go-name": "FeeCounter"
           },
+          "leverage": {
+            "description": "Leverage multiplier used for the order. Only present when the order\nwas placed using spot margin wallets; omitted otherwise.",
+            "type": "integer",
+            "format": "int32",
+            "x-go-name": "Leverage",
+            "example": 3
+          },
           "limit_price": {
             "description": "Limit price to transact",
             "type": "string",
@@ -3215,10 +3456,10 @@
             "x-go-name": "Type"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetOrderBookResponse": {
-        "description": "1/orderbook\n1/orderbook_top",
+        "description": "- /1/orderbook\n- /1/orderbook_top",
         "type": "object",
         "title": "GetOrderBookResponse response for:",
         "properties": {
@@ -3245,7 +3486,7 @@
             "x-go-name": "Timestamp"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetOrderResponse": {
         "description": "GetOrderResponse response",
@@ -3292,6 +3533,13 @@
             "type": "string",
             "format": "amount",
             "x-go-name": "FeeCounter"
+          },
+          "leverage": {
+            "description": "Leverage multiplier used for the order. Only present when the order\nwas placed using spot margin wallets; omitted otherwise.",
+            "type": "integer",
+            "format": "int32",
+            "x-go-name": "Leverage",
+            "example": 3
           },
           "limit_price": {
             "description": "Limit price to transact",
@@ -3340,7 +3588,7 @@
             "x-go-name": "OrderType"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetTickerResponse": {
         "description": "GetTickerResponse response for /api/ticker",
@@ -3393,7 +3641,7 @@
             "x-go-name": "Timestamp"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "GetWithdrawalResponse": {
         "description": "GetWithdrawalResponse response",
@@ -3458,7 +3706,7 @@
             "example": "SGD_WIRE"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "LinkedUser": {
         "type": "object",
@@ -3477,7 +3725,9 @@
           "permissions": {
             "description": "Permissions A list of permissions granted to the API client over the linked user.\nThese permissions are enforced when acting on behalf of the linked user.",
             "type": "array",
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/PermissionsEnum"
+            },
             "x-go-name": "Permissions"
           },
           "user_id": {
@@ -3487,7 +3737,7 @@
             "x-go-name": "UserID"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "LinkedUsersResponse": {
         "description": "LinkedUsersResponse linked users response body",
@@ -3502,7 +3752,7 @@
             "x-go-name": "Users"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListMovesResponse": {
         "description": "ListMovesResponse response",
@@ -3516,7 +3766,7 @@
             "x-go-name": "Moves"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListOrders2Response": {
         "description": "ListOrders2Response response for /api/2/listorders",
@@ -3530,7 +3780,7 @@
             "x-go-name": "Orders"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListOrdersResponse": {
         "description": "ListOrdersResponse response",
@@ -3544,7 +3794,7 @@
             "x-go-name": "Orders"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListTickersResponse": {
         "description": "ListTickersResponse response for /api/tickers",
@@ -3558,7 +3808,7 @@
             "x-go-name": "Tickers"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListTradesResponse": {
         "description": "ListTradesResponse response for /api/1/trades",
@@ -3572,7 +3822,7 @@
             "x-go-name": "Trades"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListTransactionsResponse": {
         "description": "ListTransactionsResponse response",
@@ -3591,7 +3841,7 @@
             "x-go-name": "Transactions"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListTransfersResponse": {
         "description": "ListTransfersResponse response for /api/1/transfers",
@@ -3605,7 +3855,7 @@
             "x-go-name": "Transfers"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListUserTradesResponse": {
         "description": "ListUserTradesResponse response for /api/1/listtrades",
@@ -3619,7 +3869,7 @@
             "x-go-name": "Trades"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ListWithdrawalsResponse": {
         "description": "ListWithdrawalsResponse response",
@@ -3633,7 +3883,7 @@
             "x-go-name": "Withdrawals"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "MarketInfo": {
         "description": "MarketInfo current market information",
@@ -3667,29 +3917,25 @@
             "description": "Maximum order price",
             "type": "string",
             "format": "amount",
-            "x-go-name": "MaxPrice",
-            "example": "100000.00"
+            "x-go-name": "MaxPrice"
           },
           "max_volume": {
             "description": "Maximum order volume",
             "type": "string",
             "format": "amount",
-            "x-go-name": "MaxVolume",
-            "example": "100.0"
+            "x-go-name": "MaxVolume"
           },
           "min_price": {
             "description": "Minimum order price",
             "type": "string",
             "format": "amount",
-            "x-go-name": "MinPrice",
-            "example": "100.00"
+            "x-go-name": "MinPrice"
           },
           "min_volume": {
             "description": "Minimum order volume",
             "type": "string",
             "format": "amount",
-            "x-go-name": "MinVolume",
-            "example": "0.0005"
+            "x-go-name": "MinVolume"
           },
           "price_scale": {
             "description": "Price decimal places",
@@ -3699,15 +3945,16 @@
             "example": 2
           },
           "trading_status": {
-            "description": "Current market trading status:<br>\n<code>POST_ONLY</code> Trading is indefinitely suspended. This state is\ncommonly used when new markets are being launched to give traders enough\ntime to setup their orders before trading begins. When in this status,\norders can only be posted as post-only.<br>\n<code>ACTIVE</code> Trading is fully enabled.<br>\n<code>SUSPENDED</code> Trading has been temporarily suspended due to very\nhigh volatility. When in this status, orders can only be posted as\npost-only.<br>\n<code>Unknown</code> Trading status is unknown. This could indicate a temporary error\non the market and should resolve shortly.\nPOST_ONLY MarketStatusPostOnly\nACTIVE MarketStatusActive\nSUSPENDED MarketStatusSuspended\nUNKNOWN MarketStatusUnknown",
+            "description": "Current market trading status:<br>\n<code>POST_ONLY</code> Trading is indefinitely suspended. This state is\ncommonly used when new markets are being launched to give traders enough\ntime to setup their orders before trading begins. When in this status,\norders can only be posted as post-only.<br>\n<code>ACTIVE</code> Trading is fully enabled.<br>\n<code>SUSPENDED</code> Trading has been temporarily suspended due to very\nhigh volatility. When in this status, orders can only be posted as\npost-only.<br>\n<code>UNAVAILABLE</code> The market exists but is not available for trading,\nfor example while it is under maintenance. When in this status, new orders\nare rejected.<br>\n<code>Unknown</code> Trading status is unknown. This could indicate a temporary error\non the market and should resolve shortly.\nPOST_ONLY MarketStatusPostOnly\nACTIVE MarketStatusActive\nSUSPENDED MarketStatusSuspended\nUNAVAILABLE MarketStatusUnavailable\nUNKNOWN MarketStatusUnknown",
             "type": "string",
             "enum": [
               "POST_ONLY",
               "ACTIVE",
               "SUSPENDED",
+              "UNAVAILABLE",
               "UNKNOWN"
             ],
-            "x-go-enum-desc": "POST_ONLY MarketStatusPostOnly\nACTIVE MarketStatusActive\nSUSPENDED MarketStatusSuspended\nUNKNOWN MarketStatusUnknown",
+            "x-go-enum-desc": "POST_ONLY MarketStatusPostOnly\nACTIVE MarketStatusActive\nSUSPENDED MarketStatusSuspended\nUNAVAILABLE MarketStatusUnavailable\nUNKNOWN MarketStatusUnknown",
             "x-go-name": "TradingStatus"
           },
           "volume_scale": {
@@ -3718,7 +3965,7 @@
             "example": 4
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "MarketsInfoResponse": {
         "description": "MarketsInfoResponse response for /api/2/markets",
@@ -3732,7 +3979,7 @@
             "x-go-name": "Markets"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "MoveResponse": {
         "description": "MoveResponse response",
@@ -3756,17 +4003,12 @@
             "x-go-name": "Status"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "Network": {
         "type": "integer",
         "format": "int64",
-        "x-go-package": "bitx/pkg/digitalasset/network"
-      },
-      "NotComparable": {
-        "description": "NotComparable Add this type as the first type/value to any struct to avoid the struct type being compared directly",
-        "type": "object",
-        "x-go-package": "bitx/pkg/ludash"
+        "x-go-package": "luno/pkg/digitalasset/network"
       },
       "Order": {
         "description": "The `base` and `counter` amounts are the principal\namounts that were traded, ignoring fees. For example, if the order resulted\nin a single trade of 1 BTC for 1000 ZAR, then `base`=1 BTC and\n`counter`=1000 ZAR.\n\nThe `fee_base` and `fee_counter` amounts are the fees\ndebited after the trade principal amounts.\n\nFor example, for a buy order, `base - base_fee` would be credited\nto the BTC account and `counter + counter_fee` would be debited\nfrom the ZAR account. Similarly, for a sell order, `counter -\ncounter_fee` would be credited to the ZAR account and `base +\nbase_fee` would be debited from the BTC account.",
@@ -3815,6 +4057,13 @@
             "format": "amount",
             "x-go-name": "FeeCounter"
           },
+          "leverage": {
+            "description": "Leverage multiplier used for the order. Only present when the order\nwas placed using spot margin wallets; omitted otherwise.",
+            "type": "integer",
+            "format": "int32",
+            "x-go-name": "Leverage",
+            "example": 3
+          },
           "limit_price": {
             "description": "Limit price to transact",
             "type": "string",
@@ -3862,7 +4111,7 @@
             "x-go-name": "OrderType"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "OrderBook": {
         "type": "object",
@@ -3891,7 +4140,7 @@
             "x-go-name": "Timestamp"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "OrderBookEntry": {
         "description": "OrderBookEntry is the representation of one or more order resting in the\norder book.",
@@ -3901,18 +4150,16 @@
             "description": "Limit price at which orders are trading at",
             "type": "string",
             "format": "amount",
-            "x-go-name": "Price",
-            "example": "10000.0"
+            "x-go-name": "Price"
           },
           "volume": {
             "description": "The volume available at the limit price",
             "type": "string",
             "format": "amount",
-            "x-go-name": "Volume",
-            "example": "1.35"
+            "x-go-name": "Volume"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "OrderV2": {
         "type": "object",
@@ -3975,6 +4222,13 @@
             "type": "string",
             "format": "amount",
             "x-go-name": "FeeCounter"
+          },
+          "leverage": {
+            "description": "Leverage multiplier used for the order. Only present when the order\nwas placed using spot margin wallets; omitted otherwise.",
+            "type": "integer",
+            "format": "int32",
+            "x-go-name": "Leverage",
+            "example": 3
           },
           "limit_price": {
             "description": "Limit price to transact",
@@ -4052,7 +4306,12 @@
             "x-go-name": "Type"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
+      },
+      "PermissionsEnum": {
+        "type": "string",
+        "title": "PermissionsEnum Permissions enforced during authentication.",
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "PostLimitOrderResponse": {
         "type": "object",
@@ -4065,7 +4324,7 @@
             "example": "BXMC2CJ7HNB88U4"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "PostMarketOrderResponse": {
         "type": "object",
@@ -4078,7 +4337,7 @@
             "example": "BXMC2CJ7HNB88U4"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "PublicTrade": {
         "type": "object",
@@ -4114,7 +4373,7 @@
             "x-go-name": "Volume"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "ReceiveAddress": {
         "description": "AddressResp wallet address response body",
@@ -4175,7 +4434,7 @@
           }
         },
         "x-go-name": "AddressResp",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "SendFeeResponse": {
         "description": "SendFeeResponse response object for send fee call",
@@ -4191,7 +4450,7 @@
             "x-go-name": "Fee"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "SendNetwork": {
         "description": "SendNetwork represents the network that can be used for crypto sending",
@@ -4213,7 +4472,7 @@
             "example": "ETH"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "SendNetworksResponse": {
         "description": "SendNetworksResponse response object for send networks call",
@@ -4227,7 +4486,7 @@
             "x-go-name": "Networks"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "StopOrderResponse": {
         "type": "object",
@@ -4237,7 +4496,7 @@
             "x-go-name": "Success"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "Ticker": {
         "description": "Ticker summarised instant market data",
@@ -4290,7 +4549,7 @@
             "x-go-name": "Timestamp"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "TradeDetails": {
         "description": "TradeDetails contains a transaction volume, price and pair",
@@ -4320,7 +4579,7 @@
             "x-go-name": "Volume"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "TradeV2": {
         "type": "object",
@@ -4386,6 +4645,11 @@
             "format": "timestamp",
             "x-go-name": "Timestamp"
           },
+          "trade_id": {
+            "description": "Unique trade identifier",
+            "type": "string",
+            "x-go-name": "TradeID"
+          },
           "type": {
             "description": "Order type",
             "type": "string",
@@ -4402,7 +4666,7 @@
             "x-go-name": "Volume"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "Transaction": {
         "type": "object",
@@ -4445,7 +4709,7 @@
             "x-go-name": "Details"
           },
           "kind": {
-            "description": "The kind of the transaction indicates the transaction flow\n\nKinds explained:<br>\n<code>FEE</code> when transaction is towards Luno fees<br>\n<code>TRANSFER</code> when the transaction is a one way flow of funds, e.g. a deposit or crypto send<br>\n<code>EXCHANGE</code> when the transaction is part of a two way exchange, e.g. a trade or instant buy\nFEE KindFee  KindFee when transaction is towards Luno fees\nTRANSFER KindTransfer  KindTransfer when the transaction is a one way flow of funds\nEXCHANGE KindExchange  KindExchange when the transaction is part of a two way exchange\nINTEREST KindInterest  KindInterest when the transaction is an interest payment.",
+            "description": "The kind of the transaction indicates the transaction flow\n\nKinds explained:<br>\n<code>FEE</code> when transaction is towards Luno fees<br>\n<code>TRANSFER</code> when the transaction is a one way flow of funds, e.g. a deposit or crypto send<br>\n<code>EXCHANGE</code> when the transaction is part of a two way exchange, e.g. a trade or instant buy\nFEE KindFee when transaction is towards Luno fees\nTRANSFER KindTransfer when the transaction is a one way flow of funds\nEXCHANGE KindExchange when the transaction is part of a two way exchange\nINTEREST KindInterest when the transaction is an interest payment.",
             "type": "string",
             "enum": [
               "FEE",
@@ -4453,8 +4717,14 @@
               "EXCHANGE",
               "INTEREST"
             ],
-            "x-go-enum-desc": "FEE KindFee  KindFee when transaction is towards Luno fees\nTRANSFER KindTransfer  KindTransfer when the transaction is a one way flow of funds\nEXCHANGE KindExchange  KindExchange when the transaction is part of a two way exchange\nINTEREST KindInterest  KindInterest when the transaction is an interest payment.",
+            "x-go-enum-desc": "FEE KindFee when transaction is towards Luno fees\nTRANSFER KindTransfer when the transaction is a one way flow of funds\nEXCHANGE KindExchange when the transaction is part of a two way exchange\nINTEREST KindInterest when the transaction is an interest payment.",
             "x-go-name": "Kind"
+          },
+          "payment_id": {
+            "description": "A returned reference id in calls such as quarantined travel rule receives",
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "PaymentID"
           },
           "reference": {
             "description": "A unique reference for the transaction this statement entry relates to.\nThere may be multiple statement entries related to the same transaction.\nE.g. a withdrawal and the withdrawal fee are two separate statement entries with the same reference.",
@@ -4474,7 +4744,7 @@
           }
         },
         "x-go-name": "StatementEntry",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "Transfer": {
         "type": "object",
@@ -4515,7 +4785,7 @@
             "example": "fe4d49620bfd6778de38e9609f491c3327b882749541dbd44d7651c533a99a1c"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "Withdrawal": {
         "description": "Withdrawal struct",
@@ -4580,7 +4850,7 @@
             "example": "SGD_WIRE"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "beneficiary": {
         "type": "object",
@@ -4637,7 +4907,7 @@
             "x-go-name": "SupportsFastWithdrawals"
           }
         },
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "createAccountResponse": {
         "type": "object",
@@ -4657,7 +4927,7 @@
           }
         },
         "x-go-name": "CreateAccountResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "createBeneficiaryResponse": {
         "description": "CreateBeneficiaryResponse response object for creating beneficiaries",
@@ -4669,7 +4939,7 @@
           }
         },
         "x-go-name": "CreateBeneficiaryResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "createFundingAddressResponse": {
         "description": "CreateFundingAddressResponse create wallet response body",
@@ -4730,7 +5000,7 @@
           }
         },
         "x-go-name": "CreateFundingAddressResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "getBalancesResponse": {
         "description": "GetBalancesResponse balance lookup response",
@@ -4745,7 +5015,7 @@
           }
         },
         "x-go-name": "GetBalancesResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "getFeeInfoResponse": {
         "description": "GetFeeInfoResponse response object for get fee info calls",
@@ -4754,6 +5024,7 @@
           "maker_fee": {
             "description": "Deprecated: Use maker_fee_buy or maker_fee_sell",
             "type": "string",
+            "x-deprecated": true,
             "x-go-name": "MakerFee"
           },
           "maker_fee_buy": {
@@ -4769,6 +5040,7 @@
           "taker_fee": {
             "description": "Deprecated: Use taker_fee_buy or taker_fee_sell",
             "type": "string",
+            "x-deprecated": true,
             "x-go-name": "TakerFee"
           },
           "taker_fee_buy": {
@@ -4787,7 +5059,7 @@
           }
         },
         "x-go-name": "GetFeeInfoResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "getFundingAddressResponse": {
         "description": "GetFundingAddressResponse get funding address response body",
@@ -4848,7 +5120,7 @@
           }
         },
         "x-go-name": "GetFundingAddressResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "listBeneficiariesResponse": {
         "description": "ListBeneficiariesResponse response object for list beneficiaries",
@@ -4863,7 +5135,7 @@
           }
         },
         "x-go-name": "ListBeneficiariesResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "listPendingTransactionsResponse": {
         "description": "ListPendingTransactionsResponse",
@@ -4898,7 +5170,7 @@
           }
         },
         "x-go-name": "ListPendingTransactionsResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "sendResponse": {
         "description": "sendResponse response struct for sending crypto",
@@ -4913,7 +5185,7 @@
             "x-go-name": "WithdrawalID"
           }
         },
-        "x-go-package": "bitx/services/fe/publicapi"
+        "x-go-package": "luno/services/fe/publicapi"
       },
       "updateAccountNameResponse": {
         "type": "object",
@@ -4924,7 +5196,7 @@
           }
         },
         "x-go-name": "UpdateAccountNameResponse",
-        "x-go-package": "bitx/services/exchange-api/internal/ops/publicapi"
+        "x-go-package": "luno/services/exchange-api/internal/ops/publicapi"
       },
       "validateAddressResponse": {
         "description": "validateAddressResponse is the non error response of an address validation request",
@@ -4935,7 +5207,7 @@
             "x-go-name": "Success"
           }
         },
-        "x-go-package": "bitx/services/fe/publicapi"
+        "x-go-package": "luno/services/fe/publicapi"
       }
     }
   }
