@@ -21,6 +21,7 @@ public class AccountMapperTests
             {
                 AccountId = "123",
                 Asset = "XBT",
+                AccountType = "SPOT",
                 Balance = "1000.50",
                 Reserved = "10.25",
                 Unconfirmed = "5.75",
@@ -33,6 +34,7 @@ public class AccountMapperTests
             // Assert
             Assert.Equal("123", domain.AccountId);
             Assert.Equal("XBT", domain.Asset);
+            Assert.Equal("SPOT", domain.AccountType);
             Assert.Equal(1000.50m, domain.Available);
             Assert.Equal(10.25m, domain.Reserved);
             Assert.Equal(5.75m, domain.Unconfirmed);
@@ -73,6 +75,22 @@ public class AccountMapperTests
         // Act & Assert
         var ex = Assert.Throws<LunoMappingException>(() => dto.ToDomain());
         Assert.Contains("Missing mandatory field: asset", ex.Message);
+        Assert.Equal(nameof(AccountBalance), ex.DtoType);
+    }
+
+    [Fact(DisplayName = "Given missing AccountType, When mapping to domain, Then throw LunoMappingException")]
+    public void MapToDomain_MissingAccountType_ThrowsLunoMappingException()
+    {
+        // Arrange
+        var dto = new AccountBalance
+        {
+            AccountId = "123",
+            Asset = "XBT"
+        };
+
+        // Act & Assert
+        var ex = Assert.Throws<LunoMappingException>(() => dto.ToDomain());
+        Assert.Contains("Missing mandatory field: account_type", ex.Message);
         Assert.Equal(nameof(AccountBalance), ex.DtoType);
     }
 }

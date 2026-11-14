@@ -10,6 +10,7 @@ namespace Luno.SDK.Application.Account;
 /// <param name="Unconfirmed">Amount that is awaiting some sort of verification to be credited to this account. This could be an on-chain transaction that Luno is waiting for further block verifications to happen.</param>
 /// <param name="Total">The calculated total amount (Available + Reserved).</param>
 /// <param name="Name">The name set by the user upon creating the account.</param>
+/// <param name="AccountType">The type of the account (e.g., "SPOT", "TRANSACTIONAL", "STAKING").</param>
 public record AccountBalanceResponse(
     string AccountId,
     string Asset,
@@ -17,5 +18,6 @@ public record AccountBalanceResponse(
     decimal Reserved,
     decimal Unconfirmed,
     decimal Total,
-    string Name
+    string Name,
+    string AccountType
 );

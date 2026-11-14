@@ -23,10 +23,14 @@ public static class AccountMapper
         if (string.IsNullOrWhiteSpace(dto.Asset))
             throw new LunoMappingException("Missing mandatory field: asset", nameof(AccountBalance));
 
+        if (string.IsNullOrWhiteSpace(dto.AccountType))
+            throw new LunoMappingException("Missing mandatory field: account_type", nameof(AccountBalance));
+
         return new Balance
         {
             AccountId = dto.AccountId,
             Asset = dto.Asset,
+            AccountType = dto.AccountType,
             Available = decimal.Parse(dto.Balance ?? throw new LunoMappingException("Missing balance field", nameof(AccountBalance)), CultureInfo.InvariantCulture),
             Reserved = decimal.Parse(dto.Reserved ?? throw new LunoMappingException("Missing reserved field", nameof(AccountBalance)), CultureInfo.InvariantCulture),
             Unconfirmed = decimal.Parse(dto.Unconfirmed ?? throw new LunoMappingException("Missing unconfirmed field", nameof(AccountBalance)), CultureInfo.InvariantCulture),

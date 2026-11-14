@@ -36,6 +36,11 @@ public record Balance
     public required string Name { get; init; }
 
     /// <summary>
+    /// The type of the account (e.g., "SPOT", "TRANSACTIONAL", "STAKING").
+    /// </summary>
+    public required string AccountType { get; init; }
+
+    /// <summary>
     /// Calculated property: Available + Reserved.
     /// </summary>
     public decimal Total => Available + Reserved;

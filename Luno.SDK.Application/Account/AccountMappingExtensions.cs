@@ -17,6 +17,7 @@ internal static class AccountMappingExtensions
         balance.Reserved,
         balance.Unconfirmed,
         balance.Total,
-        balance.Name
+        balance.Name,
+        balance.AccountType
     );
 }
