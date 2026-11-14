@@ -92,7 +92,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Move.List_moves
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class List_movesRequestBuilderGetQueryParameters 
         {
-            /// <summary>Filter to moves requested before this timestamp (Unix milliseconds)</summary>
+            /// <summary>Filter to moves requested before this timestamp (Unix milliseconds)format: timestamp</summary>
             [QueryParameter("before")]
             public long? Before { get; set; }
             /// <summary>Limit to this many moves</summary>

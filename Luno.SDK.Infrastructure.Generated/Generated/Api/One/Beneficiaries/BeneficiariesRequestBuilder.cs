@@ -155,6 +155,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Beneficiaries
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class BeneficiariesRequestBuilderGetQueryParameters 
         {
+            /// <summary>Bank Recipient name of the beneficiary. The wildcard character * can be used. Example: John* or *Smith or *John*</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("bank_recipient")]

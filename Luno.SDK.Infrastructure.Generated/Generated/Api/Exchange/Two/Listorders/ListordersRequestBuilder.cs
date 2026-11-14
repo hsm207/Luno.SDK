@@ -95,7 +95,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.Two.Listorders
             /// <summary>If true, will return closed orders instead of open orders.</summary>
             [QueryParameter("closed")]
             public bool? Closed { get; set; }
-            /// <summary>Filter to orders created before this timestamp (Unix milliseconds)</summary>
+            /// <summary>Filter to orders created before this timestamp (Unix milliseconds)format: timestamp</summary>
             [QueryParameter("created_before")]
             public long? CreatedBefore { get; set; }
             /// <summary>Limit to this many orders</summary>

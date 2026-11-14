@@ -48,7 +48,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Accounts
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public AccountsRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/accounts?currency={currency}&name={name}", pathParameters)
+        public AccountsRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/accounts?currency={currency}&name={name}{&account_type*}", pathParameters)
         {
         }
         /// <summary>
@@ -56,7 +56,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Accounts
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public AccountsRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/accounts?currency={currency}&name={name}", rawUrl)
+        public AccountsRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/accounts?currency={currency}&name={name}{&account_type*}", rawUrl)
         {
         }
         /// <summary>
@@ -111,6 +111,20 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Accounts
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class AccountsRequestBuilderPostQueryParameters 
         {
+            /// <summary>The type to use for this account (if not provided, defaults toTRANSACTIONAL).</summary>
+            [Obsolete("This property is deprecated, use AccountTypeAsPostAccountTypeQueryParameterType instead")]
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+            [QueryParameter("account_type")]
+            public string? AccountType { get; set; }
+#nullable restore
+#else
+            [QueryParameter("account_type")]
+            public string AccountType { get; set; }
+#endif
+            /// <summary>The type to use for this account (if not provided, defaults toTRANSACTIONAL).</summary>
+            [QueryParameter("account_type")]
+            public global::Luno.SDK.Infrastructure.Generated.Api.One.Accounts.PostAccount_typeQueryParameterType? AccountTypeAsPostAccountTypeQueryParameterType { get; set; }
             /// <summary>The currency code for the Account you want to create.  Please see the Currency section for a detailed list of currencies supported by the Luno platform.Users must be verified to trade currency in order to be able to create an Account.  For more information on the verification process, please see &lt;a href=&quot;/help/en/articles/1000168396&quot;&gt;How do I verify my identity?&lt;/a&gt;.Users have a limit of 10 accounts per currency.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

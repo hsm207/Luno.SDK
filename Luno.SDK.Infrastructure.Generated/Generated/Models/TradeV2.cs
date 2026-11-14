@@ -84,6 +84,14 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         public long? Sequence { get; set; }
         /// <summary>Unix timestamp in milliseconds</summary>
         public int? Timestamp { get; set; }
+        /// <summary>Unique trade identifier</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? TradeId { get; set; }
+#nullable restore
+#else
+        public string TradeId { get; set; }
+#endif
         /// <summary>Order type</summary>
         public global::Luno.SDK.Infrastructure.Generated.Models.TradeV2_type? Type { get; set; }
         /// <summary>Order volume</summary>
@@ -130,6 +138,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "price", n => { Price = n.GetStringValue(); } },
                 { "sequence", n => { Sequence = n.GetLongValue(); } },
                 { "timestamp", n => { Timestamp = n.GetIntValue(); } },
+                { "trade_id", n => { TradeId = n.GetStringValue(); } },
                 { "type", n => { Type = n.GetEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.TradeV2_type>(); } },
                 { "volume", n => { Volume = n.GetStringValue(); } },
             };
@@ -152,6 +161,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteStringValue("price", Price);
             writer.WriteLongValue("sequence", Sequence);
             writer.WriteIntValue("timestamp", Timestamp);
+            writer.WriteStringValue("trade_id", TradeId);
             writer.WriteEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.TradeV2_type>("type", Type);
             writer.WriteStringValue("volume", Volume);
             writer.WriteAdditionalData(AdditionalData);

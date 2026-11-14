@@ -86,8 +86,10 @@ namespace Luno.SDK.Infrastructure.Generated.Models
 #else
         public global::Luno.SDK.Infrastructure.Generated.Models.Transaction_details Details { get; set; }
 #endif
-        /// <summary>The kind of the transaction indicates the transaction flowKinds explained:&lt;br&gt;&lt;code&gt;FEE&lt;/code&gt; when transaction is towards Luno fees&lt;br&gt;&lt;code&gt;TRANSFER&lt;/code&gt; when the transaction is a one way flow of funds, e.g. a deposit or crypto send&lt;br&gt;&lt;code&gt;EXCHANGE&lt;/code&gt; when the transaction is part of a two way exchange, e.g. a trade or instant buyFEE KindFee  KindFee when transaction is towards Luno feesTRANSFER KindTransfer  KindTransfer when the transaction is a one way flow of fundsEXCHANGE KindExchange  KindExchange when the transaction is part of a two way exchangeINTEREST KindInterest  KindInterest when the transaction is an interest payment.</summary>
+        /// <summary>The kind of the transaction indicates the transaction flowKinds explained:&lt;br&gt;&lt;code&gt;FEE&lt;/code&gt; when transaction is towards Luno fees&lt;br&gt;&lt;code&gt;TRANSFER&lt;/code&gt; when the transaction is a one way flow of funds, e.g. a deposit or crypto send&lt;br&gt;&lt;code&gt;EXCHANGE&lt;/code&gt; when the transaction is part of a two way exchange, e.g. a trade or instant buyFEE KindFee when transaction is towards Luno feesTRANSFER KindTransfer when the transaction is a one way flow of fundsEXCHANGE KindExchange when the transaction is part of a two way exchangeINTEREST KindInterest when the transaction is an interest payment.</summary>
         public global::Luno.SDK.Infrastructure.Generated.Models.Transaction_kind? Kind { get; set; }
+        /// <summary>A returned reference id in calls such as quarantined travel rule receives</summary>
+        public long? PaymentId { get; set; }
         /// <summary>A unique reference for the transaction this statement entry relates to.There may be multiple statement entries related to the same transaction.E.g. a withdrawal and the withdrawal fee are two separate statement entries with the same reference.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -135,6 +137,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "detail_fields", n => { DetailFields = n.GetObjectValue<global::Luno.SDK.Infrastructure.Generated.Models.DetailFields>(global::Luno.SDK.Infrastructure.Generated.Models.DetailFields.CreateFromDiscriminatorValue); } },
                 { "details", n => { Details = n.GetObjectValue<global::Luno.SDK.Infrastructure.Generated.Models.Transaction_details>(global::Luno.SDK.Infrastructure.Generated.Models.Transaction_details.CreateFromDiscriminatorValue); } },
                 { "kind", n => { Kind = n.GetEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.Transaction_kind>(); } },
+                { "payment_id", n => { PaymentId = n.GetLongValue(); } },
                 { "reference", n => { Reference = n.GetStringValue(); } },
                 { "row_index", n => { RowIndex = n.GetLongValue(); } },
                 { "timestamp", n => { Timestamp = n.GetIntValue(); } },
@@ -157,6 +160,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteObjectValue<global::Luno.SDK.Infrastructure.Generated.Models.DetailFields>("detail_fields", DetailFields);
             writer.WriteObjectValue<global::Luno.SDK.Infrastructure.Generated.Models.Transaction_details>("details", Details);
             writer.WriteEnumValue<global::Luno.SDK.Infrastructure.Generated.Models.Transaction_kind>("kind", Kind);
+            writer.WriteLongValue("payment_id", PaymentId);
             writer.WriteStringValue("reference", Reference);
             writer.WriteLongValue("row_index", RowIndex);
             writer.WriteIntValue("timestamp", Timestamp);

@@ -53,6 +53,8 @@ namespace Luno.SDK.Infrastructure.Generated.Models
 #else
         public string FeeCounter { get; set; }
 #endif
+        /// <summary>Leverage multiplier used for the order. Only present when the orderwas placed using spot margin wallets; omitted otherwise.</summary>
+        public int? Leverage { get; set; }
         /// <summary>Limit price to transact</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -129,6 +131,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
                 { "expiration_timestamp", n => { ExpirationTimestamp = n.GetIntValue(); } },
                 { "fee_base", n => { FeeBase = n.GetStringValue(); } },
                 { "fee_counter", n => { FeeCounter = n.GetStringValue(); } },
+                { "leverage", n => { Leverage = n.GetIntValue(); } },
                 { "limit_price", n => { LimitPrice = n.GetStringValue(); } },
                 { "limit_volume", n => { LimitVolume = n.GetStringValue(); } },
                 { "order_id", n => { OrderId = n.GetStringValue(); } },
@@ -152,6 +155,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             writer.WriteIntValue("expiration_timestamp", ExpirationTimestamp);
             writer.WriteStringValue("fee_base", FeeBase);
             writer.WriteStringValue("fee_counter", FeeCounter);
+            writer.WriteIntValue("leverage", Leverage);
             writer.WriteStringValue("limit_price", LimitPrice);
             writer.WriteStringValue("limit_volume", LimitVolume);
             writer.WriteStringValue("order_id", OrderId);
