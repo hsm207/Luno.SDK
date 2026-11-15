@@ -95,7 +95,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Transfers
             /// <summary>Unique identifier of the account to list the transfers from.</summary>
             [QueryParameter("account_id")]
             public long? AccountId { get; set; }
-            /// <summary>Filter to transfers created before this timestamp (Unix milliseconds).The default value (0) will return the latest transfers on the account.</summary>
+            /// <summary>Filter to transfers created before this timestamp (Unix milliseconds).The default value (0) will return the latest transfers on the account.format: timestamp</summary>
             [QueryParameter("before")]
             public long? Before { get; set; }
             /// <summary>Limit to this many transfers.</summary>

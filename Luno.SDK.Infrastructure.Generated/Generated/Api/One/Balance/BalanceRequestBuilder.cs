@@ -22,7 +22,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Balance
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public BalanceRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/balance{?assets*}", pathParameters)
+        public BalanceRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/balance{?account_type*,assets*}", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Balance
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public BalanceRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/balance{?assets*}", rawUrl)
+        public BalanceRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/balance{?account_type*,assets*}", rawUrl)
         {
         }
         /// <summary>
@@ -85,6 +85,27 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Balance
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class BalanceRequestBuilderGetQueryParameters 
         {
+            /// <summary>Only return balances for wallets of these types (if not provided, allaccount types are returned). To filter by multiple types, pass theparameter multiple times, e.g. `account_type=SPOT&amp;account_type=SPOT_MARGIN`.</summary>
+            [Obsolete("This property is deprecated, use AccountTypeAsGetAccountTypeQueryParameterType instead")]
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+            [QueryParameter("account_type")]
+            public string[]? AccountType { get; set; }
+#nullable restore
+#else
+            [QueryParameter("account_type")]
+            public string[] AccountType { get; set; }
+#endif
+            /// <summary>Only return balances for wallets of these types (if not provided, allaccount types are returned). To filter by multiple types, pass theparameter multiple times, e.g. `account_type=SPOT&amp;account_type=SPOT_MARGIN`.</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+            [QueryParameter("account_type")]
+            public global::Luno.SDK.Infrastructure.Generated.Api.One.Balance.GetAccount_typeQueryParameterType[]? AccountTypeAsGetAccountTypeQueryParameterType { get; set; }
+#nullable restore
+#else
+            [QueryParameter("account_type")]
+            public global::Luno.SDK.Infrastructure.Generated.Api.One.Balance.GetAccount_typeQueryParameterType[] AccountTypeAsGetAccountTypeQueryParameterType { get; set; }
+#endif
             /// <summary>Only return balances for wallets with these currencies (if not provided,all balances will be returned). To request balances for multiple currencies,pass the parameter multiple times,e.g. `assets=XBT&amp;assets=ETH`.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

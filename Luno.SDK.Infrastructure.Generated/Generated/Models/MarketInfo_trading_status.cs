@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System;
 namespace Luno.SDK.Infrastructure.Generated.Models
 {
-    /// <summary>Current market trading status:&lt;br&gt;&lt;code&gt;POST_ONLY&lt;/code&gt; Trading is indefinitely suspended. This state iscommonly used when new markets are being launched to give traders enoughtime to setup their orders before trading begins. When in this status,orders can only be posted as post-only.&lt;br&gt;&lt;code&gt;ACTIVE&lt;/code&gt; Trading is fully enabled.&lt;br&gt;&lt;code&gt;SUSPENDED&lt;/code&gt; Trading has been temporarily suspended due to veryhigh volatility. When in this status, orders can only be posted aspost-only.&lt;br&gt;&lt;code&gt;Unknown&lt;/code&gt; Trading status is unknown. This could indicate a temporary erroron the market and should resolve shortly.POST_ONLY MarketStatusPostOnlyACTIVE MarketStatusActiveSUSPENDED MarketStatusSuspendedUNKNOWN MarketStatusUnknown</summary>
+    /// <summary>Current market trading status:&lt;br&gt;&lt;code&gt;POST_ONLY&lt;/code&gt; Trading is indefinitely suspended. This state iscommonly used when new markets are being launched to give traders enoughtime to setup their orders before trading begins. When in this status,orders can only be posted as post-only.&lt;br&gt;&lt;code&gt;ACTIVE&lt;/code&gt; Trading is fully enabled.&lt;br&gt;&lt;code&gt;SUSPENDED&lt;/code&gt; Trading has been temporarily suspended due to veryhigh volatility. When in this status, orders can only be posted aspost-only.&lt;br&gt;&lt;code&gt;UNAVAILABLE&lt;/code&gt; The market exists but is not available for trading,for example while it is under maintenance. When in this status, new ordersare rejected.&lt;br&gt;&lt;code&gt;Unknown&lt;/code&gt; Trading status is unknown. This could indicate a temporary erroron the market and should resolve shortly.POST_ONLY MarketStatusPostOnlyACTIVE MarketStatusActiveSUSPENDED MarketStatusSuspendedUNAVAILABLE MarketStatusUnavailableUNKNOWN MarketStatusUnknown</summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public enum MarketInfo_trading_status
     {
@@ -18,6 +18,10 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         [EnumMember(Value = "SUSPENDED")]
         #pragma warning disable CS1591
         SUSPENDED,
+        #pragma warning restore CS1591
+        [EnumMember(Value = "UNAVAILABLE")]
+        #pragma warning disable CS1591
+        UNAVAILABLE,
         #pragma warning restore CS1591
         [EnumMember(Value = "UNKNOWN")]
         #pragma warning disable CS1591

@@ -33,6 +33,11 @@ if (balancePath && balancePath.get && balancePath.get.parameters) {
         assetsParam.explode = true;
         console.log("Successfully patched 'assets' parameter to 'explode: true'.");
     }
+    const accountTypeParam = balancePath.get.parameters.find(p => p.name === 'account_type');
+    if (accountTypeParam) {
+        accountTypeParam.explode = true;
+        console.log("Successfully patched 'account_type' parameter to 'explode: true'.");
+    }
 }
 
 // 3. Fix the 'tickers' endpoint 'pair' parameter serialization

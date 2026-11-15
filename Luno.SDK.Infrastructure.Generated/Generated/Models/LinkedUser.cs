@@ -27,10 +27,10 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         /// <summary>Permissions A list of permissions granted to the API client over the linked user.These permissions are enforced when acting on behalf of the linked user.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public UntypedNode? Permissions { get; set; }
+        public List<string>? Permissions { get; set; }
 #nullable restore
 #else
-        public UntypedNode Permissions { get; set; }
+        public List<string> Permissions { get; set; }
 #endif
         /// <summary>The user ID the API client can act on behalf of</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -67,7 +67,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             {
                 { "created_at", n => { CreatedAt = n.GetLongValue(); } },
                 { "label", n => { Label = n.GetStringValue(); } },
-                { "permissions", n => { Permissions = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "permissions", n => { Permissions = n.GetCollectionOfPrimitiveValues<string>()?.AsList(); } },
                 { "user_id", n => { UserId = n.GetStringValue(); } },
             };
         }
@@ -80,7 +80,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteLongValue("created_at", CreatedAt);
             writer.WriteStringValue("label", Label);
-            writer.WriteObjectValue<UntypedNode>("permissions", Permissions);
+            writer.WriteCollectionOfPrimitiveValues<string>("permissions", Permissions);
             writer.WriteStringValue("user_id", UserId);
             writer.WriteAdditionalData(AdditionalData);
         }

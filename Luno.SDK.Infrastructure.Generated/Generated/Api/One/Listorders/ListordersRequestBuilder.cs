@@ -22,7 +22,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Listorders
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public ListordersRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/listorders{?created_before*,limit*,pair*,state*}", pathParameters)
+        public ListordersRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/listorders{?created_before*,limit*,margin_only*,pair*,state*}", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Listorders
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public ListordersRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/listorders{?created_before*,limit*,pair*,state*}", rawUrl)
+        public ListordersRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/listorders{?created_before*,limit*,margin_only*,pair*,state*}", rawUrl)
         {
         }
         /// <summary>
@@ -85,12 +85,15 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Listorders
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class ListordersRequestBuilderGetQueryParameters 
         {
-            /// <summary>Filter to orders created before this timestamp (Unix milliseconds)</summary>
+            /// <summary>Filter to orders created before this timestamp (Unix milliseconds)format: timestamp</summary>
             [QueryParameter("created_before")]
             public long? CreatedBefore { get; set; }
             /// <summary>Limit to this many orders</summary>
             [QueryParameter("limit")]
             public long? Limit { get; set; }
+            /// <summary>Filter to only orders placed using spot margin wallets.</summary>
+            [QueryParameter("margin_only")]
+            public bool? MarginOnly { get; set; }
             /// <summary>Filter to only orders of this currency pair</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

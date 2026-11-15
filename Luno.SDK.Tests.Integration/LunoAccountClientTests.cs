@@ -48,6 +48,7 @@ public class LunoAccountClientTests : IDisposable
                         new
                         {
                             account_id = "123",
+                            account_type = "SPOT",
                             asset = "XBT",
                             balance = "1.12345678",
                             reserved = "0.00000001",
@@ -68,6 +69,7 @@ public class LunoAccountClientTests : IDisposable
         var b = balances[0];
         Assert.Equal("123", b.AccountId);
         Assert.Equal("XBT", b.Asset);
+        Assert.Equal("SPOT", b.AccountType);
         Assert.Equal("Crypto Wallet", b.Name);
 
         // Exact decimal precision assertions

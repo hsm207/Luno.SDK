@@ -98,7 +98,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Marketorder
             [QueryParameter("base_volume")]
             public string BaseVolume { get; set; }
 #endif
-            /// <summary>Client order ID.May only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 255.It will be available in read endpoints, so you can use it to reconcile Luno with your internal system.Values must be unique across all your successful order creation endpoint calls; trying to create an orderwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.</summary>
+            /// <summary>Client order ID.May only contain alphanumeric (0-9, a-z, or A-Z) and special characters (_ ; , . -). Maximum length: 100.It will be available in read endpoints, so you can use it to reconcile Luno with your internal system.Values must be unique across all your successful order creation endpoint calls; trying to create an orderwith the same `client_order_id` as one of your past orders will result in a HTTP 409 Conflict response.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("client_order_id")]

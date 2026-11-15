@@ -11,7 +11,12 @@
 - **Spec Property**: `"explode": false` (Default for query parameters)
 - **Impact**: Kiota generates comma-separated lists (`assets=XBT,ETH`) which results in an HTTP 400 Bad Request from the Luno API.
 
-### 2. Multi-Ticker (`pair` parameter)
+### 2. Account Balances (`account_type` parameter)
+- **Description**: "Only return balances for wallets of these types (if not provided, all account types are returned). To **filter by multiple types, pass the parameter multiple times**, e.g. `account_type=SPOT&account_type=SPOT_MARGIN`."
+- **Spec Property**: `"explode": false` (Default for query parameters)
+- **Impact**: Kiota generates comma-separated lists (`account_type=SPOT,SPOT_MARGIN`) instead of repeating the parameter, causing an HTTP 400 Bad Request from the Luno API.
+
+### 3. Multi-Ticker (`pair` parameter)
 - **Description**: "To request tickers for multiple markets, **pass the parameter multiple times**, e.g. `pair=XBTZAR&pair=ETHZAR`."
 - **Spec Property**: `"explode": false`
 - **Impact**: Same as above, would result in API errors if implemented as per spec.

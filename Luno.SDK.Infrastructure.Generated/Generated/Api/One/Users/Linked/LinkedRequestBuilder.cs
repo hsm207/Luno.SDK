@@ -22,7 +22,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public LinkedRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/users/linked", pathParameters)
+        public LinkedRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/users/linked{?limit*,offset*}", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public LinkedRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/users/linked", rawUrl)
+        public LinkedRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/users/linked{?limit*,offset*}", rawUrl)
         {
         }
         /// <summary>
@@ -43,11 +43,11 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked
         /// <exception cref="global::Luno.SDK.Infrastructure.Generated.Models.LinkedUsersResponse5XXError">When receiving a 5XX status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<global::Luno.SDK.Infrastructure.Generated.Models.LinkedUsersResponse?> GetAsync(Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::Luno.SDK.Infrastructure.Generated.Models.LinkedUsersResponse?> GetAsync(Action<RequestConfiguration<global::Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked.LinkedRequestBuilder.LinkedRequestBuilderGetQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<global::Luno.SDK.Infrastructure.Generated.Models.LinkedUsersResponse> GetAsync(Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::Luno.SDK.Infrastructure.Generated.Models.LinkedUsersResponse> GetAsync(Action<RequestConfiguration<global::Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked.LinkedRequestBuilder.LinkedRequestBuilderGetQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             var requestInfo = ToGetRequestInformation(requestConfiguration);
@@ -65,11 +65,11 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
+        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<global::Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked.LinkedRequestBuilder.LinkedRequestBuilderGetQueryParameters>>? requestConfiguration = default)
         {
 #nullable restore
 #else
-        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
+        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<global::Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked.LinkedRequestBuilder.LinkedRequestBuilderGetQueryParameters>> requestConfiguration = default)
         {
 #endif
             var requestInfo = new RequestInformation(Method.GET, UrlTemplate, PathParameters);
@@ -87,11 +87,24 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked
             return new global::Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked.LinkedRequestBuilder(rawUrl, RequestAdapter);
         }
         /// <summary>
+        /// Returns a list of users linked to this API key with additional permissions.
+        /// </summary>
+        [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
+        public partial class LinkedRequestBuilderGetQueryParameters 
+        {
+            /// <summary>Limit to this many users.</summary>
+            [QueryParameter("limit")]
+            public long? Limit { get; set; }
+            /// <summary>Page through records</summary>
+            [QueryParameter("offset")]
+            public long? Offset { get; set; }
+        }
+        /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.
         /// </summary>
         [Obsolete("This class is deprecated. Please use the generic RequestConfiguration class generated by the generator.")]
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
-        public partial class LinkedRequestBuilderGetRequestConfiguration : RequestConfiguration<DefaultQueryParameters>
+        public partial class LinkedRequestBuilderGetRequestConfiguration : RequestConfiguration<global::Luno.SDK.Infrastructure.Generated.Api.One.Users.Linked.LinkedRequestBuilder.LinkedRequestBuilderGetQueryParameters>
         {
         }
     }

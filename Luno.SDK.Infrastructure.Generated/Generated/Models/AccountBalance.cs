@@ -20,6 +20,14 @@ namespace Luno.SDK.Infrastructure.Generated.Models
 #else
         public string AccountId { get; set; }
 #endif
+        /// <summary>The type for account</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? AccountType { get; set; }
+#nullable restore
+#else
+        public string AccountType { get; set; }
+#endif
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
         /// <summary>Currency code for the asset held in this account.</summary>
@@ -88,6 +96,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "account_id", n => { AccountId = n.GetStringValue(); } },
+                { "account_type", n => { AccountType = n.GetStringValue(); } },
                 { "asset", n => { Asset = n.GetStringValue(); } },
                 { "balance", n => { Balance = n.GetStringValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
@@ -103,6 +112,7 @@ namespace Luno.SDK.Infrastructure.Generated.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("account_id", AccountId);
+            writer.WriteStringValue("account_type", AccountType);
             writer.WriteStringValue("asset", Asset);
             writer.WriteStringValue("balance", Balance);
             writer.WriteStringValue("name", Name);

@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System;
 namespace Luno.SDK.Infrastructure.Generated.Models
 {
-    /// <summary>The kind of the transaction indicates the transaction flowKinds explained:&lt;br&gt;&lt;code&gt;FEE&lt;/code&gt; when transaction is towards Luno fees&lt;br&gt;&lt;code&gt;TRANSFER&lt;/code&gt; when the transaction is a one way flow of funds, e.g. a deposit or crypto send&lt;br&gt;&lt;code&gt;EXCHANGE&lt;/code&gt; when the transaction is part of a two way exchange, e.g. a trade or instant buyFEE KindFee  KindFee when transaction is towards Luno feesTRANSFER KindTransfer  KindTransfer when the transaction is a one way flow of fundsEXCHANGE KindExchange  KindExchange when the transaction is part of a two way exchangeINTEREST KindInterest  KindInterest when the transaction is an interest payment.</summary>
+    /// <summary>The kind of the transaction indicates the transaction flowKinds explained:&lt;br&gt;&lt;code&gt;FEE&lt;/code&gt; when transaction is towards Luno fees&lt;br&gt;&lt;code&gt;TRANSFER&lt;/code&gt; when the transaction is a one way flow of funds, e.g. a deposit or crypto send&lt;br&gt;&lt;code&gt;EXCHANGE&lt;/code&gt; when the transaction is part of a two way exchange, e.g. a trade or instant buyFEE KindFee when transaction is towards Luno feesTRANSFER KindTransfer when the transaction is a one way flow of fundsEXCHANGE KindExchange when the transaction is part of a two way exchangeINTEREST KindInterest when the transaction is an interest payment.</summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public enum Transaction_kind
     {

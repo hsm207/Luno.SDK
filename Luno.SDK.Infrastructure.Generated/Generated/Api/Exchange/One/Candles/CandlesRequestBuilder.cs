@@ -105,9 +105,9 @@ namespace Luno.SDK.Infrastructure.Generated.Api.Exchange.One.Candles
             [QueryParameter("pair")]
             public string Pair { get; set; }
 #endif
-            /// <summary>Filter to candles starting on or after this timestamp (Unix milliseconds).Only up to 1000 of the earliest candles are returned.</summary>
+            /// <summary>Filter to candles starting on or after this timestamp (Unix milliseconds).Only up to 1000 of the earliest candles are returned.format: timestamp</summary>
             [QueryParameter("since")]
-            public int? Since { get; set; }
+            public long? Since { get; set; }
         }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.

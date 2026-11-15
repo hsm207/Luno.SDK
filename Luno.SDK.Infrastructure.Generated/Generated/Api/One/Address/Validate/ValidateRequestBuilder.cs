@@ -22,7 +22,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public ValidateRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/address/validate?address={address}&currency={currency}{&address_name*,beneficiary_name*,country*,date_of_birth*,destination_tag*,has_destination_tag*,institution_name*,is_legal_entity*,is_private_wallet*,is_self_send*,memo*,nationality*,physical_address*,wallet_name*}", pathParameters)
+        public ValidateRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/address/validate{?address*,address_name*,beneficiary_name*,country*,currency*,date_of_birth*,destination_tag*,exchange_name*,has_destination_tag*,institution_name*,is_legal_entity*,is_private_wallet*,is_self_send*,memo*,nationality*,payment_id*,physical_address*,type*,wallet_name*}", pathParameters)
         {
         }
         /// <summary>
@@ -30,11 +30,11 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public ValidateRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/address/validate?address={address}&currency={currency}{&address_name*,beneficiary_name*,country*,date_of_birth*,destination_tag*,has_destination_tag*,institution_name*,is_legal_entity*,is_private_wallet*,is_self_send*,memo*,nationality*,physical_address*,wallet_name*}", rawUrl)
+        public ValidateRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/1/address/validate{?address*,address_name*,beneficiary_name*,country*,currency*,date_of_birth*,destination_tag*,exchange_name*,has_destination_tag*,institution_name*,is_legal_entity*,is_private_wallet*,is_self_send*,memo*,nationality*,payment_id*,physical_address*,type*,wallet_name*}", rawUrl)
         {
         }
         /// <summary>
-        /// Validate receive addresses, to which a customer wishes to make cryptocurrency sends, are verified under coveringregulatory requirements for the customer such as travel rules.Permissions required: &lt;code&gt;Perm_W_Send&lt;/code&gt;
+        /// Validates a counterparty against regulatory requirements such as travel rules. With type &quot;send&quot; (thedefault), this screens and registers the counterparty&apos;s address as the destination of anoutgoing send. With type &quot;receive&quot;, this submits originator identity information to resolve a quarantined deposit;A 200 response confirms the validation request has been received.Permissions required: &lt;code&gt;Perm_W_Send&lt;/code&gt;
         /// </summary>
         /// <returns>A <see cref="global::Luno.SDK.Infrastructure.Generated.Models.ValidateAddressResponse"/></returns>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
@@ -52,7 +52,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             return await RequestAdapter.SendAsync<global::Luno.SDK.Infrastructure.Generated.Models.ValidateAddressResponse>(requestInfo, global::Luno.SDK.Infrastructure.Generated.Models.ValidateAddressResponse.CreateFromDiscriminatorValue, default, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Validate receive addresses, to which a customer wishes to make cryptocurrency sends, are verified under coveringregulatory requirements for the customer such as travel rules.Permissions required: &lt;code&gt;Perm_W_Send&lt;/code&gt;
+        /// Validates a counterparty against regulatory requirements such as travel rules. With type &quot;send&quot; (thedefault), this screens and registers the counterparty&apos;s address as the destination of anoutgoing send. With type &quot;receive&quot;, this submits originator identity information to resolve a quarantined deposit;A 200 response confirms the validation request has been received.Permissions required: &lt;code&gt;Perm_W_Send&lt;/code&gt;
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
@@ -80,12 +80,12 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             return new global::Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate.ValidateRequestBuilder(rawUrl, RequestAdapter);
         }
         /// <summary>
-        /// Validate receive addresses, to which a customer wishes to make cryptocurrency sends, are verified under coveringregulatory requirements for the customer such as travel rules.Permissions required: &lt;code&gt;Perm_W_Send&lt;/code&gt;
+        /// Validates a counterparty against regulatory requirements such as travel rules. With type &quot;send&quot; (thedefault), this screens and registers the counterparty&apos;s address as the destination of anoutgoing send. With type &quot;receive&quot;, this submits originator identity information to resolve a quarantined deposit;A 200 response confirms the validation request has been received.Permissions required: &lt;code&gt;Perm_W_Send&lt;/code&gt;
         /// </summary>
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class ValidateRequestBuilderPostQueryParameters 
         {
-            /// <summary>Destination address or email address.&lt;b&gt;Note&lt;/b&gt;:&lt;ul&gt;&lt;li&gt;Ethereum addresses must be&lt;a href=&quot;https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md&quot; target=&quot;_blank&quot; rel=&quot;nofollow&quot;&gt;checksummed&lt;/a&gt;.&lt;/li&gt;&lt;li&gt;Ethereum validations of email addresses are not supported.&lt;/li&gt;&lt;/ul&gt;</summary>
+            /// <summary>Destination address or email address.Required for &lt;code&gt;send&lt;/code&gt; requests.&lt;b&gt;Note&lt;/b&gt;:&lt;ul&gt;&lt;li&gt;Ethereum addresses must be&lt;a href=&quot;https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md&quot; target=&quot;_blank&quot; rel=&quot;nofollow&quot;&gt;checksummed&lt;/a&gt;.&lt;/li&gt;&lt;li&gt;Ethereum validations of email addresses are not supported.&lt;/li&gt;&lt;/ul&gt;</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("address")]
@@ -95,7 +95,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("address")]
             public string Address { get; set; }
 #endif
-            /// <summary>AddressName is the optional name under which to store the address as in the address book.</summary>
+            /// <summary>AddressName is the optional name under which to store the address as in the address book.Applies to &lt;code&gt;send&lt;/code&gt; requests only.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("address_name")]
@@ -105,7 +105,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("address_name")]
             public string AddressName { get; set; }
 #endif
-            /// <summary>BeneficiaryName is the name of the beneficial owner if is it is a private address</summary>
+            /// <summary>BeneficiaryName is the name of the counterparty if is it is a private address.Required when is_legal_entity is false, depending on your account&apos;s compliancerequirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("beneficiary_name")]
@@ -115,7 +115,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("beneficiary_name")]
             public string BeneficiaryName { get; set; }
 #endif
-            /// <summary>Country is the ISO 3166-1 country code of the beneficial owner of the address</summary>
+            /// <summary>Country is the ISO 3166-1 country code of the counterparty. Requireddepending on your account&apos;s compliance requirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("country")]
@@ -125,7 +125,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("country")]
             public string Country { get; set; }
 #endif
-            /// <summary>Currency is the currency associated with the address.</summary>
+            /// <summary>Currency is the currency associated with the address.Applies to &lt;code&gt;send&lt;/code&gt; requests only.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("currency")]
@@ -135,7 +135,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("currency")]
             public string Currency { get; set; }
 #endif
-            /// <summary>DateOfBirth is the date of birth of the (non-institutional) beneficial owner of the address in the form &quot;YYYY-MM-DD&quot;</summary>
+            /// <summary>DateOfBirth is the date of birth of the (non-institutional) counterpartyin the form &quot;YYYY-MM-DD&quot;. Required when &lt;code&gt;is_legal_entity&lt;/code&gt; is false, depending onyour account&apos;s compliance requirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("date_of_birth")]
@@ -145,13 +145,23 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("date_of_birth")]
             public string DateOfBirth { get; set; }
 #endif
-            /// <summary>Optional XRP destination tag. Note that HasDestinationTag must be true if this value is provided.</summary>
+            /// <summary>Optional XRP destination tag. Note that HasDestinationTag must be true if this value is provided.Required when currency is XRP.Applies to &lt;code&gt;send&lt;/code&gt; requests only.</summary>
             [QueryParameter("destination_tag")]
             public long? DestinationTag { get; set; }
-            /// <summary>Optional boolean flag indicating that a XRP destination tag is provided (even if zero).</summary>
+            /// <summary>ExchangeName is the name of the exchange that the funds were sent from.Applies to &lt;code&gt;receive&lt;/code&gt; requests only. Required when &lt;code&gt;is_private_wallet&lt;/code&gt; is false.</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+            [QueryParameter("exchange_name")]
+            public string? ExchangeName { get; set; }
+#nullable restore
+#else
+            [QueryParameter("exchange_name")]
+            public string ExchangeName { get; set; }
+#endif
+            /// <summary>Optional boolean flag indicating that a XRP destination tag is provided (even if zero).Required when currency is XRP.Applies to &lt;code&gt;send&lt;/code&gt; requests only.</summary>
             [QueryParameter("has_destination_tag")]
             public bool? HasDestinationTag { get; set; }
-            /// <summary>InstitutionName is the name of the beneficial owner if is it is a legal entities address</summary>
+            /// <summary>InstitutionName is the name of the counterparty if is it is a legal entities address.Required when is_legal_entity is true, depending on your account&apos;s compliancerequirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("institution_name")]
@@ -161,16 +171,16 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("institution_name")]
             public string InstitutionName { get; set; }
 #endif
-            /// <summary>IsLegalEntity indicates if the address is for a legal entity and not a private beneficiary.If this field is true then the fields BeneficiaryName, Nationality &amp; DateOfBirth should be empty but thefields InstitutionName and Country should be populated.If this field is false and IsSelfSend is false (or empty) then the field InstitutionName should be empty but thefields BeneficiaryName, Nationality &amp; DateOfBirth and Country should be populated.</summary>
+            /// <summary>IsLegalEntity indicates if the address is for a legal entity and not a private counterparty.If this field is true then the fields BeneficiaryName, Nationality &amp; DateOfBirth should be empty but thefields InstitutionName and Country should be populated.If this field is false and IsSelfSend is false (or empty) then the field InstitutionName should be empty but thefields BeneficiaryName, Nationality &amp; DateOfBirth and Country should be populated.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
             [QueryParameter("is_legal_entity")]
             public bool? IsLegalEntity { get; set; }
-            /// <summary>IsPrivateWallet indicates if the address is for private wallet and not held at an exchange.</summary>
+            /// <summary>IsPrivateWallet indicates if the address is for private wallet and not held at an exchange.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
             [QueryParameter("is_private_wallet")]
             public bool? IsPrivateWallet { get; set; }
-            /// <summary>IsSelfSend to indicate that the address belongs to the customer.If this field is true then the remaining omitempty fields should notbe populated.</summary>
+            /// <summary>IsSelfSend to indicate that the address belongs to the customer.If this field is true then the remaining optional fields should notbe populated.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
             [QueryParameter("is_self_send")]
             public bool? IsSelfSend { get; set; }
-            /// <summary>Optional memo string used to provide account information for ATOM, etc. where it holds &quot;account&quot; informationfor a generic address.</summary>
+            /// <summary>Optional memo string used to provide account information for ATOM, etc. where it holds &quot;account&quot; informationfor a generic address. Required for currencies that use memo-based addressing.Applies to &lt;code&gt;send&lt;/code&gt; requests only.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("memo")]
@@ -180,7 +190,7 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("memo")]
             public string Memo { get; set; }
 #endif
-            /// <summary>Nationality ISO 3166-1 country code of the nationality of the (non-institutional) beneficial owner of the address</summary>
+            /// <summary>Nationality ISO 3166-1 country code of the nationality of the (non-institutional)counterparty. Required when &lt;code&gt;is_legal_entity&lt;/code&gt; is false, depending onyour account&apos;s compliance requirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("nationality")]
@@ -190,7 +200,10 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("nationality")]
             public string Nationality { get; set; }
 #endif
-            /// <summary>PhysicalAddress is the legal physical address of the beneficial owner of the crypto address</summary>
+            /// <summary>PaymentID is the Luno payment id of a transaction that has been quarantined.This field is required only for &lt;code&gt;receive&lt;/code&gt; validation requests.PaymentID is discoverable through the `List pending transactions` request.</summary>
+            [QueryParameter("payment_id")]
+            public long? PaymentId { get; set; }
+            /// <summary>PhysicalAddress is the legal physical address of the counterparty&apos;s cryptoaddress. Required depending on your account&apos;s compliance requirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("physical_address")]
@@ -200,7 +213,21 @@ namespace Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate
             [QueryParameter("physical_address")]
             public string PhysicalAddress { get; set; }
 #endif
-            /// <summary>PrivateWalletName is the name of the private wallet</summary>
+            /// <summary>Type is the optional input for the direction of the payment, send or receive.&lt;code&gt;send&lt;/code&gt; screens and registers the counterparty&apos;s address as the destination of an outgoing send (the default).&lt;code&gt;receive&lt;/code&gt; submits originator identity information to resolve a quarantined deposit.</summary>
+            [Obsolete("This property is deprecated, use TypeAsPostTypeQueryParameterType instead")]
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+            [QueryParameter("type")]
+            public string? Type { get; set; }
+#nullable restore
+#else
+            [QueryParameter("type")]
+            public string Type { get; set; }
+#endif
+            /// <summary>Type is the optional input for the direction of the payment, send or receive.&lt;code&gt;send&lt;/code&gt; screens and registers the counterparty&apos;s address as the destination of an outgoing send (the default).&lt;code&gt;receive&lt;/code&gt; submits originator identity information to resolve a quarantined deposit.</summary>
+            [QueryParameter("type")]
+            public global::Luno.SDK.Infrastructure.Generated.Api.One.Address.Validate.PostTypeQueryParameterType? TypeAsPostTypeQueryParameterType { get; set; }
+            /// <summary>PrivateWalletName is the name of the private wallet. Required when &lt;code&gt;is_private_wallet&lt;/code&gt; istrue, depending on your account&apos;s compliance requirements.Applies to both &lt;code&gt;send&lt;/code&gt; and &lt;code&gt;receive&lt;/code&gt; requests.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
             [QueryParameter("wallet_name")]
